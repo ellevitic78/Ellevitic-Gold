@@ -372,6 +372,10 @@ let state = {
   clKey: LS.get('cl_key')||'',
   mode: 'swing',
   candles: {'5m':[],'1h':[],'1d':[],'1m':[]},
+  scalpCorr: {
+    eurusd1m:[], eurusd5m:[],
+    tnx1m:[],   tnx5m:[],
+  },
   corrData: {dxy:[],us10y:[],dxyInverted:false,dxySymbol:'',us10ySymbol:''},
   pivots: {pivot:4330,r1:4360,r2:4390,s1:4300,s2:4270},
   tf: '1h',
@@ -1484,6 +1488,123 @@ function detectSqueeze(bollArr, lookback=20) {
 }
 
 // ── Compute scalp signal ──────────────────────────────────────
+// ── Analisi macro anticipatori su TF scalping ────────────────
+function computeMacroScalpSignal() {
+  const sc = state.scalpCorr;
+
+  // Slope: variazione % sulle ultime N candele
+  const pctSlope = (arr, n=5) => {
+    if (!arr || arr.length < n+1) return null;
+    const last = arr[arr.length-1].c, prev = arr[arr.length-1-n].c;
+    return +((last - prev) / prev * 100).toFixed(4);
+  };
+  // Accelerazione: slope recente vs slope precedente
+  const accel = (arr, n=3) => {
+    if (!arr || arr.length < n*2+1) return 0;
+    const s1 = arr[arr.length-1].c - arr[arr.length-1-n].c;
+    const s2 = arr[arr.length-1-n].c - arr[arr.length-1-n*2].c;
+    return +(s1 - s2).toFixed(4);
+  };
+  // Mini RSI veloce su serie prezzi
+  const quickRSI = (arr, p=7) => {
+    if (!arr || arr.length < p+1) return 50;
+    const closes = arr.map(c=>c.c);
+    const r = calcRSI(closes, p);
+    return +r[r.length-1].toFixed(1);
+  };
+  // ATR spike su serie
+  const quickATR = (arr, p=5) => {
+    if (!arr || arr.length < p+1) return {spike:false,ratio:1};
+    const tr = arr.map((c,i)=>{
+      if(!i) return c.h-c.l;
+      const pc=arr[i-1].c;
+      return Math.max(c.h-c.l,Math.abs(c.h-pc),Math.abs(c.l-pc));
+    });
+    const current = tr[tr.length-1];
+    const avg = tr.slice(-p-1,-1).reduce((s,v)=>s+v,0)/p;
+    return {spike:current>avg*1.4, ratio:+(current/avg).toFixed(2), current:+current.toFixed(4)};
+  };
+
+  // EUR/USD 1M e 5M
+  const eur1mSlope  = pctSlope(sc.eurusd1m, 3);   // slope 3 candele 1M
+  const eur5mSlope  = pctSlope(sc.eurusd5m, 3);   // slope 3 candele 5M
+  const eur1mAccel  = accel(sc.eurusd1m, 3);
+  const eur1mRSI    = quickRSI(sc.eurusd1m, 7);
+  const eur1mATR    = quickATR(sc.eurusd1m, 5);
+  const eur1mLast   = sc.eurusd1m.length ? sc.eurusd1m[sc.eurusd1m.length-1].c : null;
+
+  // TNX 1M e 5M
+  const tnx1mSlope  = pctSlope(sc.tnx1m, 3);
+  const tnx5mSlope  = pctSlope(sc.tnx5m, 3);
+  const tnx1mAccel  = accel(sc.tnx1m, 3);
+  const tnx1mRSI    = quickRSI(sc.tnx1m, 7);
+  const tnx1mATR    = quickATR(sc.tnx1m, 5);
+  const tnx1mLast   = sc.tnx1m.length ? sc.tnx1m[sc.tnx1m.length-1].c : null;
+
+  const hasEur = eur1mSlope !== null || eur5mSlope !== null;
+  const hasTnx = tnx1mSlope !== null || tnx5mSlope !== null;
+
+  if (!hasEur && !hasTnx) return null;
+
+  // Interpretazione direzionale per XAU:
+  // EUR/USD sale   → dollaro debole → XAU sale   (bias BUY)
+  // EUR/USD scende → dollaro forte  → XAU scende (bias SELL)
+  // TNX sale       → yield alto     → XAU scende (bias SELL)
+  // TNX scende     → yield basso    → XAU sale   (bias BUY)
+
+  const eurBias1m = eur1mSlope === null ? null : eur1mSlope > 0.002 ? 'BUY' : eur1mSlope < -0.002 ? 'SELL' : 'FLAT';
+  const eurBias5m = eur5mSlope === null ? null : eur5mSlope > 0.003 ? 'BUY' : eur5mSlope < -0.003 ? 'SELL' : 'FLAT';
+  const tnxBias1m = tnx1mSlope === null ? null : tnx1mSlope > 0.002 ? 'SELL' : tnx1mSlope < -0.002 ? 'BUY' : 'FLAT';
+  const tnxBias5m = tnx5mSlope === null ? null : tnx5mSlope > 0.003 ? 'SELL' : tnx5mSlope < -0.003 ? 'BUY' : 'FLAT';
+
+  // Consistenza TF: 1M e 5M allineati sullo stesso asset → segnale più forte
+  const eurAligned = eurBias1m && eurBias5m && eurBias1m !== 'FLAT' && eurBias1m === eurBias5m;
+  const tnxAligned = tnxBias1m && tnxBias5m && tnxBias1m !== 'FLAT' && tnxBias1m === tnxBias5m;
+
+  // Confluenza macro: EUR e TNX concordano sulla direzione XAU
+  const allBiases = [eurBias1m, eurBias5m, tnxBias1m, tnxBias5m].filter(b=>b&&b!=='FLAT');
+  const macroUP   = allBiases.filter(b=>b==='BUY').length;
+  const macroDN   = allBiases.filter(b=>b==='SELL').length;
+  const macroDir  = macroUP > macroDN ? 'BUY' : macroDN > macroUP ? 'SELL' : 'FLAT';
+  const macroStr  = Math.max(macroUP, macroDN); // 0-4
+
+  // Boost confidence: +5 per ogni segnale coerente, +10 se confluenza piena
+  let confidenceBoost = 0;
+  if (macroStr >= 3) confidenceBoost = 20;
+  else if (macroStr === 2) confidenceBoost = 12;
+  else if (macroStr === 1) confidenceBoost = 5;
+  if (eurAligned) confidenceBoost += 8;
+  if (tnxAligned) confidenceBoost += 8;
+  if (eur1mATR.spike) confidenceBoost += 5; // spike EUR/USD = evento macro in corso
+  if (tnx1mATR.spike) confidenceBoost += 5;
+
+  // Accelerazione: se il movimento sta accelerando → più urgenza
+  const eurAccelDir = eur1mAccel > 0.0001 ? 'BUY' : eur1mAccel < -0.0001 ? 'SELL' : 'FLAT';
+  const tnxAccelDir = tnx1mAccel > 0.0001 ? 'SELL' : tnx1mAccel < -0.0001 ? 'BUY' : 'FLAT';
+  const accelConfirm = eurAccelDir === macroDir || tnxAccelDir === macroDir;
+
+  // Divergenza 1M vs 5M (segnale di esaurimento)
+  const eurDivergence = eurBias1m && eurBias5m && eurBias1m !== 'FLAT' && eurBias5m !== 'FLAT' && eurBias1m !== eurBias5m;
+  const tnxDivergence = tnxBias1m && tnxBias5m && tnxBias1m !== 'FLAT' && tnxBias5m !== 'FLAT' && tnxBias1m !== tnxBias5m;
+
+  const macroLabel = macroStr >= 3 ? '🎯 CONFLUENZA MACRO FORTE' :
+    macroStr === 2 ? '⚡ CONFLUENZA MACRO' :
+    macroStr === 1 ? '📡 Segnale macro debole' : '⚪ Nessun segnale macro';
+  const macroColor = macroDir === 'BUY' ? '#22c55e' : macroDir === 'SELL' ? '#ef4444' : '#64748b';
+
+  return {
+    eurBias1m, eurBias5m, tnxBias1m, tnxBias5m,
+    eurAligned, tnxAligned,
+    macroDir, macroStr, macroLabel, macroColor,
+    confidenceBoost, accelConfirm,
+    eurDivergence, tnxDivergence,
+    eur1mSlope, eur5mSlope, tnx1mSlope, tnx5mSlope,
+    eur1mAccel, tnx1mAccel, eurAccelDir, tnxAccelDir,
+    eur1mRSI, tnx1mRSI, eur1mATR, tnx1mATR,
+    eur1mLast, tnx1mLast, hasEur, hasTnx,
+  };
+}
+
 function computeScalpSignal() {
   const m1 = state.candles['1m'] || [];
   const m5 = state.candles['5m'] || [];
@@ -1580,6 +1701,15 @@ function computeScalpSignal() {
   if (atr.spike) confidence = Math.min(100, confidence + 10);
   if (patterns.length && patterns[0].strength === 'FORTE') confidence = Math.min(100, confidence + 10);
   if (squeeze.squeeze) confidence = Math.min(100, confidence + 5);
+
+  // Macro boost da EUR/USD e TNX su TF scalping
+  const macro = computeMacroScalpSignal();
+  if (macro) {
+    // Boost se macro concorda con bias XAU
+    if (macro.macroDir === mainBias) confidence = Math.min(100, confidence + macro.confidenceBoost);
+    // Penalizza se macro contrasta
+    else if (macro.macroDir !== 'FLAT' && macro.macroDir !== mainBias) confidence = Math.max(0, confidence - Math.round(macro.confidenceBoost * 0.5));
+  }
   confidence = Math.max(0, Math.min(100, confidence));
 
   const confColor = confidence >= 70 ? '#22c55e' : confidence >= 45 ? '#f0b429' : '#ef4444';
@@ -1607,37 +1737,48 @@ function computeScalpSignal() {
     rsi7, rsi14, rsi5m: rsi5mNow, rsiDiv, rsiDivDir,
     entry, sl, tp1, tp2, atrVal,
     tfLabel, lastPrice: last.c, microSlope,
-    buyV, sellV,
+    buyV, sellV, macro,
   };
 }
 
-// ── Fetch 1M candles ─────────────────────────────────────────
+// ── Helper: fetch serie temporale generica ───────────────────
+async function fetchSeries(symbol, interval, outputsize) {
+  const url = `${TD}/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${outputsize}&apikey=${state.tdKey}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const d = await res.json();
+  if (d.status === 'error' || !d.values) throw new Error(d.message || 'no data');
+  const raw = [...d.values].reverse();
+  return raw.map(c => ({
+    t: new Date(c.datetime),
+    c: parseFloat(c.close),
+    h: parseFloat(c.high),
+    l: parseFloat(c.low),
+    o: parseFloat(c.open),
+    vol: parseInt(c.volume||1),
+  }));
+}
+
+// ── Fetch 1M XAU + correlati macro su 1M e 5M ───────────────
 async function fetchScalpCandles() {
+  // XAU/USD 1M
   try {
-    const data = await (async () => {
-      const url = `${TD}/time_series?symbol=XAU%2FUSD&interval=1min&outputsize=60&apikey=${state.tdKey}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const d = await res.json();
-      if (d.status === 'error') throw new Error(d.message);
-      return d;
-    })();
-    const raw = [...data.values].reverse();
-    const closes = raw.map(c=>parseFloat(c.close));
-    const rsiA = calcRSI(closes);
-    const macdA = calcMACD(closes);
-    const base = raw.map((c,i) => ({
-      t: new Date(c.datetime), o: parseFloat(c.open), h: parseFloat(c.high),
-      l: parseFloat(c.low), c: parseFloat(c.close), vol: parseInt(c.volume||1),
-      rsi: +rsiA[i].toFixed(1), macd: macdA[i], atr: 0,
-    }));
-    const atrA = calcATR(base, 7);
-    base.forEach((c,i) => c.atr = atrA[i]);
+    const raw = await fetchSeries('XAU/USD','1min',60);
+    const closes = raw.map(c=>c.c);
+    const rsiA = calcRSI(closes), macdA = calcMACD(closes);
+    const base = raw.map((c,i)=>({...c,rsi:+rsiA[i].toFixed(1),macd:macdA[i],atr:0}));
+    const atrA = calcATR(base,7); base.forEach((c,i)=>c.atr=atrA[i]);
     state.candles['1m'] = base;
-  } catch(e) {
-    console.warn('1M fetch fallito:', e.message);
-    state.candles['1m'] = [];
-  }
+  } catch(e) { console.warn('XAU 1M fallito:',e.message); state.candles['1m']=[]; }
+
+  // Correlati in parallelo — prova EUR/USD (proxy DXY inv.) e TNX (yield)
+  const corrFetches = [
+    fetchSeries('EUR/USD','1min',60).then(d=>state.scalpCorr.eurusd1m=d).catch(()=>state.scalpCorr.eurusd1m=[]),
+    fetchSeries('EUR/USD','5min',30).then(d=>state.scalpCorr.eurusd5m=d).catch(()=>state.scalpCorr.eurusd5m=[]),
+    fetchSeries('TNX','1min',60).then(d=>state.scalpCorr.tnx1m=d).catch(()=>state.scalpCorr.tnx1m=[]),
+    fetchSeries('TNX','5min',30).then(d=>state.scalpCorr.tnx5m=d).catch(()=>state.scalpCorr.tnx5m=[]),
+  ];
+  await Promise.all(corrFetches);
 }
 
 // ── Render scalp screen ───────────────────────────────────────
@@ -1742,6 +1883,132 @@ function renderScalpScreen() {
     </div>`;
   });
   html += '</div></div>';
+
+  // ── Pannello macro anticipatori su TF scalping ───────────────
+  const macro = sig.macro;
+  if (macro) {
+    const eurLabel = '💵 EUR/USD';
+    const tnxLabel = '🏦 TNX Yield';
+
+    // Semaforo helper
+    const macroSem = (bias, aligned, divergence) => {
+      if (!bias || bias === 'FLAT') return '#334155';
+      if (divergence) return '#f97316';
+      if (aligned) return bias === 'BUY' ? '#22c55e' : '#ef4444';
+      return bias === 'BUY' ? '#22c55e' : '#ef4444';
+    };
+    const semGlow = col => col === '#22c55e' ? '0 0 8px #22c55e88' : col === '#ef4444' ? '0 0 8px #ef444488' : col === '#f97316' ? '0 0 8px #f9731688' : 'none';
+
+    html += `<div class="card" style="border:2px solid ${macro.macroColor}44">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div>
+          <div style="color:#f97316;font-weight:800;font-size:14px">📡 Macro Anticipatori Scalping</div>
+          <div style="color:#64748b;font-size:10px;margin-top:2px">EUR/USD + TNX su 1M e 5M → impulso XAU</div>
+        </div>
+        <div style="text-align:right">
+          <span style="background:${macro.macroColor}22;color:${macro.macroColor};border:1px solid ${macro.macroColor}44;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:800">${macro.macroLabel}</span>
+          ${macro.accelConfirm ? '<div style="color:#f0b429;font-size:9px;margin-top:3px">⚡ Momentum in accelerazione</div>' : ''}
+        </div>
+      </div>
+
+      <!-- Grid 2x2: EUR 1M, EUR 5M, TNX 1M, TNX 5M -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px">`;
+
+    // EUR/USD 1M
+    if (macro.hasEur) {
+      const col1m = macroSem(macro.eurBias1m, macro.eurAligned, false);
+      const eurDir1m = macro.eurBias1m === 'BUY' ? '→ ↑ XAU' : macro.eurBias1m === 'SELL' ? '→ ↓ XAU' : '→ neutro';
+      html += `<div style="background:#1a2130;border-radius:9px;padding:10px;border:1px solid ${col1m}33">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div style="width:12px;height:12px;border-radius:50%;background:${col1m};box-shadow:${semGlow(col1m)};flex-shrink:0"></div>
+          <span style="color:#94a3b8;font-size:10px;font-weight:700">${eurLabel} 1M</span>
+        </div>
+        <div style="color:${col1m};font-size:15px;font-weight:800">${macro.eurBias1m||'–'}</div>
+        <div style="color:#64748b;font-size:10px;margin-top:2px">Slope: ${macro.eur1mSlope>0?'+':''}${(macro.eur1mSlope*100||0).toFixed(3)}%</div>
+        <div style="color:${col1m};font-size:10px;font-weight:600">${eurDir1m}</div>
+        ${macro.eur1mATR?.spike ? '<div style="color:#f97316;font-size:9px;margin-top:3px">⚡ Spike ATR → evento in corso</div>' : ''}
+        <div style="color:#64748b;font-size:9px;margin-top:2px">RSI7: ${macro.eur1mRSI} ${macro.eur1mLast?`· $${macro.eur1mLast.toFixed(4)}`:''}</div>
+      </div>`;
+
+      // EUR/USD 5M
+      const col5m = macroSem(macro.eurBias5m, macro.eurAligned, macro.eurDivergence);
+      const eurDir5m = macro.eurBias5m === 'BUY' ? '→ ↑ XAU' : macro.eurBias5m === 'SELL' ? '→ ↓ XAU' : '→ neutro';
+      html += `<div style="background:#1a2130;border-radius:9px;padding:10px;border:1px solid ${col5m}33">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div style="width:12px;height:12px;border-radius:50%;background:${col5m};box-shadow:${semGlow(col5m)};flex-shrink:0"></div>
+          <span style="color:#94a3b8;font-size:10px;font-weight:700">${eurLabel} 5M</span>
+          ${macro.eurAligned ? '<span style="background:#22c55e20;color:#22c55e;border-radius:4px;padding:1px 5px;font-size:8px;font-weight:700">ALLINEATO</span>' : ''}
+          ${macro.eurDivergence ? '<span style="background:#f9731620;color:#f97316;border-radius:4px;padding:1px 5px;font-size:8px;font-weight:700">DIV</span>' : ''}
+        </div>
+        <div style="color:${col5m};font-size:15px;font-weight:800">${macro.eurBias5m||'–'}</div>
+        <div style="color:#64748b;font-size:10px;margin-top:2px">Slope: ${macro.eur5mSlope>0?'+':''}${(macro.eur5mSlope*100||0).toFixed(3)}%</div>
+        <div style="color:${col5m};font-size:10px;font-weight:600">${eurDir5m}</div>
+        ${macro.eurDivergence ? '<div style="color:#f97316;font-size:9px;margin-top:3px">⚠️ 1M vs 5M divergenti → esaurimento?</div>' : ''}
+      </div>`;
+    } else {
+      html += `<div style="background:#1a2130;border-radius:9px;padding:10px;opacity:0.4;grid-column:span 2"><div style="color:#64748b;font-size:11px">EUR/USD non disponibile nel piano</div></div>`;
+    }
+
+    // TNX 1M
+    if (macro.hasTnx) {
+      const tCol1m = macroSem(macro.tnxBias1m, macro.tnxAligned, false);
+      const tnxDir1m = macro.tnxBias1m === 'BUY' ? '→ ↑ XAU' : macro.tnxBias1m === 'SELL' ? '→ ↓ XAU' : '→ neutro';
+      html += `<div style="background:#1a2130;border-radius:9px;padding:10px;border:1px solid ${tCol1m}33">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div style="width:12px;height:12px;border-radius:50%;background:${tCol1m};box-shadow:${semGlow(tCol1m)};flex-shrink:0"></div>
+          <span style="color:#94a3b8;font-size:10px;font-weight:700">${tnxLabel} 1M</span>
+        </div>
+        <div style="color:${tCol1m};font-size:15px;font-weight:800">${macro.tnxBias1m||'–'}</div>
+        <div style="color:#64748b;font-size:10px;margin-top:2px">Slope: ${macro.tnx1mSlope>0?'+':''}${(macro.tnx1mSlope*100||0).toFixed(3)}%</div>
+        <div style="color:${tCol1m};font-size:10px;font-weight:600">${tnxDir1m}</div>
+        ${macro.tnx1mATR?.spike ? '<div style="color:#f97316;font-size:9px;margin-top:3px">⚡ Spike ATR → movimento yield</div>' : ''}
+        <div style="color:#64748b;font-size:9px;margin-top:2px">RSI7: ${macro.tnx1mRSI} ${macro.tnx1mLast?`· ${macro.tnx1mLast.toFixed(3)}%`:''}</div>
+      </div>`;
+
+      // TNX 5M
+      const tCol5m = macroSem(macro.tnxBias5m, macro.tnxAligned, macro.tnxDivergence);
+      const tnxDir5m = macro.tnxBias5m === 'BUY' ? '→ ↑ XAU' : macro.tnxBias5m === 'SELL' ? '→ ↓ XAU' : '→ neutro';
+      html += `<div style="background:#1a2130;border-radius:9px;padding:10px;border:1px solid ${tCol5m}33">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div style="width:12px;height:12px;border-radius:50%;background:${tCol5m};box-shadow:${semGlow(tCol5m)};flex-shrink:0"></div>
+          <span style="color:#94a3b8;font-size:10px;font-weight:700">${tnxLabel} 5M</span>
+          ${macro.tnxAligned ? '<span style="background:#22c55e20;color:#22c55e;border-radius:4px;padding:1px 5px;font-size:8px;font-weight:700">ALLINEATO</span>' : ''}
+          ${macro.tnxDivergence ? '<span style="background:#f9731620;color:#f97316;border-radius:4px;padding:1px 5px;font-size:8px;font-weight:700">DIV</span>' : ''}
+        </div>
+        <div style="color:${tCol5m};font-size:15px;font-weight:800">${macro.tnxBias5m||'–'}</div>
+        <div style="color:#64748b;font-size:10px;margin-top:2px">Slope: ${macro.tnx5mSlope>0?'+':''}${(macro.tnx5mSlope*100||0).toFixed(3)}%</div>
+        <div style="color:${tCol5m};font-size:10px;font-weight:600">${tnxDir5m}</div>
+        ${macro.tnxDivergence ? '<div style="color:#f97316;font-size:9px;margin-top:3px">⚠️ 1M vs 5M divergenti → cautela</div>' : ''}
+      </div>`;
+    } else {
+      html += `<div style="background:#1a2130;border-radius:9px;padding:10px;opacity:0.4;grid-column:span 2"><div style="color:#64748b;font-size:11px">TNX non disponibile nel piano</div></div>`;
+    }
+
+    html += `</div>`; // close grid
+
+    // Riepilogo confluenza macro
+    if (macro.macroStr >= 2) {
+      const icon = macro.macroDir === 'BUY' ? '🟢' : '🔴';
+      const boost = sig.macro?.confidenceBoost || 0;
+      html += `<div style="background:${macro.macroColor}12;border:1px solid ${macro.macroColor}33;border-radius:9px;padding:10px 12px">
+        <div style="color:${macro.macroColor};font-weight:800;font-size:13px;margin-bottom:4px">${icon} ${macro.macroLabel}</div>
+        <div style="color:#e2e8f0;font-size:11px;line-height:1.6">
+          ${macro.macroStr >= 3
+            ? `EUR/USD e TNX concordano su ${macro.macroDir === 'BUY' ? 'dollaro debole e yield in calo' : 'dollaro forte e yield in salita'} su entrambi i TF → impulso macro ${macro.macroDir === 'BUY' ? 'rialzista' : 'ribassista'} confermato.`
+            : `${macro.macroStr} segnali macro su ${macro.macroDir === 'BUY' ? 'rialzo' : 'ribasso'} XAU.`}
+          ${macro.accelConfirm ? ' Movimento in accelerazione.' : ''}
+        </div>
+        <div style="color:#64748b;font-size:10px;margin-top:5px">Boost confidence: <span style="color:#f0b429;font-weight:700">+${boost} pt</span></div>
+      </div>`;
+    } else if (macro.eurDivergence || macro.tnxDivergence) {
+      html += `<div style="background:#f9731612;border:1px solid #f9731633;border-radius:9px;padding:9px 11px">
+        <div style="color:#f97316;font-weight:700;font-size:12px">⚠️ Divergenza 1M vs 5M rilevata</div>
+        <div style="color:#94a3b8;font-size:11px;margin-top:3px">Il momentum a breve contrasta con la struttura a medio termine. Attendi chiarimento prima di entrare.</div>
+      </div>`;
+    }
+
+    html += `</div>`; // close card
+  }
 
   // ── Pattern candele ──────────────────────────────────────────
   html += `<div class="card"><div class="section-title">🕯 Pattern Rilevati</div>`;

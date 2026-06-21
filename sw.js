@@ -216,3 +216,33 @@ function computeLastATR(candles, period) {
   const last = trs.slice(-period);
   return last.reduce((s,v) => s+v, 0) / last.length;
 }
+
+// ── Alert scalping macro (aggiunto) ─────────────────────────
+// Viene chiamato dal doBackgroundCheck con dati EUR/USD 1M
+async function checkScalpMacroAlerts(tdKey, alertConfig) {
+  if (!alertConfig?.scalpMacro) return;
+  try {
+    const [eurRes, tnxRes] = await Promise.all([
+      fetch(`https://api.twelvedata.com/time_series?symbol=EUR%2FUSD&interval=1min&outputsize=8&apikey=${tdKey}`),
+      fetch(`https://api.twelvedata.com/time_series?symbol=TNX&interval=1min&outputsize=8&apikey=${tdKey}`),
+    ]);
+    const eur = await eurRes.json();
+    const tnx = await tnxRes.json();
+    if (!eur.values || !tnx.values) return;
+    const eurP = [...eur.values].reverse().map(c=>parseFloat(c.close));
+    const tnxP = [...tnx.values].reverse().map(c=>parseFloat(c.close));
+    const eurSlope = eurP.length >= 4 ? (eurP[eurP.length-1]-eurP[eurP.length-4])/eurP[eurP.length-4]*100 : 0;
+    const tnxSlope = tnxP.length >= 4 ? (tnxP[tnxP.length-1]-tnxP[tnxP.length-4])/tnxP[tnxP.length-4]*100 : 0;
+    const eurBias = eurSlope > 0.003 ? 'BUY' : eurSlope < -0.003 ? 'SELL' : null;
+    const tnxBias = tnxSlope > 0.003 ? 'SELL' : tnxSlope < -0.003 ? 'BUY' : null;
+    if (eurBias && tnxBias && eurBias === tnxBias) {
+      const dir = eurBias === 'BUY' ? 'RIALZO' : 'RIBASSO';
+      await self.registration.showNotification(`⚡ Confluenza Macro Scalping — ${dir}`, {
+        body: `EUR/USD e TNX su 1M concordano su ${dir} XAU. Verifica setup scalping.`,
+        tag: 'scalp-macro', icon: '/icon-192.png', vibrate: [300,100,300,100,300],
+        requireInteraction: true,
+        data: { url: '/?mode=scalp' }
+      });
+    }
+  } catch(e) {}
+}
