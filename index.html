@@ -334,6 +334,9 @@ button{cursor:pointer}
       <button class="tab inactive" onclick="setDiaryTab('trades')">📋 Trade</button>
       <button class="tab inactive" onclick="setDiaryTab('stats')">📈 Stats</button>
       <button class="tab inactive" onclick="setDiaryTab('patterns')">🔬 Pattern</button>
+      <button class="tab inactive" onclick="setDiaryTab('backtest')">🧪 Backtest</button>
+      <button class="tab inactive" onclick="setDiaryTab('session')">🕐 Session</button>
+      <button class="tab inactive" onclick="setDiaryTab('paper')">🤖 Auto</button>
     </div>
   </div>
   <div class="content" id="diary-content"></div>
@@ -375,6 +378,16 @@ let state = {
   scalpCorr: {
     eurusd1m:[], eurusd5m:[],
     tnx1m:[],   tnx5m:[],
+  },
+  paper: {
+    enabled: false,
+    capital: 10000,          // capitale attuale €
+    initialCapital: 10000,
+    openTrade: null,         // trade aperto corrente
+    trades: [],              // storico trade chiusi
+    equity: [10000],         // curva equity nel tempo
+    lastSignalTs: 0,         // timestamp ultimo segnale (evita doppi)
+    cooldownMin: 5,          // minuti minimi tra un trade e il prossimo
   },
   corrData: {dxy:[],us10y:[],dxyInverted:false,dxySymbol:'',us10ySymbol:''},
   pivots: {pivot:4330,r1:4360,r2:4390,s1:4300,s2:4270},
@@ -1288,7 +1301,661 @@ function renderDiary(){
     }
   }
 
+  // ── BACKTEST TAB ─────────────────────────────────────────────
+  else if(state.diaryTab==='backtest'){
+    const bt=runBacktest(state.trades);
+    if(!bt){html+=`<div style="text-align:center;padding:40px 0;color:#64748b"><div style="font-size:32px;margin-bottom:8px">🧪</div>Servono almeno 3 trade chiusi per il backtest.</div>`;} 
+    else {
+      // KPI avanzati
+      html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div class="kpi" style="border-color:#22c55e33"><div class="lbl">Profit Factor</div><div class="val" style="color:${bt.profitFactor>=1.5?'#22c55e':bt.profitFactor>=1?'#f0b429':'#ef4444'}">${bt.profitFactor}</div><div class="sub">guadagni/perdite</div></div>
+        <div class="kpi" style="border-color:#ef444433"><div class="lbl">Max Drawdown</div><div class="val" style="color:#ef4444">-$${bt.maxDD}</div><div class="sub">perdita massima cumulata</div></div>
+        <div class="kpi"><div class="lbl">Avg Win</div><div class="val" style="color:#22c55e">+$${bt.avgWin}</div><div class="sub">per trade vinto</div></div>
+        <div class="kpi"><div class="lbl">Avg Loss</div><div class="val" style="color:#ef4444">$${bt.avgLoss}</div><div class="sub">per trade perso</div></div>
+      </div>`;
+
+      // Heat map 24h
+      html+=`<div class="card"><div class="section-title">🌡️ Heat Map — Win Rate per Ora</div>`;
+      html+=`<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin-bottom:8px">`;
+      for(let h=0;h<24;h++){
+        const s=bt.byHour[h];
+        const wr=s.n?Math.round(s.w/s.n*100):null;
+        const intensity=wr===null?0:wr/100;
+        const bg=wr===null?'#1a2130':wr>=60?`rgba(34,197,94,${0.2+intensity*0.6})`:wr>=40?`rgba(240,180,41,${0.2+intensity*0.4})`:`rgba(239,68,68,${0.2+(1-intensity)*0.6})`;
+        const textCol=wr===null?'#334155':wr>=60?'#22c55e':wr>=40?'#f0b429':'#ef4444';
+        html+=`<div style="background:${bg};border-radius:6px;padding:5px 3px;text-align:center;border:1px solid #1e2535">
+          <div style="color:#64748b;font-size:8px">${String(h).padStart(2,'0')}h</div>
+          <div style="color:${textCol};font-size:10px;font-weight:700">${wr!==null?wr+'%':'–'}</div>
+          <div style="color:#64748b;font-size:7px">${s.n}t</div>
+        </div>`;
+      }
+      html+=`</div>`;
+      // Legenda sessioni
+      html+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+        ${[['🌏 Asia','00-08','#3b82f6'],['🇬🇧 Londra','08-12','#f0b429'],['⚡ Overlap','12-17','#ef4444'],['🗽 NY','17-23','#f97316']].map(([l,r,c])=>`<span style="font-size:9px;color:${c}">● ${l} ${r}</span>`).join('')}
+      </div>`;
+      // Best/worst hours
+      if(bt.bestHours.length){
+        html+=`<div style="margin-top:8px">
+          <div style="color:#22c55e;font-size:11px;font-weight:700;margin-bottom:5px">✅ Ore migliori</div>
+          ${bt.bestHours.map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2535"><span style="color:#94a3b8;font-size:11px">${String(h.h).padStart(2,'0')}:00 (${h.n} trade)</span><span style="color:#22c55e;font-weight:700;font-size:11px">${h.wr}% WR · ${fmtPnl(h.pnl)}</span></div>`).join('')}
+        </div>
+        <div style="margin-top:8px">
+          <div style="color:#ef4444;font-size:11px;font-weight:700;margin-bottom:5px">❌ Ore peggiori</div>
+          ${bt.worstHours.map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2535"><span style="color:#94a3b8;font-size:11px">${String(h.h).padStart(2,'0')}:00 (${h.n} trade)</span><span style="color:#ef4444;font-weight:700;font-size:11px">${h.wr}% WR · ${fmtPnl(h.pnl)}</span></div>`).join('')}
+        </div>`;
+      }
+      html+=`</div>`;
+
+      // Per giorno settimana
+      html+=`<div class="card"><div class="section-title">📅 Win Rate per Giorno</div>`;
+      [1,2,3,4,5,0,6].forEach(d=>{
+        const s=bt.byDow[d]; if(!s.n)return;
+        const wr=Math.round(s.w/s.n*100),col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
+        html+=`<div style="margin-bottom:7px">
+          <div class="row" style="margin-bottom:2px">
+            <span style="color:#94a3b8;font-size:11px">${s.label} (${s.n} trade)</span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-size:10px">${fmtPnl(s.pnl)}</span>
+              <span style="color:${col};font-size:11px;font-weight:700">${wr}%</span>
+            </div>
+          </div>
+          <div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
+        </div>`;
+      });
+      html+=`</div>`;
+
+      // Per sessione
+      html+=`<div class="card"><div class="section-title">🌍 Win Rate per Sessione</div>`;
+      Object.entries(bt.bySess).forEach(([sess,s])=>{
+        if(!s.n)return;
+        const wr=Math.round(s.w/s.n*100),col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
+        const sessColor={'Asia':'#3b82f6','Londra':'#f0b429','Overlap':'#ef4444','New York':'#f97316'}[sess]||'#64748b';
+        html+=`<div style="background:#1a2130;border-radius:9px;padding:10px 12px;margin-bottom:7px;border-left:3px solid ${sessColor}">
+          <div class="row" style="margin-bottom:5px">
+            <span style="color:#e2e8f0;font-size:12px;font-weight:700">${sess}</span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-size:11px;font-weight:600">${fmtPnl(s.pnl)}</span>
+              <span style="color:${col};font-size:13px;font-weight:800">${wr}%</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;font-size:10px;color:#64748b">
+            <span>${s.n} trade</span><span>${s.w} vinti</span><span>${s.n-s.w} persi</span>
+          </div>
+          <div class="bar-wrap" style="margin-top:5px"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
+        </div>`;
+      });
+      html+=`</div>`;
+
+      // Per confidence
+      html+=`<div class="card"><div class="section-title">⭐ Win Rate per Confidence AI</div>`;
+      Object.entries(bt.byConf).forEach(([label,s])=>{
+        if(!s.n)return;
+        const wr=Math.round(s.w/s.n*100),col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
+        html+=`<div style="margin-bottom:7px">
+          <div class="row" style="margin-bottom:2px"><span style="color:#94a3b8;font-size:11px">${label} (${s.n} trade)</span><span style="color:${col};font-size:11px;font-weight:700">${wr}% · ${fmtPnl(s.pnl)}</span></div>
+          <div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
+        </div>`;
+      });
+      // Insight confidenza
+      const confHigh=bt.byConf['Alta (≥70)'],confLow=bt.byConf['Bassa (<45)'];
+      if(confHigh?.n>=2&&confLow?.n>=2){
+        const wrH=Math.round(confHigh.w/confHigh.n*100),wrL=Math.round(confLow.w/confLow.n*100);
+        if(wrH>wrL+15) html+=`<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:8px 10px;margin-top:6px;font-size:11px;color:#94a3b8">💡 I trade con confidence alta (${wrH}% WR) battono quelli a bassa confidenza (${wrL}% WR). <strong style="color:#22c55e">Filtra sotto 45.</strong></div>`;
+      }
+      html+=`</div>`;
+
+      // Per direzione
+      html+=`<div class="card"><div class="section-title">🎯 BUY vs SELL</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">`;
+      ['BUY','SELL'].forEach(dir=>{
+        const s=bt.byDir[dir]; if(!s.n)return;
+        const wr=Math.round(s.w/s.n*100),col=wr>=50?'#22c55e':'#ef4444';
+        const dCol=dir==='BUY'?'#22c55e':'#ef4444';
+        html+=`<div style="background:#1a2130;border-radius:9px;padding:12px;border:1px solid ${dCol}33;text-align:center">
+          <div style="color:${dCol};font-size:18px;font-weight:800;margin-bottom:4px">${dir==='BUY'?'▲':'▼'} ${dir}</div>
+          <div style="color:${col};font-size:22px;font-weight:900">${wr}%</div>
+          <div style="color:#64748b;font-size:10px;margin-top:3px">${s.n} trade · ${fmtPnl(s.pnl)}</div>
+        </div>`;
+      });
+      html+=`</div></div>`;
+
+      // Per market condition
+      if(Object.keys(bt.byCond).length>1){
+        html+=`<div class="card"><div class="section-title">📈 Win Rate per Condizione Mercato</div>`;
+        Object.entries(bt.byCond).sort((a,b)=>b[1].n-a[1].n).forEach(([cond,s])=>{
+          const wr=Math.round(s.w/s.n*100),col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
+          html+=`<div style="margin-bottom:7px">
+            <div class="row" style="margin-bottom:2px"><span style="color:#94a3b8;font-size:11px">${cond} (${s.n})</span><span style="color:${col};font-size:11px;font-weight:700">${wr}% · ${fmtPnl(s.pnl)}</span></div>
+            <div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
+          </div>`;
+        });
+        html+=`</div>`;
+      }
+    }
+  }
+
+  // ── SESSION TAB ───────────────────────────────────────────────
+  else if(state.diaryTab==='session'){
+    const ss = getSessionStatus();
+    const bt = runBacktest(state.trades);
+
+    // Clock sessione corrente
+    html+=`<div class="card" style="border:2px solid ${ss.sessInfo.color}44">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:40px;margin-bottom:4px">${ss.sessInfo.emoji}</div>
+        <div style="color:${ss.sessInfo.color};font-size:22px;font-weight:900">${ss.sess}</div>
+        <div style="color:#e2e8f0;font-size:32px;font-weight:800;font-variant-numeric:tabular-nums;margin:4px 0">${ss.timeStr}</div>
+        <div style="display:inline-block;background:${ss.sessInfo.color}20;border:1px solid ${ss.sessInfo.color}44;border-radius:8px;padding:3px 14px;font-size:12px;font-weight:700;color:${ss.sessInfo.color}">Volatilità ${ss.sessInfo.vol}</div>
+      </div>
+      <div style="background:#080b10;border-radius:9px;padding:10px 12px;margin-bottom:10px;border-left:3px solid ${ss.sessInfo.color}">
+        <div style="color:#94a3b8;font-size:12px;line-height:1.6">${ss.sessInfo.desc}</div>
+      </div>
+      ${ss.nextEvent?`<div style="display:flex;justify-content:space-between;align-items:center;background:#1a2130;border-radius:8px;padding:10px 12px">
+        <div><div style="color:#64748b;font-size:10px">Prossimo evento</div><div style="color:#e2e8f0;font-size:13px;font-weight:700;margin-top:2px">${ss.nextEvent.label}</div></div>
+        <div style="text-align:right"><div style="color:#f0b429;font-size:18px;font-weight:900">${ss.minToNext<60?ss.minToNext+'m':`${Math.floor(ss.minToNext/60)}h${ss.minToNext%60}m`}</div><div style="color:#64748b;font-size:9px">Impatto: ${ss.nextEvent.imp}</div></div>
+      </div>`:''}
+    </div>`;
+
+    // Timeline sessioni giornata
+    html+=`<div class="card"><div class="section-title">📅 Calendario Sessioni Oggi</div>`;
+    const sessions=[
+      {name:'🌏 Asia',      start:0,  end:8,  col:'#3b82f6', vol:'Bassa'},
+      {name:'🇬🇧 Londra',   start:8,  end:12, col:'#f0b429', vol:'Alta'},
+      {name:'⚡ Overlap',  start:12, end:17, col:'#ef4444', vol:'Massima'},
+      {name:'🗽 New York', start:17, end:24, col:'#f97316', vol:'Alta'},
+    ];
+    const curH=ss.h+ss.m/60;
+    html+=`<div style="position:relative;height:40px;background:#1a2130;border-radius:8px;overflow:hidden;margin-bottom:12px">`;
+    sessions.forEach(s=>{
+      const left=(s.start/24*100).toFixed(1);
+      const width=((s.end-s.start)/24*100).toFixed(1);
+      html+=`<div style="position:absolute;left:${left}%;width:${width}%;height:100%;background:${s.col}25;border-right:1px solid ${s.col}44;display:flex;align-items:center;justify-content:center"><span style="color:${s.col};font-size:9px;font-weight:700">${s.name.split(' ')[1]||s.name}</span></div>`;
+    });
+    // Cursore ora corrente
+    html+=`<div style="position:absolute;left:${(curH/24*100).toFixed(1)}%;top:0;width:2px;height:100%;background:#fff;opacity:0.8"></div>`;
+    html+=`</div>`;
+    sessions.forEach(s=>{
+      const isNow=curH>=s.start&&curH<s.end;
+      const myStats=bt?.bySess[s.name.replace(/^[^ ]+ /,'')]||null;
+      const wr=myStats?.n?Math.round(myStats.w/myStats.n*100):null;
+      html+=`<div style="background:#1a2130;border-radius:9px;padding:10px 12px;margin-bottom:7px;border-left:3px solid ${s.col};${isNow?`box-shadow:0 0 12px ${s.col}44`:''}">
+        <div class="row" style="margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:6px">
+            ${isNow?`<div style="width:8px;height:8px;border-radius:50%;background:${s.col};box-shadow:0 0 6px ${s.col}"></div>`:''}
+            <span style="color:${isNow?s.col:'#94a3b8'};font-size:13px;font-weight:${isNow?800:600}">${s.name} ${isNow?'← ORA':''}</span>
+          </div>
+          <span style="color:#64748b;font-size:11px">${String(s.start).padStart(2,'0')}:00 – ${s.end===24?'24':String(s.end).padStart(2,'0')}:00</span>
+        </div>
+        <div style="display:flex;gap:10px;font-size:11px">
+          <span style="color:#64748b">Volatilità: <span style="color:${s.col};font-weight:700">${s.vol}</span></span>
+          ${wr!==null?`<span style="color:#64748b">Il tuo WR: <span style="color:${wr>=50?'#22c55e':'#ef4444'};font-weight:700">${wr}% (${myStats.n}t)</span></span>`:''}
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+
+    // Insight operativi dal backtest
+    if(bt&&bt.total>=3){
+      html+=`<div class="card" style="border:1px solid #f0b42933"><div class="section-title">💡 Insight Operativi Personalizzati</div>`;
+      const insights=[];
+      // Migliore sessione
+      const bestSess=Object.entries(bt.bySess).filter(([,s])=>s.n>=2).sort((a,b)=>(b[1].w/b[1].n)-(a[1].w/a[1].n))[0];
+      if(bestSess) insights.push({icon:'🏆',col:'#22c55e',text:`La tua sessione migliore è <strong style="color:#22c55e">${bestSess[0]}</strong> (${Math.round(bestSess[1].w/bestSess[1].n*100)}% WR). Preferisci operare in quella fascia.`});
+      // Ore da evitare
+      const badHours=bt.worstHours.filter(h=>h.wr<35);
+      if(badHours.length) insights.push({icon:'⛔',col:'#ef4444',text:`Evita di operare alle <strong style="color:#ef4444">${badHours.map(h=>String(h.h).padStart(2,'0')+':00').join(', ')}</strong> — win rate sotto il 35%.`});
+      // BUY vs SELL
+      const bBuy=bt.byDir['BUY'],bSell=bt.byDir['SELL'];
+      if(bBuy?.n>=2&&bSell?.n>=2){
+        const wrB=Math.round(bBuy.w/bBuy.n*100),wrS=Math.round(bSell.w/bSell.n*100);
+        if(Math.abs(wrB-wrS)>15) insights.push({icon:'🎯',col:'#f0b429',text:`Sei migliore in direzione <strong style="color:#f0b429">${wrB>wrS?'BUY':'SELL'}</strong> (${Math.max(wrB,wrS)}% vs ${Math.min(wrB,wrS)}%). Considera di filtrare le operazioni contrarie.`});
+      }
+      // Confidence
+      const cHigh=bt.byConf['Alta (≥70)'],cLow=bt.byConf['Bassa (<45)'];
+      if(cHigh?.n>=2&&cLow?.n>=2){
+        const wrH=Math.round(cHigh.w/cHigh.n*100),wrL=Math.round(cLow.w/cLow.n*100);
+        if(wrH>wrL+10) insights.push({icon:'⭐',col:'#a855f7',text:`Confidence alta = ${wrH}% WR vs bassa = ${wrL}% WR. <strong style="color:#a855f7">Non operare sotto 45 di confidence.</strong>`});
+      }
+      if(insights.length===0) insights.push({icon:'📊',col:'#64748b',text:'Aggiungi più trade al diario per ricevere insight personalizzati.'});
+      insights.forEach(i=>{
+        html+=`<div style="display:flex;gap:10px;background:#1a2130;border-radius:9px;padding:11px 12px;margin-bottom:7px;border-left:3px solid ${i.col}">
+          <span style="font-size:18px;flex-shrink:0">${i.icon}</span>
+          <div style="color:#94a3b8;font-size:12px;line-height:1.6">${i.text}</div>
+        </div>`;
+      });
+      html+=`</div>`;
+    }
+  }
+
   content.innerHTML=html;
+}
+
+// ══ BACKTESTING ENGINE ═══════════════════════════════════════
+function runBacktest(trades) {
+  const closed = trades.filter(t => t.status === 'CLOSED');
+  if (closed.length < 3) return null;
+
+  // ── Per ogni trade calcola metriche chiave ────────────────
+  const enriched = closed.map(t => {
+    const hour = t.openedAt ? new Date(t.openedAt).getHours() : null;
+    const dow  = t.openedAt ? new Date(t.openedAt).getDay() : null; // 0=dom
+    const sess = getSessionFromHour(hour);
+    return { ...t, hour, dow, sess };
+  });
+
+  // ── Win rate per ora (heat map 24h) ──────────────────────
+  const byHour = {};
+  for (let h = 0; h < 24; h++) byHour[h] = { n:0, w:0, pnl:0 };
+  enriched.forEach(t => {
+    if (t.hour === null) return;
+    byHour[t.hour].n++;
+    if (t.isWin) byHour[t.hour].w++;
+    byHour[t.hour].pnl += (t.pnl||0);
+  });
+
+  // ── Win rate per giorno settimana ─────────────────────────
+  const dowLabels = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+  const byDow = {};
+  for (let d = 0; d < 7; d++) byDow[d] = { n:0, w:0, pnl:0, label:dowLabels[d] };
+  enriched.forEach(t => {
+    if (t.dow === null) return;
+    byDow[t.dow].n++;
+    if (t.isWin) byDow[t.dow].w++;
+    byDow[t.dow].pnl += (t.pnl||0);
+  });
+
+  // ── Win rate per sessione ─────────────────────────────────
+  const bySess = { Asia:{n:0,w:0,pnl:0}, Londra:{n:0,w:0,pnl:0}, 'New York':{n:0,w:0,pnl:0}, 'Overlap':{n:0,w:0,pnl:0} };
+  enriched.forEach(t => {
+    if (!t.sess || !bySess[t.sess]) return;
+    bySess[t.sess].n++;
+    if (t.isWin) bySess[t.sess].w++;
+    bySess[t.sess].pnl += (t.pnl||0);
+  });
+
+  // ── Win rate per confidence range ─────────────────────────
+  const byConf = { 'Alta (≥70)':{n:0,w:0,pnl:0}, 'Media (45-69)':{n:0,w:0,pnl:0}, 'Bassa (<45)':{n:0,w:0,pnl:0} };
+  enriched.forEach(t => {
+    const conf = t.confidence || 0;
+    const k = conf>=70?'Alta (≥70)':conf>=45?'Media (45-69)':'Bassa (<45)';
+    byConf[k].n++; if(t.isWin) byConf[k].w++; byConf[k].pnl+=(t.pnl||0);
+  });
+
+  // ── Win rate per direzione ────────────────────────────────
+  const byDir = { BUY:{n:0,w:0,pnl:0,loss:0}, SELL:{n:0,w:0,pnl:0,loss:0} };
+  enriched.forEach(t => {
+    const d = t.direction; if(!byDir[d]) return;
+    byDir[d].n++; if(t.isWin) byDir[d].w++; else byDir[d].loss++;
+    byDir[d].pnl+=(t.pnl||0);
+  });
+
+  // ── Win rate per market condition ─────────────────────────
+  const byCond = {};
+  enriched.forEach(t => {
+    const mc = t.market_condition||'N/D';
+    if(!byCond[mc]) byCond[mc]={n:0,w:0,pnl:0};
+    byCond[mc].n++; if(t.isWin) byCond[mc].w++; byCond[mc].pnl+=(t.pnl||0);
+  });
+
+  // ── Drawdown massimo ──────────────────────────────────────
+  let peak=0, maxDD=0, cum=0;
+  enriched.forEach(t => {
+    cum += (t.pnl||0);
+    if(cum>peak) peak=cum;
+    const dd=peak-cum;
+    if(dd>maxDD) maxDD=dd;
+  });
+
+  // ── Profit factor ─────────────────────────────────────────
+  const totalGains = enriched.filter(t=>t.pnl>0).reduce((s,t)=>s+(t.pnl||0),0);
+  const totalLosses = Math.abs(enriched.filter(t=>t.pnl<0).reduce((s,t)=>s+(t.pnl||0),0));
+  const profitFactor = totalLosses>0 ? +(totalGains/totalLosses).toFixed(2) : totalGains>0 ? '∞' : 0;
+
+  // ── Avg win vs avg loss ───────────────────────────────────
+  const wins2 = enriched.filter(t=>t.pnl>0);
+  const losses2 = enriched.filter(t=>t.pnl<0);
+  const avgWin = wins2.length ? Math.round(wins2.reduce((s,t)=>s+(t.pnl||0),0)/wins2.length) : 0;
+  const avgLoss = losses2.length ? Math.round(losses2.reduce((s,t)=>s+(t.pnl||0),0)/losses2.length) : 0;
+
+  // ── Best hour (ore con >2 trade e WR più alto) ────────────
+  const bestHours = Object.entries(byHour)
+    .filter(([,s])=>s.n>=2)
+    .sort((a,b)=>(b[1].w/b[1].n)-(a[1].w/a[1].n))
+    .slice(0,3)
+    .map(([h,s])=>({h:parseInt(h), wr:Math.round(s.w/s.n*100), n:s.n, pnl:s.pnl}));
+
+  const worstHours = Object.entries(byHour)
+    .filter(([,s])=>s.n>=2)
+    .sort((a,b)=>(a[1].w/a[1].n)-(b[1].w/b[1].n))
+    .slice(0,3)
+    .map(([h,s])=>({h:parseInt(h), wr:Math.round(s.w/s.n*100), n:s.n, pnl:s.pnl}));
+
+  return { byHour, byDow, bySess, byConf, byDir, byCond, maxDD:+maxDD.toFixed(0), profitFactor, avgWin, avgLoss, bestHours, worstHours, total:enriched.length };
+}
+
+// ── Sessione da ora UTC+1 (CET) ──────────────────────────────
+function getSessionFromHour(h) {
+  if (h === null) return null;
+  // Asia: 00-08, London: 08-12, Overlap: 12-17, NY: 17-23
+  if (h >= 0  && h < 8)  return 'Asia';
+  if (h >= 8  && h < 12) return 'Londra';
+  if (h >= 12 && h < 17) return 'Overlap';
+  return 'New York';
+}
+
+// ── Session clock: ora corrente + volatilità attesa ───────────
+function getSessionStatus() {
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  const sess = getSessionFromHour(h);
+
+  // Minuti mancanti al prossimo evento chiave
+  const events = [
+    { h:8,  m:0,  label:'🔔 London Open',   imp:'ALTA' },
+    { h:10, m:30, label:'🇬🇧 BOE Liquidity', imp:'MEDIA' },
+    { h:12, m:0,  label:'⚡ NY Pre-market',  imp:'ALTA' },
+    { h:13, m:30, label:'🇺🇸 NY Open',        imp:'MASSIMA' },
+    { h:15, m:30, label:'📊 US Data window', imp:'ALTA' },
+    { h:17, m:0,  label:'🔕 London Close',   imp:'MEDIA' },
+    { h:20, m:0,  label:'📉 NY Late session', imp:'BASSA' },
+    { h:22, m:0,  label:'🌙 Asia Pre-open',  imp:'BASSA' },
+  ];
+
+  const nowMin = h*60+m;
+  let nextEvent = null, minToNext = 9999;
+  events.forEach(e => {
+    const eMin = e.h*60+e.m;
+    let diff = eMin - nowMin;
+    if (diff < 0) diff += 24*60;
+    if (diff < minToNext) { minToNext=diff; nextEvent=e; }
+  });
+
+  // Volatilità attesa per sessione
+  const sessInfo = {
+    'Asia':     { vol:'BASSA',   color:'#3b82f6', desc:'Range stretto, movimenti lenti. Livelli psicologici più rispettati.', emoji:'🌏' },
+    'Londra':   { vol:'ALTA',    color:'#f0b429', desc:'Maggior volume. Breakout frequenti. Attenzione ai false break.', emoji:'🇬🇧' },
+    'Overlap':  { vol:'MASSIMA', color:'#ef4444', desc:'Sovrapposizione London-NY. Volatilità massima, spread migliori.', emoji:'⚡' },
+    'New York': { vol:'ALTA',    color:'#f97316', desc:'Dati macro USA. Movimenti bruschi. Lead macro più impattanti.', emoji:'🗽' },
+  };
+
+  return { sess, sessInfo:sessInfo[sess]||sessInfo['Asia'], timeStr, nextEvent, minToNext, h, m };
+}
+
+// ══ PAPER TRADING ENGINE ═════════════════════════════════════
+const SPREAD      = 0.04;   // $0.04 spread fisso bid/ask
+const RISK_PCT    = 0.01;   // 1% del capitale per trade (rischio per stop)
+const LEVERAGE    = 100;    // leva 1:100
+const MAX_POS_PCT = 0.05;   // max 5% capitale per singola posizione
+const MIN_CONF    = 65;     // confidence minima per entry
+const MIN_SEMS    = 2;      // semafori verdi minimi
+const MAX_DD      = 0.10;   // max drawdown 10% prima di stop
+
+// Calcola lot size con leva 1:100 e limite 5% capitale
+// XAU/USD standard: 1 lot = 100 oz
+// Con leva 1:100: margine richiesto = (entry * 100 oz) / 100 = entry EUR
+// Notional per lot = entry * 100 oz
+// P&L per punto = lots * 100 oz * $0.01 ... semplificato: 1 lot = $1 per $0.01 mossa
+// In pratica: 1 lotto = $100 per $1 di mossa, 0.01 lotto = $1 per $1 di mossa
+function calcLotSize(capital, entry, sl) {
+  const riskEur    = capital * RISK_PCT;             // es. €100 su €10k
+  const slDist     = Math.abs(entry - sl);
+  if (!slDist) return 0.01;
+
+  // Lot size da rischio: rischio / (slDist * 100)
+  const lotsByRisk = riskEur / (slDist * 100);
+
+  // Limite 5% capitale come margine:
+  // Margine per 1 lot = (entry / LEVERAGE) * 100 oz
+  const marginPer1Lot   = (entry / LEVERAGE) * 100; // in USD ~ in EUR approssimato
+  const maxLotsByMargin = (capital * MAX_POS_PCT) / marginPer1Lot;
+
+  const lots = Math.min(lotsByRisk, maxLotsByMargin);
+  return Math.max(0.01, +lots.toFixed(2));
+}
+
+// Valuta se aprire un trade (chiamato dopo ogni fetch scalp)
+function evaluateAutoEntry() {
+  const p = state.paper;
+  if (!p.enabled) return;
+  if (p.openTrade) return; // già in posizione
+
+  // Controllo drawdown
+  const dd = (p.initialCapital - p.capital) / p.initialCapital;
+  if (dd >= MAX_DD) {
+    console.log('[PAPER] Stop: drawdown massimo raggiunto');
+    p.enabled = false;
+    renderPaperWidget();
+    return;
+  }
+
+  // Cooldown tra trade
+  const nowTs = Date.now();
+  if (nowTs - p.lastSignalTs < p.cooldownMin * 60 * 1000) return;
+
+  const sig = computeScalpSignal();
+  if (!sig || sig.mainBias === 'WAIT') return;
+  if (sig.confidence < MIN_CONF) return;
+
+  // Conta semafori verdi nella direzione del bias
+  const greenInDir = sig.sems.filter(s =>
+    s.sem === 'green' && s.bias === sig.mainBias
+  ).length;
+  if (greenInDir < MIN_SEMS) return;
+
+  // Controlla macro se disponibile
+  const macro = sig.macro;
+  if (macro && macro.macroStr >= 1 && macro.macroDir !== 'FLAT' && macro.macroDir !== sig.mainBias) return;
+
+  // Entry con spread
+  const rawEntry = sig.lastPrice;
+  const entry = sig.mainBias === 'BUY'
+    ? +(rawEntry + SPREAD / 2).toFixed(2)   // compri all'ask
+    : +(rawEntry - SPREAD / 2).toFixed(2);  // vendi al bid
+
+  const sl  = sig.sl;
+  const tp1 = sig.tp1;
+  const tp2 = sig.tp2;
+  const lots = calcLotSize(p.capital, entry, sl);
+  const riskEur = +(Math.abs(entry - sl) * lots * 100).toFixed(2);
+
+  const trade = {
+    id: Date.now(),
+    direction: sig.mainBias,
+    entry, sl, tp1, tp2, lots,
+    riskEur,
+    confidence: sig.confidence,
+    openedAt: new Date().toISOString(),
+    capitalAtOpen: p.capital,
+    spread: SPREAD,
+    pattern: sig.patterns[0]?.name || '–',
+    macroDir: macro?.macroDir || '–',
+    atrAtEntry: sig.atr.current,
+  };
+
+  p.openTrade = trade;
+  p.lastSignalTs = nowTs;
+  savePaperState();
+  renderPaperWidget();
+  console.log('[PAPER] Trade aperto:', trade);
+}
+
+// Valuta se chiudere il trade aperto
+function evaluateAutoExit(currentPrice) {
+  const p = state.paper;
+  if (!p.enabled || !p.openTrade) return;
+
+  const t = p.openTrade;
+  const dir = t.direction;
+  let closed = false, exitReason = '', exitPrice = 0;
+
+  // Check SL
+  if (dir === 'BUY'  && currentPrice <= t.sl) { exitReason = 'SL'; exitPrice = t.sl; closed = true; }
+  if (dir === 'SELL' && currentPrice >= t.sl) { exitReason = 'SL'; exitPrice = t.sl; closed = true; }
+
+  // Check TP1
+  if (!closed && dir === 'BUY'  && currentPrice >= t.tp1) { exitReason = 'TP1'; exitPrice = t.tp1; closed = true; }
+  if (!closed && dir === 'SELL' && currentPrice <= t.tp1) { exitReason = 'TP1'; exitPrice = t.tp1; closed = true; }
+
+  // Check TP2
+  if (!closed && dir === 'BUY'  && currentPrice >= t.tp2) { exitReason = 'TP2'; exitPrice = t.tp2; closed = true; }
+  if (!closed && dir === 'SELL' && currentPrice <= t.tp2) { exitReason = 'TP2'; exitPrice = t.tp2; closed = true; }
+
+  if (!closed) return;
+
+  // Calcola P&L con spread
+  const exitWithSpread = dir === 'BUY'
+    ? +(exitPrice - SPREAD / 2).toFixed(2)  // chiudi al bid
+    : +(exitPrice + SPREAD / 2).toFixed(2); // chiudi all'ask
+
+  const pnlPts = dir === 'BUY' ? exitWithSpread - t.entry : t.entry - exitWithSpread;
+  const pnlEur = +(pnlPts * t.lots * 100).toFixed(2);
+  const isWin  = pnlEur > 0;
+
+  // Aggiorna capitale
+  p.capital = +(p.capital + pnlEur).toFixed(2);
+  p.equity.push(p.capital);
+  if (p.equity.length > 200) p.equity.shift(); // cap array
+
+  const closed_trade = {
+    ...t,
+    exitPrice: exitWithSpread,
+    exitReason,
+    pnlEur,
+    isWin,
+    closedAt: new Date().toISOString(),
+    capitalAfter: p.capital,
+    rr: +(pnlPts / Math.abs(t.entry - t.sl)).toFixed(2),
+  };
+
+  p.trades.unshift(closed_trade); // più recente prima
+  if (p.trades.length > 100) p.trades.pop();
+  p.openTrade = null;
+
+  savePaperState();
+  renderPaperWidget();
+  console.log('[PAPER] Trade chiuso:', closed_trade);
+}
+
+function savePaperState() {
+  const p = state.paper;
+  LS.set('paper_capital',  p.capital);
+  LS.set('paper_open',     p.openTrade);
+  LS.set('paper_trades',   p.trades);
+  LS.set('paper_equity',   p.equity);
+  LS.set('paper_enabled',  p.enabled);
+  LS.set('paper_lastSig',  p.lastSignalTs);
+}
+
+function loadPaperState() {
+  const p = state.paper;
+  p.capital      = LS.get('paper_capital')   ?? 10000;
+  p.openTrade    = LS.get('paper_open')      ?? null;
+  p.trades       = LS.get('paper_trades')    ?? [];
+  p.equity       = LS.get('paper_equity')    ?? [10000];
+  p.enabled      = LS.get('paper_enabled')   ?? false;
+  p.lastSignalTs = LS.get('paper_lastSig')   ?? 0;
+}
+
+function resetPaperTrading() {
+  if (!confirm('Sei sicuro di voler azzerare il paper trading? Tutti i trade verranno cancellati.')) return;
+  const p = state.paper;
+  p.capital = p.initialCapital = 10000;
+  p.openTrade = null;
+  p.trades = [];
+  p.equity = [10000];
+  p.enabled = false;
+  p.lastSignalTs = 0;
+  savePaperState();
+  renderPaperWidget();
+  if (state.diaryTab === 'paper') renderDiary();
+}
+
+// Mini widget paper nella scalp screen
+function renderPaperWidget() {
+  const el = document.getElementById('paper-widget');
+  if (!el) return;
+  const p = state.paper;
+  const pnlTotal = +(p.capital - p.initialCapital).toFixed(2);
+  const pnlPct   = +(pnlTotal / p.initialCapital * 100).toFixed(2);
+  const wins     = p.trades.filter(t=>t.isWin).length;
+  const wr       = p.trades.length ? Math.round(wins/p.trades.length*100) : 0;
+  const dd       = +((p.initialCapital - p.capital) / p.initialCapital * 100).toFixed(1);
+  const ddReached = dd >= MAX_DD * 100;
+
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+      <div>
+        <div style="color:#f0b429;font-weight:800;font-size:13px">🤖 Paper Trading Auto</div>
+        <div style="color:#64748b;font-size:10px;margin-top:1px">Leva 1:100 · Spread $${SPREAD} · Rischio 1% · Max pos 5% · Capital €10K</div>
+      </div>
+      <button onclick="togglePaperTrading()" style="background:${p.enabled?'#ef4444':'#22c55e'};color:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;border:none">
+        ${p.enabled?'⏹ Stop':'▶ Avvia'}
+      </button>
+    </div>
+
+    ${ddReached&&!p.enabled?'<div style="background:#ef444415;border:1px solid #ef444433;border-radius:8px;padding:8px 10px;margin-bottom:8px;color:#ef4444;font-size:11px">⛔ Stop automatico: drawdown massimo (10%) raggiunto. Resetta per ricominciare.</div>':''}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:8px">
+      <div style="background:#080b10;border-radius:8px;padding:8px;text-align:center">
+        <div style="color:#64748b;font-size:9px">Capitale</div>
+        <div style="color:#e2e8f0;font-size:13px;font-weight:800">€${p.capital.toFixed(0)}</div>
+      </div>
+      <div style="background:#080b10;border-radius:8px;padding:8px;text-align:center">
+        <div style="color:#64748b;font-size:9px">P&L</div>
+        <div style="color:${pnlTotal>=0?'#22c55e':'#ef4444'};font-size:13px;font-weight:800">${pnlTotal>=0?'+':''}€${pnlTotal.toFixed(0)}</div>
+        <div style="color:${pnlTotal>=0?'#22c55e':'#ef4444'};font-size:9px">${pnlPct>=0?'+':''}${pnlPct}%</div>
+      </div>
+      <div style="background:#080b10;border-radius:8px;padding:8px;text-align:center">
+        <div style="color:#64748b;font-size:9px">Win Rate</div>
+        <div style="color:${wr>=50?'#22c55e':'#ef4444'};font-size:13px;font-weight:800">${wr}%</div>
+        <div style="color:#64748b;font-size:9px">${p.trades.length}T</div>
+      </div>
+      <div style="background:#080b10;border-radius:8px;padding:8px;text-align:center">
+        <div style="color:#64748b;font-size:9px">Drawdown</div>
+        <div style="color:${dd>5?'#ef4444':dd>2?'#f97316':'#22c55e'};font-size:13px;font-weight:800">${dd>0?'-':''}${Math.abs(dd)}%</div>
+      </div>
+    </div>
+
+    ${p.openTrade ? `
+    <div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:9px;padding:10px 12px;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="color:#f0b429;font-weight:700;font-size:12px">📈 Trade aperto</span>
+        <span style="background:${p.openTrade.direction==='BUY'?'#22c55e':'#ef4444'}20;color:${p.openTrade.direction==='BUY'?'#22c55e':'#ef4444'};border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700">${p.openTrade.direction}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px">
+        ${[['Entry','$'+fmtP(p.openTrade.entry),'#f0b429'],['SL','$'+fmtP(p.openTrade.sl),'#ef4444'],['TP1','$'+fmtP(p.openTrade.tp1),'#22c55e'],['Lot',p.openTrade.lots,'#94a3b8']].map(([l,v,c])=>`<div style="background:#080b10;border-radius:5px;padding:4px;text-align:center"><div style="color:#64748b;font-size:8px">${l}</div><div style="color:${c};font-size:10px;font-weight:700">${v}</div></div>`).join('')}
+      </div>
+      <div style="color:#64748b;font-size:9px;margin-top:5px">Rischio: €${p.openTrade.riskEur} · Conf: ${p.openTrade.confidence}/100 · ${new Date(p.openTrade.openedAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>` : p.enabled ? `<div style="background:#22c55e12;border:1px solid #22c55e22;border-radius:8px;padding:8px 10px;color:#22c55e;font-size:11px;text-align:center">✅ In ascolto — prossimo segnale conf ≥${MIN_CONF} e ${MIN_SEMS} semafori verdi</div>` : ''}
+
+    <button onclick="showDiary();setDiaryTabDirect('paper')" style="width:100%;margin-top:6px;background:#1a2130;border:1px solid #1e2535;color:#94a3b8;border-radius:8px;padding:7px 0;font-size:11px">
+      📊 Storico completo nel Diario →
+    </button>
+    <button onclick="resetPaperTrading()" style="width:100%;margin-top:5px;background:transparent;border:1px solid #334155;color:#475569;border-radius:8px;padding:6px 0;font-size:10px">
+      🗑 Azzera paper trading
+    </button>`;
+}
+
+function togglePaperTrading() {
+  const p = state.paper;
+  const dd = (p.initialCapital - p.capital) / p.initialCapital;
+  if (!p.enabled && dd >= MAX_DD) {
+    alert('Drawdown massimo raggiunto. Premi "Azzera" per ricominciare.');
+    return;
+  }
+  p.enabled = !p.enabled;
+  savePaperState();
+  renderPaperWidget();
+}
+
+function setDiaryTabDirect(tab) {
+  state.diaryTab = tab;
+  document.querySelectorAll('.tab').forEach(b => {
+    b.classList.remove('active','inactive');
+    b.classList.add('inactive');
+  });
+  renderDiary();
 }
 
 function closeTradeById(id){
@@ -2096,11 +2763,16 @@ function renderScalpScreen() {
     </div>
   </div>`;
 
+  // ── Paper trading widget ────────────────────────────────────
+  html += `<div class="card" id="paper-widget-card" style="border:1px solid #f0b42933"><div id="paper-widget"></div></div>`;
+
   html += `<div style="text-align:center;color:#64748b;font-size:9px;line-height:1.5;padding:4px 8px;border-top:1px solid #1e2535">
     ⚠️ Solo scopo didattico. Lo scalping è ad alto rischio. Non operare senza money management.
   </div>`;
 
   content.innerHTML = html;
+  // Render widget dopo che DOM è aggiornato
+  setTimeout(() => renderPaperWidget(), 0);
 }
 
 // ── Fetch scalp dedicato ─────────────────────────────────────
@@ -2108,6 +2780,13 @@ async function doScalpFetch() {
   document.getElementById('refresh-btn').textContent='⟳';
   await fetchScalpCandles();
   renderScalpScreen();
+  // Paper trading: valuta exit prima (usa prezzo attuale) poi entry
+  const cur1m = state.candles['1m'];
+  const curPrice = cur1m.length ? cur1m[cur1m.length-1].c : (state.candles['5m'].slice(-1)[0]?.c || 0);
+  if (curPrice) {
+    evaluateAutoExit(curPrice);
+    evaluateAutoEntry();
+  }
   document.getElementById('refresh-btn').textContent='↻';
 }
 
@@ -2140,185 +2819,225 @@ function setMode(mode) {
 let swReg = null;
 let bgActive = false;
 
-// Registra SW
+// ── Registra SW ───────────────────────────────────────────────
 async function registerSW() {
-  if (!('serviceWorker' in navigator)) {
-    console.warn('Service Worker non supportato');
-    return false;
-  }
+  if (!('serviceWorker' in navigator)) return null;
   try {
-    swReg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-    console.log('[PWA] SW registrato:', swReg.scope);
+    // Usa path relativo per compatibilità con GitHub Pages subpath
+    const swPath = new URL('sw.js', window.location.href).pathname;
+    const scope  = new URL('./', window.location.href).pathname;
+    swReg = await navigator.serviceWorker.register(swPath, { scope });
+    console.log('[PWA] SW registered, scope:', swReg.scope);
 
-    // Ascolta messaggi dal SW (aggiornamenti background)
-    navigator.serviceWorker.addEventListener('message', e => {
-      if (e.data?.type === 'BG_UPDATE') {
-        const { price, rsi, pivot, r1, s1, alertsFired, ts } = e.data;
-        // Aggiorna prezzo in header se la pagina è aperta
-        const priceEl = document.getElementById('hdr-price');
-        if (priceEl && price) priceEl.textContent = '$' + price.toFixed(2);
-        // Mostra ultimo check
-        const lastEl = document.getElementById('bg-last-check');
-        if (lastEl) {
-          lastEl.style.display = 'block';
-          lastEl.textContent = `Ultimo check: ${new Date(ts).toLocaleTimeString('it-IT')} · ${alertsFired} alert inviati`;
-        }
-      }
-    });
-    return true;
+    // Aspetta che sia attivo
+    await navigator.serviceWorker.ready;
+
+    // Ascolta messaggi dal SW
+    navigator.serviceWorker.removeEventListener('message', handleSwMessage);
+    navigator.serviceWorker.addEventListener('message', handleSwMessage);
+
+    return swReg;
   } catch(e) {
     console.error('[PWA] SW registration failed:', e);
-    return false;
+    return null;
   }
 }
 
-// Richiedi permesso notifiche
+function handleSwMessage(e) {
+  const d = e.data;
+  if (!d) return;
+
+  if (d.type === 'BG_UPDATE') {
+    const priceEl = document.getElementById('hdr-price');
+    if (priceEl && d.price) priceEl.textContent = `$${d.price.toFixed(2)}`;
+    const lastEl = document.getElementById('bg-last-check');
+    if (lastEl) {
+      lastEl.style.display = 'block';
+      lastEl.textContent = `Check: ${new Date(d.ts).toLocaleTimeString('it-IT')} · XAU $${d.price?.toFixed(2)||'–'} · RSI ${d.rsi||'–'}`;
+    }
+    // Valuta exit paper trading con prezzo aggiornato
+    if (d.price) evaluateAutoExit(d.price);
+  }
+
+  if (d.type === 'BG_STARTED') {
+    updateBgUI(true);
+  }
+  if (d.type === 'BG_STOPPED') {
+    updateBgUI(false);
+  }
+  if (d.type === 'BG_ERROR') {
+    const lastEl = document.getElementById('bg-last-check');
+    if (lastEl) { lastEl.style.display='block'; lastEl.textContent=`⚠ Errore: ${d.error}`; }
+  }
+  if (d.type === 'ALERT_FIRED') {
+    const lastEl = document.getElementById('bg-last-check');
+    if (lastEl) { lastEl.style.display='block'; lastEl.textContent=`🔔 Alert: ${d.title} · ${new Date(d.ts).toLocaleTimeString('it-IT')}`; }
+  }
+}
+
+// ── Aggiorna UI badge e bottoni ───────────────────────────────
+function updateBgUI(active) {
+  bgActive = active;
+  LS.set('bg_active', active);
+  const btn     = document.getElementById('bg-toggle');
+  const statusEl= document.getElementById('bg-status');
+  const badge   = document.getElementById('notif-badge');
+  const cfgDiv  = document.getElementById('alert-config');
+  const alertBtn= document.getElementById('alert-btn');
+
+  if (btn)      { btn.textContent = active ? 'Disattiva' : 'Attiva'; btn.style.background = active ? '#ef4444' : '#f0b429'; btn.style.color = '#000'; }
+  if (statusEl) statusEl.textContent = active ? '✅ Attivo — check ogni 5 min' : 'Non attivo';
+  if (badge)    badge.style.display = active ? 'inline' : 'none';
+  if (cfgDiv)   cfgDiv.style.display = active ? 'block' : 'none';
+  if (alertBtn) { alertBtn.style.borderColor = active ? '#22c55e44' : '#f0b42944'; alertBtn.style.color = active ? '#22c55e' : '#f0b429'; }
+}
+
+// ── Permesso notifiche ────────────────────────────────────────
 async function requestNotifPermission() {
-  if (!('Notification' in window)) return false;
+  if (!('Notification' in window)) { alert('Questo browser non supporta le notifiche.'); return false; }
   if (Notification.permission === 'granted') return true;
   if (Notification.permission === 'denied') {
-    alert('Le notifiche sono bloccate. Vai in Impostazioni Chrome → Sito → Notifiche → Consenti.');
+    alert('Notifiche bloccate.\nVai in: Chrome menu → Impostazioni → Privacy e sicurezza → Notifiche → Cerca il sito → Consenti');
     return false;
   }
   const perm = await Notification.requestPermission();
-  return perm === 'granted';
+  if (perm !== 'granted') { alert('Permesso notifiche non concesso. Riprova dalle impostazioni del browser.'); return false; }
+  return true;
 }
 
-// Toggle alert panel
-function toggleAlertPanel() {
-  const panel = document.getElementById('alert-panel');
-  const isVisible = panel.style.display !== 'none';
-  panel.style.display = isVisible ? 'none' : 'block';
-  if (!isVisible) {
-    // Scorri fino al panel
-    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-}
-
-// Leggi config alert
+// ── Leggi config alert ────────────────────────────────────────
 function getAlertConfig() {
   return {
-    pivot:    document.getElementById('cfg-pivot')?.checked !== false,
-    r1:       true,
-    s1:       true,
-    rsiOB:    document.getElementById('cfg-rsi-ob')?.checked !== false,
-    rsiOS:    document.getElementById('cfg-rsi-os')?.checked !== false,
-    spike:    document.getElementById('cfg-spike')?.checked !== false,
-    lead:     document.getElementById('cfg-lead')?.checked !== false,
-    rsiOBLevel: 70,
-    rsiOSLevel: 30,
-    spikeMultiplier: 1.8,
-    priceAbove: parseFloat(document.getElementById('cfg-price-above')?.value) || null,
-    priceBelow: parseFloat(document.getElementById('cfg-price-below')?.value) || null,
+    pivot:          document.getElementById('cfg-pivot')?.checked ?? true,
+    r1:             true,
+    s1:             true,
+    rsiOB:          document.getElementById('cfg-rsi-ob')?.checked ?? true,
+    rsiOS:          document.getElementById('cfg-rsi-os')?.checked ?? true,
+    spike:          document.getElementById('cfg-spike')?.checked ?? true,
+    lead:           document.getElementById('cfg-lead')?.checked ?? true,
+    scalpMacro:     true,
+    rsiOBLevel:     70,
+    rsiOSLevel:     30,
+    spikeMultiplier:1.8,
+    priceAbove:     parseFloat(document.getElementById('cfg-price-above')?.value) || null,
+    priceBelow:     parseFloat(document.getElementById('cfg-price-below')?.value) || null,
   };
 }
 
-// Salva config e aggiorna SW
-function saveAlertConfig() {
-  if (!swReg?.active) return;
-  const cfg = getAlertConfig();
-  LS.set('alert_config', cfg);
-  swReg.active.postMessage({ type: 'UPDATE_ALERTS', tdKey: state.tdKey, alertConfig: cfg });
-  // Feedback
-  const btn = event.target;
-  btn.textContent = '✅ Salvato!';
-  setTimeout(() => btn.textContent = 'Salva configurazione', 1500);
+// ── Invia messaggio al SW (con retry su worker non ancora attivo) ─
+async function sendToSW(msg) {
+  if (!swReg) { swReg = await registerSW(); }
+  await navigator.serviceWorker.ready;
+  const worker = navigator.serviceWorker.controller;
+  if (worker) {
+    worker.postMessage(msg);
+    return true;
+  }
+  // Fallback: prova tutti i worker disponibili
+  const w2 = swReg?.active || swReg?.waiting || swReg?.installing;
+  if (w2) { w2.postMessage(msg); return true; }
+  return false;
 }
 
-// Attiva/disattiva background
+// ── Toggle alert panel ────────────────────────────────────────
+function toggleAlertPanel() {
+  const panel = document.getElementById('alert-panel');
+  const visible = panel.style.display !== 'none';
+  panel.style.display = visible ? 'none' : 'block';
+  if (!visible) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── Salva config ──────────────────────────────────────────────
+async function saveAlertConfig() {
+  const cfg = getAlertConfig();
+  LS.set('alert_config', cfg);
+  await sendToSW({ type: 'UPDATE_CONFIG', tdKey: state.tdKey, config: cfg });
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✅ Salvato!';
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+// ── Attiva/Disattiva background monitoring ────────────────────
 async function toggleBackground() {
   const btn = document.getElementById('bg-toggle');
-  const statusEl = document.getElementById('bg-status');
-  const badge = document.getElementById('notif-badge');
-  const cfgDiv = document.getElementById('alert-config');
+  if (btn) { btn.textContent = '⟳ Attivando...'; btn.style.background = '#1e2535'; btn.style.color = '#94a3b8'; }
 
   if (bgActive) {
-    // Disattiva
-    if (swReg?.active) swReg.active.postMessage({ type: 'STOP_BG' });
-    bgActive = false;
-    btn.textContent = 'Attiva';
-    btn.style.background = '#f0b429';
-    statusEl.textContent = 'Non attivo';
-    badge.style.display = 'none';
-    cfgDiv.style.display = 'none';
-    document.getElementById('alert-btn').style.borderColor = '#f0b42944';
-    LS.set('bg_active', false);
+    await sendToSW({ type: 'STOP_BG' });
+    updateBgUI(false);
     return;
   }
 
-  // Attiva
-  btn.textContent = 'Attivando...';
-  btn.style.background = '#1e2535';
+  // 1. Registra SW
+  if (!swReg) { await registerSW(); }
+  if (!swReg) {
+    if (btn) { btn.textContent = 'Attiva'; btn.style.background = '#f0b429'; btn.style.color = '#000'; }
+    document.getElementById('bg-status').textContent = '❌ Service Worker non disponibile (serve HTTPS)';
+    return;
+  }
 
-  // Registra SW se non già fatto
-  if (!swReg) await registerSW();
-
-  // Permesso notifiche
+  // 2. Permesso notifiche
   const granted = await requestNotifPermission();
   if (!granted) {
-    btn.textContent = 'Attiva';
-    btn.style.background = '#f0b429';
-    statusEl.textContent = '❌ Permesso notifiche negato';
+    if (btn) { btn.textContent = 'Attiva'; btn.style.background = '#f0b429'; btn.style.color = '#000'; }
     return;
   }
 
-  // Invia config al SW
+  // 3. Aspetta SW attivo
+  await navigator.serviceWorker.ready;
+
+  // 4. Invia START al SW
   const cfg = getAlertConfig();
   LS.set('alert_config', cfg);
+  const ok = await sendToSW({ type: 'START_BG', tdKey: state.tdKey, config: cfg });
 
-  // Aspetta che SW sia attivo
-  const worker = swReg.active || swReg.installing || swReg.waiting;
-  if (!worker) {
-    statusEl.textContent = '❌ Service Worker non pronto';
-    btn.textContent = 'Attiva';
-    btn.style.background = '#f0b429';
+  if (!ok) {
+    document.getElementById('bg-status').textContent = '❌ SW non pronto — ricarica la pagina';
+    if (btn) { btn.textContent = 'Attiva'; btn.style.background = '#f0b429'; btn.style.color = '#000'; }
     return;
   }
 
-  // Manda messaggio di start
-  worker.postMessage({ type: 'START_BG', tdKey: state.tdKey, alertConfig: cfg });
+  // 5. Notifica di test
+  try {
+    await swReg.showNotification('🥇 XAU/USD Analyzer', {
+      body: '✅ Monitoraggio attivato! Riceverai alert ogni 5 minuti.',
+      icon: '/icon-192.png', badge: '/icon-72.png',
+      tag: 'startup', vibrate: [200, 100, 200], requireInteraction: false,
+    });
+  } catch(e) { console.warn('Test notification failed:', e); }
 
-  // Test notifica immediata
-  await swReg.showNotification('🥇 XAU/USD Analyzer attivo', {
-    body: 'Monitoraggio in background avviato. Riceverai alert sui segnali configurati.',
-    icon: '/icon-192.png',
-    badge: '/icon-72.png',
-    vibrate: [200],
-    tag: 'startup',
-    requireInteraction: false,
-  });
-
-  bgActive = true;
-  btn.textContent = 'Disattiva';
-  btn.style.background = '#ef4444';
-  statusEl.textContent = '✅ Attivo — check ogni 5 minuti';
-  badge.style.display = 'inline';
-  cfgDiv.style.display = 'block';
-  document.getElementById('alert-btn').style.borderColor = '#22c55e44';
-  document.getElementById('alert-btn').style.color = '#22c55e';
-  LS.set('bg_active', true);
+  updateBgUI(true);
 }
 
-// Ripristina stato bg se era attivo
+// ── Ripristina stato al caricamento ───────────────────────────
 async function restoreBgState() {
-  if (LS.get('bg_active') && state.tdKey) {
-    // Registra SW silenziosamente
-    await registerSW();
-    // Non riattivare automaticamente (richiede interazione utente per notifiche)
-    const statusEl = document.getElementById('bg-status');
-    if (statusEl) statusEl.textContent = 'Premi Attiva per riavviare il monitoraggio';
+  await registerSW();
+  const wasActive = LS.get('bg_active');
+  const savedCfg  = LS.get('alert_config');
+  if (savedCfg) {
+    // Popola checkbox config
+    if (document.getElementById('cfg-pivot'))   document.getElementById('cfg-pivot').checked   = savedCfg.pivot   ?? true;
+    if (document.getElementById('cfg-rsi-ob'))  document.getElementById('cfg-rsi-ob').checked  = savedCfg.rsiOB   ?? true;
+    if (document.getElementById('cfg-rsi-os'))  document.getElementById('cfg-rsi-os').checked  = savedCfg.rsiOS   ?? true;
+    if (document.getElementById('cfg-spike'))   document.getElementById('cfg-spike').checked   = savedCfg.spike   ?? true;
+    if (document.getElementById('cfg-lead'))    document.getElementById('cfg-lead').checked    = savedCfg.lead    ?? true;
+    if (document.getElementById('cfg-price-above') && savedCfg.priceAbove) document.getElementById('cfg-price-above').value = savedCfg.priceAbove;
+    if (document.getElementById('cfg-price-below') && savedCfg.priceBelow) document.getElementById('cfg-price-below').value = savedCfg.priceBelow;
+  }
+  if (wasActive) {
+    document.getElementById('bg-status').textContent = 'Era attivo — premi Attiva per riavviare';
   }
 }
 
 // ══ INIT ══════════════════════════════════════════════════════
 (function init(){
-  // Registra SW subito (serve HTTPS/localhost)
   if ('serviceWorker' in navigator) registerSW();
+  loadPaperState();
 
   if(state.tdKey){
     document.getElementById('setup-screen').style.display='none';
     document.getElementById('app-screen').style.display='block';
-    // Mostra panel alert
     document.getElementById('alert-panel').style.display='block';
     doFetch();
     state.fetchTimer=setInterval(doFetch,5*60000);
