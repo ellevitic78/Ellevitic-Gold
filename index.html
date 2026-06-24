@@ -15,30 +15,30 @@
 body{background:#080b10;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;font-size:15px}
 input,button{font-family:inherit;outline:none;border:none}
 button{cursor:pointer}
-.card{background:#141920;border-radius:14px;padding:18px;border:1px solid #1e2535;margin-bottom:12px}
+.card{background:#141920;border-radius:14px;padding:18px;border:1px solid #2a3550;margin-bottom:12px}
 .row{display:flex;justify-content:space-between;align-items:center}
 .gold{color:#f0b429}
 .bull{color:#22c55e}
 .bear{color:#ef4444}
-.dim{color:#64748b}
-.mid{color:#94a3b8}
+.dim{color:#b0bdd0}
+.mid{color:#b0bdd0}
 .pill{border-radius:6px;padding:3px 11px;font-size:13px;font-weight:700;white-space:nowrap}
 .btn{border-radius:10px;padding:14px 16px;font-size:15px;font-weight:700;width:100%;display:block;text-align:center;margin-bottom:10px}
-.input{width:100%;background:#141920;border:1px solid #1e2535;border-radius:10px;padding:15px 16px;color:#e2e8f0;font-size:15px;font-family:monospace}
+.input{width:100%;background:#141920;border:1px solid #2a3550;border-radius:10px;padding:15px 16px;color:#e2e8f0;font-size:15px;font-family:monospace}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px}
-.kpi{background:#1a2130;border-radius:8px;padding:8px 10px;text-align:center;border:1px solid #1e2535}
+.kpi{background:#1e2740;border-radius:8px;padding:8px 10px;text-align:center;border:1px solid #2a3550}
 .kpi .val{font-weight:800;font-size:18px}
-.kpi .lbl{color:#64748b;font-size:11px;margin-bottom:2px}
-.kpi .sub{color:#64748b;font-size:8px;margin-top:1px}
-.mini-card{background:#1a2130;border-radius:8px;padding:8px 10px;border:1px solid #1e2535}
+.kpi .lbl{color:#b0bdd0;font-size:11px;margin-bottom:2px}
+.kpi .sub{color:#b0bdd0;font-size:10px;margin-top:1px}
+.mini-card{background:#1e2740;border-radius:8px;padding:8px 10px;border:1px solid #2a3550}
 .bar-wrap{background:#1e2535;border-radius:99px;height:4px;overflow:hidden;margin-top:3px}
 .bar{height:4px;border-radius:99px;transition:width .5s}
 .tab-bar{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px}
 .tab{flex:none;padding:7px 14px;border-radius:8px;border:none;font-size:12px;cursor:pointer;font-weight:400}
 .tab.active{background:#f0b429;color:#000;font-weight:700}
-.tab.inactive{background:#141920;color:#64748b}
+.tab.inactive{background:#141920;color:#b0bdd0}
 .loader{height:3px;background:#1e2535;border-radius:99px;overflow:hidden}
 .loader-inner{height:100%;width:40%;border-radius:99px;animation:slide 1.2s infinite linear}
 @keyframes slide{0%{margin-left:-40%}100%{margin-left:100%}}
@@ -46,12 +46,12 @@ button{cursor:pointer}
 .tf-btn{flex:1;padding:8px 0;border-radius:8px;font-size:13px;font-weight:400;border:none}
 .content{padding:11px 13px}
 .err-banner{background:#ef444415;border:1px solid #ef444433;border-radius:8px;padding:10px 12px;margin-top:8px}
-.warn-banner{background:#f0b42912;border:1px solid #f0b42933;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:10px;color:#94a3b8}
+.warn-banner{background:#f0b42912;border:1px solid #f0b42933;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:10px;color:#b0bdd0}
 .hidden{display:none}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal{background:#0f1318;border-radius:14px;padding:20px;width:100%;max-width:400px;border:1px solid #1e2535}
+.modal{background:#0f1318;border-radius:14px;padding:20px;width:100%;max-width:400px;border:1px solid #2a3550}
 #diary-screen,#settings-modal{display:none}
-.trade-card{background:#141920;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #1e2535}
+.trade-card{background:#141920;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #2a3550}
 .section-title{color:#f0b429;font-weight:700;font-size:14px;margin-bottom:11px}
 .semaph{width:18px;height:18px;border-radius:50%;display:inline-block;flex-shrink:0}
 .semaph.green{background:#22c55e;box-shadow:0 0 8px #22c55e88}
@@ -69,20 +69,20 @@ button{cursor:pointer}
 <div id="setup-screen" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px">
   <div style="font-size:48px;margin-bottom:14px">🥇</div>
   <div style="color:#f0b429;font-weight:800;font-size:22px;margin-bottom:6px">XAU/USD Analyzer</div>
-  <div style="color:#94a3b8;font-size:13px;text-align:center;margin-bottom:28px;line-height:1.6">App standalone con dati live.<br>Configura le API key per iniziare.</div>
+  <div style="color:#b0bdd0;font-size:13px;text-align:center;margin-bottom:28px;line-height:1.6">App standalone con dati live.<br>Configura le API key per iniziare.</div>
   <div style="width:100%;margin-bottom:10px">
     <div style="color:#f0b429;font-size:11px;font-weight:700;margin-bottom:5px">TWELVE DATA API KEY <span style="color:#ef4444">*</span></div>
     <input type="text" id="setup-td-key" class="input" placeholder="es. a1b2c3d4e5f6..."/>
-    <div style="color:#64748b;font-size:10px;margin-top:4px">→ twelvedata.com → Account → API Keys</div>
+    <div style="color:#b0bdd0;font-size:10px;margin-top:4px">→ twelvedata.com → Account → API Keys</div>
   </div>
   <div style="width:100%;margin-bottom:20px">
-    <div style="color:#a855f7;font-size:11px;font-weight:700;margin-bottom:5px">ANTHROPIC API KEY <span style="color:#64748b">(opzionale — analisi AI)</span></div>
+    <div style="color:#a855f7;font-size:11px;font-weight:700;margin-bottom:5px">ANTHROPIC API KEY <span style="color:#b0bdd0">(opzionale — analisi AI)</span></div>
     <input type="text" id="setup-cl-key" class="input" placeholder="sk-ant-..."/>
-    <div style="color:#64748b;font-size:10px;margin-top:4px">→ console.anthropic.com → API Keys</div>
+    <div style="color:#b0bdd0;font-size:10px;margin-top:4px">→ console.anthropic.com → API Keys</div>
   </div>
   <div id="setup-err" style="display:none;background:#ef444415;border:1px solid #ef444433;border-radius:8px;padding:10px 12px;color:#ef4444;font-size:12px;margin-bottom:12px;width:100%"></div>
   <button id="setup-btn" class="btn" style="background:#f0b429;color:#000" onclick="handleSetup()">Salva e avvia →</button>
-  <div style="color:#64748b;font-size:10px;margin-top:14px;text-align:center;line-height:1.6">🔒 Le key sono salvate solo nel tuo browser.<br>Non vengono inviate a server esterni.</div>
+  <div style="color:#b0bdd0;font-size:10px;margin-top:14px;text-align:center;line-height:1.6">🔒 Le key sono salvate solo nel tuo browser.<br>Non vengono inviate a server esterni.</div>
 </div>
 
 <!-- ══ MAIN APP ══════════════════════════════════════════════ -->
@@ -95,17 +95,17 @@ button{cursor:pointer}
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
           <span style="font-size:18px">🥇</span>
           <span style="color:#f0b429;font-weight:800;font-size:20px">XAU/USD</span>
-          <span id="status-badge" style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:4px;padding:1px 5px;font-size:8px;font-weight:700">⟳</span>
-          <button onclick="showSettings()" style="background:#141920;border:1px solid #1e2535;color:#64748b;border-radius:5px;padding:2px 7px;font-size:10px">⚙️</button>
+          <span id="status-badge" style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">⟳</span>
+          <button onclick="showSettings()" style="background:#141920;border:1px solid #2a3550;color:#b0bdd0;border-radius:5px;padding:2px 7px;font-size:10px">⚙️</button>
         </div>
         <div style="display:flex;align-items:baseline;gap:7px">
           <span id="hdr-price" style="font-size:30px;font-weight:800;color:#e2e8f0">–</span>
           <span id="hdr-chg" style="font-size:15px;font-weight:600"></span>
         </div>
-        <div id="hdr-sub" style="color:#64748b;font-size:8px;margin-top:1px"></div>
+        <div id="hdr-sub" style="color:#b0bdd0;font-size:10px;margin-top:1px"></div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-        <span id="mtf-badge" style="background:#64748b20;color:#64748b;border:1px solid #64748b44;border-radius:5px;padding:4px 12px;font-size:13px;font-weight:700">–</span>
+        <span id="mtf-badge" style="background:#64748b20;color:#b0bdd0;border:1px solid #64748b44;border-radius:5px;padding:4px 12px;font-size:13px;font-weight:700">–</span>
         <button onclick="showDiary()" style="background:#a855f715;border:1px solid #a855f744;color:#a855f7;border-radius:6px;padding:3px 9px;font-size:9px;font-weight:700" id="diary-btn">📓 Diario</button>
             <button onclick="toggleAlertPanel()" style="background:#f0b42915;border:1px solid #f0b42944;color:#f0b429;border-radius:6px;padding:3px 9px;font-size:9px;font-weight:700" id="alert-btn">🔔</button>
       </div>
@@ -113,7 +113,7 @@ button{cursor:pointer}
     <!-- Error banner -->
     <div id="err-banner" class="err-banner hidden">
       <div style="color:#ef4444;font-size:11px;font-weight:700;margin-bottom:4px">Errore caricamento</div>
-      <div id="err-msg" style="color:#94a3b8;font-size:11px;font-family:monospace;margin-bottom:8px"></div>
+      <div id="err-msg" style="color:#b0bdd0;font-size:11px;font-family:monospace;margin-bottom:8px"></div>
       <div style="display:flex;gap:8px">
         <button onclick="doFetch()" style="flex:1;background:#22c55e;color:#000;border-radius:7px;padding:7px 0;font-size:11px;font-weight:700">↻ Riprova</button>
         <button onclick="showSettings()" style="flex:1;background:#f0b429;color:#000;border-radius:7px;padding:7px 0;font-size:11px;font-weight:700">🔑 Key</button>
@@ -122,8 +122,8 @@ button{cursor:pointer}
     <!-- Mode + TF tabs -->
     <div style="display:flex;gap:5px;margin-top:8px">
       <button id="mode-swing" onclick="setMode('swing')" style="flex:1;padding:8px 0;border-radius:8px;font-size:12px;font-weight:700;background:#f0b429;color:#000;border:none">📊 Swing</button>
-      <button id="mode-scalp" onclick="setMode('scalp')" style="flex:1;padding:8px 0;border-radius:8px;font-size:12px;font-weight:700;background:#141920;color:#64748b;border:none">⚡ Scalp</button>
-      <button onclick="doFetch()" id="refresh-btn" style="padding:5px 14px;border-radius:8px;border:1px solid #1e2535;background:transparent;color:#64748b;font-size:14px">↻</button>
+      <button id="mode-scalp" onclick="setMode('scalp')" style="flex:1;padding:8px 0;border-radius:8px;font-size:12px;font-weight:700;background:#141920;color:#b0bdd0;border:none">⚡ Scalp</button>
+      <button onclick="doFetch()" id="refresh-btn" style="padding:5px 14px;border-radius:8px;border:1px solid #2a3550;background:transparent;color:#b0bdd0;font-size:14px">↻</button>
     </div>
     <!-- TF tabs (solo swing mode) -->
     <div id="tf-bar" style="display:flex;gap:5px;margin-top:6px">
@@ -139,24 +139,24 @@ button{cursor:pointer}
       <!-- Riga 1: bias direzionale grande -->
       <div id="dash-bias" style="text-align:center;margin-bottom:14px">
         <div id="dash-direction" style="font-size:32px;font-weight:900;letter-spacing:-1px">–</div>
-        <div id="dash-subtitle" style="color:#94a3b8;font-size:12px;margin-top:2px"></div>
+        <div id="dash-subtitle" style="color:#b0bdd0;font-size:12px;margin-top:2px"></div>
       </div>
 
       <!-- Confidence meter -->
       <div style="margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="color:#94a3b8;font-size:12px;font-weight:600">Confidenza Outlook</span>
+          <span style="color:#b0bdd0;font-size:12px;font-weight:600">Confidenza Outlook</span>
           <span id="conf-value" style="font-size:20px;font-weight:900;color:#f0b429">–</span>
         </div>
         <div class="conf-bar">
           <div id="conf-fill" class="conf-fill" style="width:0%"></div>
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:4px">
-          <span style="color:#64748b;font-size:10px">0 — Incerto</span>
-          <span style="color:#64748b;font-size:10px">50 — Moderato</span>
-          <span style="color:#64748b;font-size:10px">100 — Forte</span>
+          <span style="color:#b0bdd0;font-size:10px">0 — Incerto</span>
+          <span style="color:#b0bdd0;font-size:10px">50 — Moderato</span>
+          <span style="color:#b0bdd0;font-size:10px">100 — Forte</span>
         </div>
-        <div id="conf-label" style="text-align:center;font-size:11px;color:#94a3b8;margin-top:4px"></div>
+        <div id="conf-label" style="text-align:center;font-size:11px;color:#b0bdd0;margin-top:4px"></div>
       </div>
 
       <!-- Griglia semafori -->
@@ -167,7 +167,7 @@ button{cursor:pointer}
     <div class="card" style="padding:10px 5px 6px">
       <div class="row" style="padding:0 7px 4px">
         <span class="dim" style="font-size:10px" id="chart-label">Grafico 1h</span>
-        <div style="display:flex;gap:8px"><span class="bull" style="font-size:8px">— MA20</span><span style="color:#f87171;font-size:8px">— MA50</span></div>
+        <div style="display:flex;gap:8px"><span class="bull" style="font-size:10px">— MA20</span><span style="color:#f87171;font-size:10px">— MA50</span></div>
       </div>
       <svg id="main-chart" width="100%" viewBox="0 0 340 160" style="display:block"></svg>
     </div>
@@ -176,16 +176,16 @@ button{cursor:pointer}
     <div class="card" style="padding:10px">
       <div style="color:#f0b429;font-weight:700;font-size:11px;margin-bottom:7px">📊 Vista MTF — tocca per espandere</div>
       <div style="display:flex;gap:5px">
-        <div onclick="setTf('1d')" style="flex:1;background:#1a2130;border-radius:8px;border:1px solid #1e2535;padding:5px 3px 3px;cursor:pointer">
-          <div class="row" style="padding:0 4px 2px"><span class="dim" style="font-size:8px;font-weight:700">1D</span><span id="trend-1d" style="font-size:8px">—</span></div>
+        <div onclick="setTf('1d')" style="flex:1;background:#1e2740;border-radius:8px;border:1px solid #2a3550;padding:5px 3px 3px;cursor:pointer">
+          <div class="row" style="padding:0 4px 2px"><span class="dim" style="font-size:10px;font-weight:700">1D</span><span id="trend-1d" style="font-size:10px">—</span></div>
           <svg id="chart-1d" width="100%" viewBox="0 0 340 70" style="display:block"></svg>
         </div>
-        <div onclick="setTf('1h')" style="flex:1;background:#1a2130;border-radius:8px;border:1px solid #1e2535;padding:5px 3px 3px;cursor:pointer">
-          <div class="row" style="padding:0 4px 2px"><span class="dim" style="font-size:8px;font-weight:700">1H</span><span id="trend-1h" style="font-size:8px">—</span></div>
+        <div onclick="setTf('1h')" style="flex:1;background:#1e2740;border-radius:8px;border:1px solid #2a3550;padding:5px 3px 3px;cursor:pointer">
+          <div class="row" style="padding:0 4px 2px"><span class="dim" style="font-size:10px;font-weight:700">1H</span><span id="trend-1h" style="font-size:10px">—</span></div>
           <svg id="chart-1h" width="100%" viewBox="0 0 340 70" style="display:block"></svg>
         </div>
-        <div onclick="setTf('5m')" style="flex:1;background:#1a2130;border-radius:8px;border:1px solid #1e2535;padding:5px 3px 3px;cursor:pointer">
-          <div class="row" style="padding:0 4px 2px"><span class="dim" style="font-size:8px;font-weight:700">5M</span><span id="trend-5m" style="font-size:8px">—</span></div>
+        <div onclick="setTf('5m')" style="flex:1;background:#1e2740;border-radius:8px;border:1px solid #2a3550;padding:5px 3px 3px;cursor:pointer">
+          <div class="row" style="padding:0 4px 2px"><span class="dim" style="font-size:10px;font-weight:700">5M</span><span id="trend-5m" style="font-size:10px">—</span></div>
           <svg id="chart-5m" width="100%" viewBox="0 0 340 70" style="display:block"></svg>
         </div>
       </div>
@@ -252,7 +252,7 @@ button{cursor:pointer}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div>
           <div style="color:#f0b429;font-weight:800;font-size:14px">🔔 Alert in Background</div>
-          <div id="bg-status" style="color:#64748b;font-size:10px;margin-top:2px">Non attivo</div>
+          <div id="bg-status" style="color:#b0bdd0;font-size:10px;margin-top:2px">Non attivo</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="notif-badge" style="display:none;background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700">🔔 ATTIVO</span>
@@ -262,50 +262,50 @@ button{cursor:pointer}
 
       <!-- Configurazione alert -->
       <div id="alert-config" style="display:none">
-        <div style="color:#94a3b8;font-size:11px;font-weight:600;margin-bottom:8px">Ricevi notifica quando:</div>
+        <div style="color:#b0bdd0;font-size:11px;font-weight:600;margin-bottom:8px">Ricevi notifica quando:</div>
         
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
-          <label style="display:flex;align-items:center;justify-content:space-between;background:#1a2130;border-radius:8px;padding:10px 12px">
+          <label style="display:flex;align-items:center;justify-content:space-between;background:#1e2740;border-radius:8px;padding:10px 12px">
             <span style="color:#e2e8f0;font-size:12px">📍 Prezzo vicino a Pivot/R1/S1</span>
             <input type="checkbox" id="cfg-pivot" checked style="width:18px;height:18px;accent-color:#f0b429"/>
           </label>
-          <label style="display:flex;align-items:center;justify-content:space-between;background:#1a2130;border-radius:8px;padding:10px 12px">
+          <label style="display:flex;align-items:center;justify-content:space-between;background:#1e2740;border-radius:8px;padding:10px 12px">
             <span style="color:#e2e8f0;font-size:12px">⚠️ RSI Overbought (&gt;70)</span>
             <input type="checkbox" id="cfg-rsi-ob" checked style="width:18px;height:18px;accent-color:#f0b429"/>
           </label>
-          <label style="display:flex;align-items:center;justify-content:space-between;background:#1a2130;border-radius:8px;padding:10px 12px">
+          <label style="display:flex;align-items:center;justify-content:space-between;background:#1e2740;border-radius:8px;padding:10px 12px">
             <span style="color:#e2e8f0;font-size:12px">⚡ RSI Oversold (&lt;30)</span>
             <input type="checkbox" id="cfg-rsi-os" checked style="width:18px;height:18px;accent-color:#f0b429"/>
           </label>
-          <label style="display:flex;align-items:center;justify-content:space-between;background:#1a2130;border-radius:8px;padding:10px 12px">
+          <label style="display:flex;align-items:center;justify-content:space-between;background:#1e2740;border-radius:8px;padding:10px 12px">
             <span style="color:#e2e8f0;font-size:12px">⚡ Spike di volatilità (&gt;1.8x ATR)</span>
             <input type="checkbox" id="cfg-spike" checked style="width:18px;height:18px;accent-color:#f0b429"/>
           </label>
-          <label style="display:flex;align-items:center;justify-content:space-between;background:#1a2130;border-radius:8px;padding:10px 12px">
+          <label style="display:flex;align-items:center;justify-content:space-between;background:#1e2740;border-radius:8px;padding:10px 12px">
             <span style="color:#e2e8f0;font-size:12px">📡 Segnale anticipatore DXY</span>
             <input type="checkbox" id="cfg-lead" checked style="width:18px;height:18px;accent-color:#f0b429"/>
           </label>
         </div>
 
         <!-- Alert prezzo personalizzato -->
-        <div style="color:#94a3b8;font-size:11px;font-weight:600;margin-bottom:6px">Alert prezzo personalizzato:</div>
+        <div style="color:#b0bdd0;font-size:11px;font-weight:600;margin-bottom:6px">Alert prezzo personalizzato:</div>
         <div style="display:flex;gap:8px;margin-bottom:6px">
           <div style="flex:1">
-            <div style="color:#64748b;font-size:10px;margin-bottom:3px">Sopra $</div>
-            <input type="number" id="cfg-price-above" placeholder="es. 4350" style="width:100%;background:#1a2130;border:1px solid #1e2535;border-radius:7px;padding:8px 10px;color:#e2e8f0;font-size:13px"/>
+            <div style="color:#b0bdd0;font-size:10px;margin-bottom:3px">Sopra $</div>
+            <input type="number" id="cfg-price-above" placeholder="es. 4350" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:7px;padding:8px 10px;color:#e2e8f0;font-size:13px"/>
           </div>
           <div style="flex:1">
-            <div style="color:#64748b;font-size:10px;margin-bottom:3px">Sotto $</div>
-            <input type="number" id="cfg-price-below" placeholder="es. 4150" style="width:100%;background:#1a2130;border:1px solid #1e2535;border-radius:7px;padding:8px 10px;color:#e2e8f0;font-size:13px"/>
+            <div style="color:#b0bdd0;font-size:10px;margin-bottom:3px">Sotto $</div>
+            <input type="number" id="cfg-price-below" placeholder="es. 4150" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:7px;padding:8px 10px;color:#e2e8f0;font-size:13px"/>
           </div>
         </div>
         <button onclick="saveAlertConfig()" style="width:100%;background:#f0b429;color:#000;border-radius:8px;padding:9px 0;font-size:13px;font-weight:700;border:none;margin-top:4px">Salva configurazione</button>
       </div>
 
-      <div id="bg-last-check" style="color:#64748b;font-size:10px;margin-top:8px;text-align:center;display:none"></div>
+      <div id="bg-last-check" style="color:#b0bdd0;font-size:10px;margin-top:8px;text-align:center;display:none"></div>
     </div>
 
-    <div style="text-align:center;color:#64748b;font-size:9px;line-height:1.5;padding:4px 8px;border-top:1px solid #1e2535;margin-top:4px">
+    <div style="text-align:center;color:#b0bdd0;font-size:9px;line-height:1.5;padding:4px 8px;border-top:1px solid #1e2535;margin-top:4px">
       ⚠️ Solo scopo didattico. Non costituisce consulenza finanziaria.<br>
       Dati live: Twelve Data · Analisi AI: Anthropic Claude
     </div>
@@ -315,7 +315,7 @@ button{cursor:pointer}
 <!-- ══ SCALP SCREEN ═════════════════════════════════════════ -->
 <div id="scalp-screen" style="display:none;max-width:480px;margin:0 auto;padding-bottom:36px">
   <div class="content" id="scalp-content">
-    <div style="text-align:center;padding:40px 0;color:#64748b">
+    <div style="text-align:center;padding:40px 0;color:#b0bdd0">
       <div style="font-size:32px;margin-bottom:8px">⚡</div>
       <div>Caricamento dati scalping...</div>
     </div>
@@ -326,7 +326,7 @@ button{cursor:pointer}
 <div id="diary-screen" style="display:none;max-width:480px;margin:0 auto;padding-bottom:40px">
   <div class="sticky">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <button onclick="hideDiary()" style="background:#141920;border:1px solid #1e2535;color:#e2e8f0;border-radius:8px;padding:4px 10px;font-size:14px">←</button>
+      <button onclick="hideDiary()" style="background:#141920;border:1px solid #2a3550;color:#e2e8f0;border-radius:8px;padding:4px 10px;font-size:14px">←</button>
       <div><div style="color:#f0b429;font-weight:800;font-size:14px">📓 Diario & Autoapprendimento</div><div class="dim" style="font-size:9px" id="diary-sub">0 trade</div></div>
     </div>
     <div class="tab-bar">
@@ -357,7 +357,7 @@ button{cursor:pointer}
     <div id="settings-err" style="display:none;background:#ef444415;border:1px solid #ef444433;border-radius:7px;padding:8px 10px;color:#ef4444;font-size:11px;margin-bottom:10px"></div>
     <div style="display:flex;gap:8px">
       <button onclick="saveSettings()" style="flex:2;background:#f0b429;color:#000;border-radius:8px;padding:11px 0;font-size:13px;font-weight:700" id="settings-save-btn">Salva</button>
-      <button onclick="hideSettings()" style="flex:1;background:#141920;color:#64748b;border:1px solid #1e2535;border-radius:8px;padding:11px 0;font-size:12px">Annulla</button>
+      <button onclick="hideSettings()" style="flex:1;background:#141920;color:#b0bdd0;border:1px solid #2a3550;border-radius:8px;padding:11px 0;font-size:12px">Annulla</button>
     </div>
   </div>
 </div>
@@ -374,6 +374,7 @@ let state = {
   tdKey: LS.get('td_key')||'',
   clKey: LS.get('cl_key')||'',
   mode: 'swing',
+  scalpTimer: null,
   candles: {'5m':[],'1h':[],'1d':[],'1m':[]},
   scalpCorr: {
     eurusd1m:[], eurusd5m:[],
@@ -722,11 +723,11 @@ function renderDashboard(){
   d.semList.forEach(({label,sem,detail})=>{
     const col=sem==='green'?'#22c55e':sem==='red'?'#ef4444':sem==='orange'?'#f97316':'#334155';
     const shadow=sem==='green'?'0 0 8px #22c55e88':sem==='red'?'0 0 8px #ef444488':sem==='orange'?'0 0 8px #f9731688':'none';
-    html+=`<div style="background:#1a2130;border-radius:10px;padding:10px 12px;border:1px solid ${col}33;display:flex;align-items:center;gap:10px">
+    html+=`<div style="background:#1e2740;border-radius:10px;padding:10px 12px;border:1px solid ${col}33;display:flex;align-items:center;gap:10px">
       <div style="width:18px;height:18px;border-radius:50%;background:${col};box-shadow:${shadow};flex-shrink:0"></div>
       <div>
         <div style="color:#e2e8f0;font-size:12px;font-weight:700">${label}</div>
-        <div style="color:#64748b;font-size:10px;margin-top:1px">${detail}</div>
+        <div style="color:#b0bdd0;font-size:10px;margin-top:1px">${detail}</div>
       </div>
     </div>`;
   });
@@ -776,11 +777,11 @@ function updateUI(){
     const t=tfTrend(cc[tf]||[]);
     const l=cc[tf]?cc[tf][cc[tf].length-1]:null;
     const col=t==='BULL'?'#22c55e':t==='BEAR'?'#ef4444':'#64748b';
-    mtfHtml+=`<div style="flex:1;background:#1a2130;border-radius:8px;padding:8px 6px;border:1px solid ${col}33;text-align:center">
-      <div style="color:#64748b;font-size:9px;font-weight:700;margin-bottom:2px">${mtfLabels[tf]}</div>
+    mtfHtml+=`<div style="flex:1;background:#1e2740;border-radius:8px;padding:8px 6px;border:1px solid ${col}33;text-align:center">
+      <div style="color:#b0bdd0;font-size:9px;font-weight:700;margin-bottom:2px">${mtfLabels[tf]}</div>
       <div style="color:${col};font-size:22px">${t==='BULL'?'▲':t==='BEAR'?'▼':'—'}</div>
       <div style="color:${col};font-size:11px;font-weight:700;margin-top:2px">${t}</div>
-      <div style="color:#64748b;font-size:10px;margin-top:3px">$${fmtP(l?.c)}</div>
+      <div style="color:#b0bdd0;font-size:10px;margin-top:3px">$${fmtP(l?.c)}</div>
     </div>`;
   });
   document.getElementById('mtf-cards').innerHTML=mtfHtml;
@@ -793,7 +794,7 @@ function updateUI(){
     const near=last&&Math.abs(last.c-v)<18;
     pvHtml+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-radius:6px;margin-bottom:2px;background:${near?c+'14':'transparent'};border:1px solid ${near?c+'44':'transparent'}">
       <span style="color:${c};font-weight:700;font-size:13px">${l}</span>
-      <span style="color:#e2e8f0;font-size:12px">$${fmtP(v)}${near?`<span style="color:${c};font-size:8px;margin-left:5px">◀ vicino</span>`:''}</span>
+      <span style="color:#e2e8f0;font-size:12px">$${fmtP(v)}${near?`<span style="color:${c};font-size:10px;margin-left:5px">◀ vicino</span>`:''}</span>
     </div>`;
   });
   document.getElementById('pivot-list').innerHTML=pvHtml;
@@ -837,11 +838,11 @@ function renderLeadPanel(){
     const impactText=invert?(lastChg>0?'→ ↓ oro':'→ ↑ oro'):(lastChg>0?'→ ↑ oro':'→ ↓ oro');
     return`<div style="background:#080b10;border-radius:7px;padding:7px 9px;flex:1;min-width:0">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-        <span style="color:#64748b;font-size:9px;font-weight:700">${label}</span>
+        <span style="color:#b0bdd0;font-size:9px;font-weight:700">${label}</span>
         <span style="color:${impactColor};font-size:9px;font-weight:700">${lastChg>=0?'▲':'▼'}${Math.abs(lastChg).toFixed(lastChg<1&&lastChg>-1?3:2)}</span>
       </div>
       ${sparkLine(prices,color)}
-      <div style="color:${impactColor};font-size:8px;margin-top:2px;text-align:right">${impactText}</div>
+      <div style="color:${impactColor};font-size:10px;margin-top:2px;text-align:right">${impactText}</div>
     </div>`;
   };
 
@@ -849,9 +850,9 @@ function renderLeadPanel(){
   if(sig.hasDxy) sparks+=sparkItem(dxyLabel,dxyP,'#3b82f6',state.corrData.dxyInverted);
   if(sig.hasUs10) sparks+=sparkItem(us10Label,us10P,'#f97316',true);
   sparks+=`<div style="background:#080b10;border-radius:7px;padding:7px 9px;flex:1;min-width:0">
-    <div style="color:#64748b;font-size:9px;font-weight:700;margin-bottom:3px">XAU/USD</div>
+    <div style="color:#b0bdd0;font-size:9px;font-weight:700;margin-bottom:3px">XAU/USD</div>
     ${sparkLine(xauP,'#f0b429')}
-    <div style="color:#f0b429;font-size:8px;margin-top:2px;text-align:right">$${fmtP(xauP[xauP.length-1])}</div>
+    <div style="color:#f0b429;font-size:10px;margin-top:2px;text-align:right">$${fmtP(xauP[xauP.length-1])}</div>
   </div>`;
   document.getElementById('lead-sparklines').innerHTML=sparks;
 
@@ -864,14 +865,14 @@ function renderLeadPanel(){
         <span style="color:#3b82f6;font-weight:700;font-size:11px">💵 ${dxyLabel}</span>
         <span style="color:${col};font-weight:800;font-size:12px">${sig.dxyDir==='UP'?'▲ RIALZO ORO':'▼ RIBASSO ORO'}</span>
       </div>
-      <div style="color:#94a3b8;font-size:10px;line-height:1.5">
+      <div style="color:#b0bdd0;font-size:10px;line-height:1.5">
         ${state.corrData.dxyInverted
           ?(sig.dxySl>0?'EUR/USD in salita → dollaro debole → supporto rialzo oro':'EUR/USD in discesa → dollaro forte → pressione ribasso oro')
           :(sig.dxySl>0?'DXY in salita → pressione ribasso oro':'DXY in discesa → supporto rialzo oro')}
       </div>
       ${sig.dxyLag?.avgLag?`<div style="display:flex;gap:12px;margin-top:5px;font-size:9px">
-        <span style="color:#64748b">Lag storico: <span style="color:#3b82f6;font-weight:700">${sig.dxyLag.avgLag} candele 1H</span></span>
-        <span style="color:#64748b">Affidabilità: <span style="color:${sig.dxyLag.confidence>60?'#22c55e':'#f97316'};font-weight:700">${sig.dxyLag.confidence}%</span></span>
+        <span style="color:#b0bdd0">Lag storico: <span style="color:#3b82f6;font-weight:700">${sig.dxyLag.avgLag} candele 1H</span></span>
+        <span style="color:#b0bdd0">Affidabilità: <span style="color:${sig.dxyLag.confidence>60?'#22c55e':'#f97316'};font-weight:700">${sig.dxyLag.confidence}%</span></span>
       </div>`:''}
       ${sig.dxySwing?`<div style="margin-top:5px;background:#3b82f615;border-radius:6px;padding:4px 8px;font-size:9px;color:#3b82f6">
         🔔 Swing ${sig.dxySwing.type} rilevato${sig.dxyLag?.avgLag?` → atteso impatto entro ~${Math.round(sig.dxyLag.avgLag)} candele`:''}
@@ -888,12 +889,12 @@ function renderLeadPanel(){
         <span style="color:#f97316;font-weight:700;font-size:11px">🏦 ${us10Label} Yield</span>
         <span style="color:${col};font-weight:800;font-size:12px">${sig.us10Dir==='UP'?'▲ RIALZO ORO':'▼ RIBASSO ORO'}</span>
       </div>
-      <div style="color:#94a3b8;font-size:10px;line-height:1.5">
+      <div style="color:#b0bdd0;font-size:10px;line-height:1.5">
         ${sig.us10Sl>0?'Yield in salita → costo opportunità aumenta → pressione ribasso oro':'Yield in discesa → oro più attrattivo → supporto rialzo oro'}
       </div>
       ${sig.us10Lag?.avgLag?`<div style="display:flex;gap:12px;margin-top:5px;font-size:9px">
-        <span style="color:#64748b">Lag storico: <span style="color:#f97316;font-weight:700">${sig.us10Lag.avgLag} candele 1H</span></span>
-        <span style="color:#64748b">Affidabilità: <span style="color:${sig.us10Lag.confidence>60?'#22c55e':'#f97316'};font-weight:700">${sig.us10Lag.confidence}%</span></span>
+        <span style="color:#b0bdd0">Lag storico: <span style="color:#f97316;font-weight:700">${sig.us10Lag.avgLag} candele 1H</span></span>
+        <span style="color:#b0bdd0">Affidabilità: <span style="color:${sig.us10Lag.confidence>60?'#22c55e':'#f97316'};font-weight:700">${sig.us10Lag.confidence}%</span></span>
       </div>`:''}
       ${sig.us10Swing?`<div style="margin-top:5px;background:#f9731615;border-radius:6px;padding:4px 8px;font-size:9px;color:#f97316">
         🔔 Swing ${sig.us10Swing.type} rilevato${sig.us10Lag?.avgLag?` → atteso impatto entro ~${Math.round(sig.us10Lag.avgLag)} candele`:''}
@@ -915,7 +916,7 @@ function renderLeadPanel(){
   } else if(sig.biasStrength===1){
     det+=`<div style="background:#f9731612;border:1px solid #f9731633;border-radius:9px;padding:9px 11px">
       <div style="color:#f97316;font-weight:700;font-size:11px">⚡ Segnali divergenti — attendi conferma tecnica</div>
-      <div style="color:#94a3b8;font-size:10px;margin-top:3px">Privilegia l'analisi tecnica diretta su XAU/USD.</div>
+      <div style="color:#b0bdd0;font-size:10px;margin-top:3px">Privilegia l'analisi tecnica diretta su XAU/USD.</div>
     </div>`;
   }
   document.getElementById('lead-details').innerHTML=det;
@@ -962,9 +963,9 @@ function setStatus(s,msg=''){
   const badge=document.getElementById('status-badge');
   const errBanner=document.getElementById('err-banner');
   const errMsg=document.getElementById('err-msg');
-  if(s==='loading'){badge.textContent='⟳';badge.style.cssText='background:#f0b42922;color:#f0b429;border:1px solid #f0b42944;border-radius:4px;padding:1px 5px;font-size:8px;font-weight:700';errBanner.classList.add('hidden');}
-  else if(s==='live'){badge.textContent='🟢 LIVE';badge.style.cssText='background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:4px;padding:1px 5px;font-size:8px;font-weight:700';errBanner.classList.add('hidden');}
-  else if(s==='error'){badge.textContent='⚠';badge.style.cssText='background:#ef444422;color:#ef4444;border:1px solid #ef444444;border-radius:4px;padding:1px 5px;font-size:8px;font-weight:700';errMsg.textContent=msg;errBanner.classList.remove('hidden');}
+  if(s==='loading'){badge.textContent='⟳';badge.style.cssText='background:#f0b42922;color:#f0b429;border:1px solid #f0b42944;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700';errBanner.classList.add('hidden');}
+  else if(s==='live'){badge.textContent='🟢 LIVE';badge.style.cssText='background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700';errBanner.classList.add('hidden');}
+  else if(s==='error'){badge.textContent='⚠';badge.style.cssText='background:#ef444422;color:#ef4444;border:1px solid #ef444444;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700';errMsg.textContent=msg;errBanner.classList.remove('hidden');}
 }
 
 async function doFetch(){
@@ -992,6 +993,9 @@ async function doFetch(){
     const now=new Date();
     document.getElementById('hdr-sub').textContent=`Twelve Data · ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})} · key …${state.tdKey.slice(-4)}`;
     updateUI();
+    // Paper trading: valuta exit con prezzo 1H aggiornato
+    const cur1hPrice = state.candles['1h']?.slice(-1)[0]?.c;
+    if(cur1hPrice) evaluateAutoExit(cur1hPrice);
   }catch(e){
     setStatus('error',e.message||String(e));
   }
@@ -1092,9 +1096,9 @@ Pivot: R2=${pv.r2} R1=${pv.r1} P=${pv.pivot} S1=${pv.s1} S2=${pv.s2}
           <span style="color:#f0b429;font-size:10px">⭐${trade.confidence}/10</span>
         </div>
         <div class="grid4" style="margin-bottom:7px">
-          ${[['Entry',trade.entry,'#f0b429'],['SL',trade.sl,'#ef4444'],['TP1',trade.tp1,'#22c55e'],['TP2',trade.tp2,'#14b8a6']].map(([l,v,c])=>`<div style="background:#0f1318;border-radius:6px;padding:5px 4px;text-align:center"><div style="color:#64748b;font-size:8px">${l}</div><div style="color:${c};font-size:11px;font-weight:700">$${fmtP(v)}</div></div>`).join('')}
+          ${[['Entry',trade.entry,'#f0b429'],['SL',trade.sl,'#ef4444'],['TP1',trade.tp1,'#22c55e'],['TP2',trade.tp2,'#14b8a6']].map(([l,v,c])=>`<div style="background:#0f1318;border-radius:6px;padding:5px 4px;text-align:center"><div style="color:#b0bdd0;font-size:10px">${l}</div><div style="color:${c};font-size:11px;font-weight:700">$${fmtP(v)}</div></div>`).join('')}
         </div>
-        <div style="font-size:10px;color:#64748b;margin-bottom:7px">R/R <span style="color:#f97316;font-weight:700">1:${trade.rr_ratio}</span> · MTF <span style="color:#3b82f6;font-weight:700">${trade.mtf_align}/3</span> · ${trade.session} · ${trade.market_condition}</div>
+        <div style="font-size:10px;color:#b0bdd0;margin-bottom:7px">R/R <span style="color:#f97316;font-weight:700">1:${trade.rr_ratio}</span> · MTF <span style="color:#3b82f6;font-weight:700">${trade.mtf_align}/3</span> · ${trade.session} · ${trade.market_condition}</div>
         <div style="background:#141920;border-radius:7px;padding:7px 9px;margin-bottom:5px"><div style="color:#a855f7;font-size:9px;font-weight:700;margin-bottom:2px">📖 RATIONALE</div><div style="color:#e2e8f0;font-size:11px;line-height:1.55">${trade.rationale}</div></div>
         <div style="background:#22c55e15;border-radius:7px;padding:7px 9px"><div style="color:#22c55e;font-size:9px;font-weight:700;margin-bottom:2px">🎓 LEZIONE</div><div style="color:#e2e8f0;font-size:11px;line-height:1.55">${trade.lesson}</div></div>
         <div style="color:#14b8a6;font-size:10px;margin-top:6px;text-align:center">✅ Salvato nel Diario</div>
@@ -1177,7 +1181,7 @@ function renderDiary(){
     html+=`<div class="grid3" style="margin-bottom:10px">
       <div class="kpi" style="border-color:${pnl>=0?'#22c55e33':'#ef444433'}"><div class="lbl">PnL Totale</div><div class="val" style="color:${pnl>=0?'#22c55e':'#ef4444'}">${fmtPnl(pnl)}</div><div class="sub">${closed.length} chiusi</div></div>
       <div class="kpi"><div class="lbl">Win Rate</div><div class="val" style="color:${+wr>=50?'#22c55e':'#ef4444'}">${wr}%</div><div class="sub">${wins.length}W ${losses.length}L</div></div>
-      <div class="kpi"><div class="lbl">BE</div><div class="val" style="color:#64748b">${bes.length}</div><div class="sub">breakeven</div></div>
+      <div class="kpi"><div class="lbl">BE</div><div class="val" style="color:#b0bdd0">${bes.length}</div><div class="sub">breakeven</div></div>
     </div>`;
 
     // Equity curve
@@ -1212,21 +1216,21 @@ function renderDiary(){
               <span style="background:${col}20;color:${col};border:1px solid ${col}44;border-radius:5px;padding:1px 5px;font-size:9px;font-weight:700">${tr.direction}</span>
               <span style="color:#e2e8f0;font-size:11px;font-weight:600">${tr.setup_name}</span>
             </div>
-            <span style="color:#64748b;font-size:9px">${fmtDt(tr.openedAt)}</span>
+            <span style="color:#b0bdd0;font-size:9px">${fmtDt(tr.openedAt)}</span>
           </div>
           <div class="grid4" style="margin-bottom:7px">
-            ${[['Entry',tr.entry,'#f0b429'],['SL',tr.sl,'#ef4444'],['TP1',tr.tp1,'#22c55e'],['TP2',tr.tp2,'#14b8a6']].map(([l,v,c])=>`<div style="background:#141920;border-radius:5px;padding:3px 4px;text-align:center"><div style="color:#64748b;font-size:8px">${l}</div><div style="color:${c};font-size:10px;font-weight:700">$${fmtP(v)}</div></div>`).join('')}
+            ${[['Entry',tr.entry,'#f0b429'],['SL',tr.sl,'#ef4444'],['TP1',tr.tp1,'#22c55e'],['TP2',tr.tp2,'#14b8a6']].map(([l,v,c])=>`<div style="background:#141920;border-radius:5px;padding:3px 4px;text-align:center"><div style="color:#b0bdd0;font-size:10px">${l}</div><div style="color:${c};font-size:10px;font-weight:700">$${fmtP(v)}</div></div>`).join('')}
           </div>
           <button onclick="closeTradeById(${tr.id})" style="width:100%;background:#f9731620;border:1px solid #f9731644;color:#f97316;border-radius:6px;padding:5px 0;font-size:11px;font-weight:700">Simula chiusura →</button>
         </div>`;
       });
       html+='</div>';
     }
-    if(t.length===0) html+=`<div style="text-align:center;padding:40px 0;color:#64748b"><div style="font-size:36px;margin-bottom:8px">📓</div>Nessun trade ancora.</div>`;
+    if(t.length===0) html+=`<div style="text-align:center;padding:40px 0;color:#b0bdd0"><div style="font-size:36px;margin-bottom:8px">📓</div>Nessun trade ancora.</div>`;
   }
 
   else if(state.diaryTab==='trades'){
-    if(closed.length===0){html+=`<div style="text-align:center;padding:28px 0;color:#64748b">Nessun trade chiuso.</div>`;}
+    if(closed.length===0){html+=`<div style="text-align:center;padding:28px 0;color:#b0bdd0">Nessun trade chiuso.</div>`;}
     else{
       [...closed].reverse().forEach(tr=>{
         const col=tr.isWin?'#22c55e':tr.outcome==='BE'?'#64748b':'#ef4444';
@@ -1243,17 +1247,17 @@ function renderDiary(){
             </div>
           </div>
           <div style="display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap">
-            <span style="color:#64748b;font-size:9px">${fmtDt(tr.openedAt)}</span>
-            ${tr.session?`<span style="background:#64748b20;color:#64748b;border:1px solid #64748b44;border-radius:5px;padding:1px 5px;font-size:9px;font-weight:700">${tr.session}</span>`:''}
+            <span style="color:#b0bdd0;font-size:9px">${fmtDt(tr.openedAt)}</span>
+            ${tr.session?`<span style="background:#64748b20;color:#b0bdd0;border:1px solid #64748b44;border-radius:5px;padding:1px 5px;font-size:9px;font-weight:700">${tr.session}</span>`:''}
           </div>
           <div class="grid4" style="margin-bottom:5px">
-            ${[['Entry',`$${fmtP(tr.entry)}`,'#f0b429'],['Exit',`$${fmtP(tr.exitPrice)}`,tr.isWin?'#22c55e':'#ef4444'],['R/R',`1:${tr.rr_ratio}`,'#f97316'],['MTF',`${tr.mtf_align}/3`,'#3b82f6']].map(([l,v,c])=>`<div style="background:#1a2130;border-radius:5px;padding:4px 5px;text-align:center"><div style="color:#64748b;font-size:8px">${l}</div><div style="color:${c};font-size:10px;font-weight:700">${v}</div></div>`).join('')}
+            ${[['Entry',`$${fmtP(tr.entry)}`,'#f0b429'],['Exit',`$${fmtP(tr.exitPrice)}`,tr.isWin?'#22c55e':'#ef4444'],['R/R',`1:${tr.rr_ratio}`,'#f97316'],['MTF',`${tr.mtf_align}/3`,'#3b82f6']].map(([l,v,c])=>`<div style="background:#1e2740;border-radius:5px;padding:4px 5px;text-align:center"><div style="color:#b0bdd0;font-size:10px">${l}</div><div style="color:${c};font-size:10px;font-weight:700">${v}</div></div>`).join('')}
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:3px;margin-bottom:7px">
-            ${[['R/R reale',tr.realizedRR,parseFloat(tr.realizedRR)>=0?'#22c55e':'#ef4444'],['Eff',`${tr.efficiencyPct}%`,+tr.efficiencyPct>=55?'#22c55e':'#f97316'],['MAE',`$${fmtP(tr.mae)}`,'#ef4444'],['MFE',`$${fmtP(tr.mfe)}`,'#14b8a6'],['Min',`${tr.durationMin}`,'#64748b']].map(([l,v,c])=>`<div style="background:#1a2130;border-radius:5px;padding:3px 4px;text-align:center"><div style="color:#64748b;font-size:7px">${l}</div><div style="color:${c};font-size:9px;font-weight:700">${v}</div></div>`).join('')}
+            ${[['R/R reale',tr.realizedRR,parseFloat(tr.realizedRR)>=0?'#22c55e':'#ef4444'],['Eff',`${tr.efficiencyPct}%`,+tr.efficiencyPct>=55?'#22c55e':'#f97316'],['MAE',`$${fmtP(tr.mae)}`,'#ef4444'],['MFE',`$${fmtP(tr.mfe)}`,'#14b8a6'],['Min',`${tr.durationMin}`,'#64748b']].map(([l,v,c])=>`<div style="background:#1e2740;border-radius:5px;padding:3px 4px;text-align:center"><div style="color:#b0bdd0;font-size:9px">${l}</div><div style="color:${c};font-size:9px;font-weight:700">${v}</div></div>`).join('')}
           </div>
-          ${tr.rationale?`<div style="background:#080b10;border-radius:7px;padding:6px 8px;margin-bottom:5px"><div style="color:#a855f7;font-size:8px;font-weight:700;margin-bottom:2px">📖 RATIONALE</div><div style="color:#94a3b8;font-size:10px;line-height:1.5">${tr.rationale}</div></div>`:''}
-          ${state.lessons[tr.id]?`<div style="background:#080b10;border-radius:7px;padding:6px 8px;border-left:3px solid #a855f7"><div style="color:#a855f7;font-size:8px;font-weight:700;margin-bottom:2px">🎓 ANALISI POST-TRADE</div><div style="color:#e2e8f0;font-size:11px;line-height:1.65;white-space:pre-wrap">${state.lessons[tr.id]}</div></div>`:
+          ${tr.rationale?`<div style="background:#080b10;border-radius:7px;padding:6px 8px;margin-bottom:5px"><div style="color:#a855f7;font-size:10px;font-weight:700;margin-bottom:2px">📖 RATIONALE</div><div style="color:#b0bdd0;font-size:10px;line-height:1.5">${tr.rationale}</div></div>`:''}
+          ${state.lessons[tr.id]?`<div style="background:#080b10;border-radius:7px;padding:6px 8px;border-left:3px solid #a855f7"><div style="color:#a855f7;font-size:10px;font-weight:700;margin-bottom:2px">🎓 ANALISI POST-TRADE</div><div style="color:#e2e8f0;font-size:11px;line-height:1.65;white-space:pre-wrap">${state.lessons[tr.id]}</div></div>`:
           `<button onclick="getLesson(${tr.id})" style="width:100%;background:#a855f715;border:1px solid #a855f744;color:#a855f7;border-radius:7px;padding:5px 0;font-size:10px;font-weight:700" id="lesson-btn-${tr.id}">🤖 Analisi post-trade AI</button>`}
         </div>`;
       });
@@ -1261,12 +1265,12 @@ function renderDiary(){
   }
 
   else if(state.diaryTab==='stats'){
-    if(closed.length===0){html+=`<div style="text-align:center;padding:28px 0;color:#64748b">Chiudi almeno un trade.</div>`;}
+    if(closed.length===0){html+=`<div style="text-align:center;padding:28px 0;color:#b0bdd0">Chiudi almeno un trade.</div>`;}
     else{
       html+=`<div class="card"><div class="section-title">Distribuzione Esiti</div>`;
       [['TP2',closed.filter(x=>x.outcome==='TP2').length,'#14b8a6'],['TP1',wins.length,'#22c55e'],['BE',bes.length,'#64748b'],['SL',losses.length,'#ef4444']].forEach(([l,n,c])=>{
         const pct=closed.length?Math.round(n/closed.length*100):0;
-        html+=`<div style="margin-bottom:7px"><div class="row" style="margin-bottom:2px"><span style="color:#64748b;font-size:10px">${l} — ${n} trade</span><span style="color:${c};font-size:10px;font-weight:700">${pct}%</span></div><div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${c}"></div></div></div>`;
+        html+=`<div style="margin-bottom:7px"><div class="row" style="margin-bottom:2px"><span style="color:#b0bdd0;font-size:10px">${l} — ${n} trade</span><span style="color:${c};font-size:10px;font-weight:700">${pct}%</span></div><div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${c}"></div></div></div>`;
       });
       html+='</div>';
 
@@ -1277,7 +1281,7 @@ function renderDiary(){
       [3,2,1,0].forEach(a=>{
         const s=alignMap[a];if(!s.n)return;
         const wr=Math.round(s.w/s.n*100),col=wr>=50?'#22c55e':'#ef4444';
-        html+=`<div style="margin-bottom:7px"><div class="row" style="margin-bottom:2px"><span style="color:#64748b;font-size:10px">MTF ${a}/3 (${s.n} trade)</span><span style="color:${col};font-size:10px;font-weight:700">${wr}%</span></div><div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div></div>`;
+        html+=`<div style="margin-bottom:7px"><div class="row" style="margin-bottom:2px"><span style="color:#b0bdd0;font-size:10px">MTF ${a}/3 (${s.n} trade)</span><span style="color:${col};font-size:10px;font-weight:700">${wr}%</span></div><div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div></div>`;
       });
       html+='</div>';
     }
@@ -1286,14 +1290,14 @@ function renderDiary(){
   else if(state.diaryTab==='patterns'){
     const setupMap={};
     closed.forEach(x=>{if(!setupMap[x.setup_name])setupMap[x.setup_name]={n:0,w:0,pnl:0};const s=setupMap[x.setup_name];s.n++;if(x.isWin)s.w++;s.pnl+=(x.pnl||0);});
-    if(Object.keys(setupMap).length===0){html+=`<div style="text-align:center;padding:28px 0;color:#64748b">Chiudi dei trade per vedere i pattern.</div>`;}
+    if(Object.keys(setupMap).length===0){html+=`<div style="text-align:center;padding:28px 0;color:#b0bdd0">Chiudi dei trade per vedere i pattern.</div>`;}
     else{
       html+=`<div class="card"><div class="section-title">Performance per Setup</div>`;
       Object.entries(setupMap).sort((a,b)=>b[1].pnl-a[1].pnl).forEach(([name,s])=>{
         const wr=Math.round(s.w/s.n*100),col=wr>=50?'#22c55e':'#ef4444';
-        html+=`<div style="background:#1a2130;border-radius:7px;padding:8px 10px;margin-bottom:6px">
+        html+=`<div style="background:#1e2740;border-radius:7px;padding:8px 10px;margin-bottom:6px">
           <div class="row" style="margin-bottom:4px"><span style="color:#e2e8f0;font-size:11px;font-weight:700">${name}</span><span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-weight:700;font-size:11px">${fmtPnl(s.pnl)}</span></div>
-          <div style="display:flex;gap:8px;font-size:9px;color:#64748b;margin-bottom:4px"><span>${s.n} trade</span><span style="color:${col};font-weight:700">${wr}% WR</span></div>
+          <div style="display:flex;gap:8px;font-size:9px;color:#b0bdd0;margin-bottom:4px"><span>${s.n} trade</span><span style="color:${col};font-weight:700">${wr}% WR</span></div>
           <div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
         </div>`;
       });
@@ -1304,7 +1308,7 @@ function renderDiary(){
   // ── BACKTEST TAB ─────────────────────────────────────────────
   else if(state.diaryTab==='backtest'){
     const bt=runBacktest(state.trades);
-    if(!bt){html+=`<div style="text-align:center;padding:40px 0;color:#64748b"><div style="font-size:32px;margin-bottom:8px">🧪</div>Servono almeno 3 trade chiusi per il backtest.</div>`;} 
+    if(!bt){html+=`<div style="text-align:center;padding:40px 0;color:#b0bdd0"><div style="font-size:32px;margin-bottom:8px">🧪</div>Servono almeno 3 trade chiusi per il backtest.</div>`;} 
     else {
       // KPI avanzati
       html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
@@ -1323,10 +1327,10 @@ function renderDiary(){
         const intensity=wr===null?0:wr/100;
         const bg=wr===null?'#1a2130':wr>=60?`rgba(34,197,94,${0.2+intensity*0.6})`:wr>=40?`rgba(240,180,41,${0.2+intensity*0.4})`:`rgba(239,68,68,${0.2+(1-intensity)*0.6})`;
         const textCol=wr===null?'#334155':wr>=60?'#22c55e':wr>=40?'#f0b429':'#ef4444';
-        html+=`<div style="background:${bg};border-radius:6px;padding:5px 3px;text-align:center;border:1px solid #1e2535">
-          <div style="color:#64748b;font-size:8px">${String(h).padStart(2,'0')}h</div>
+        html+=`<div style="background:${bg};border-radius:6px;padding:5px 3px;text-align:center;border:1px solid #2a3550">
+          <div style="color:#b0bdd0;font-size:10px">${String(h).padStart(2,'0')}h</div>
           <div style="color:${textCol};font-size:10px;font-weight:700">${wr!==null?wr+'%':'–'}</div>
-          <div style="color:#64748b;font-size:7px">${s.n}t</div>
+          <div style="color:#b0bdd0;font-size:9px">${s.n}t</div>
         </div>`;
       }
       html+=`</div>`;
@@ -1338,11 +1342,11 @@ function renderDiary(){
       if(bt.bestHours.length){
         html+=`<div style="margin-top:8px">
           <div style="color:#22c55e;font-size:11px;font-weight:700;margin-bottom:5px">✅ Ore migliori</div>
-          ${bt.bestHours.map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2535"><span style="color:#94a3b8;font-size:11px">${String(h.h).padStart(2,'0')}:00 (${h.n} trade)</span><span style="color:#22c55e;font-weight:700;font-size:11px">${h.wr}% WR · ${fmtPnl(h.pnl)}</span></div>`).join('')}
+          ${bt.bestHours.map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2535"><span style="color:#b0bdd0;font-size:11px">${String(h.h).padStart(2,'0')}:00 (${h.n} trade)</span><span style="color:#22c55e;font-weight:700;font-size:11px">${h.wr}% WR · ${fmtPnl(h.pnl)}</span></div>`).join('')}
         </div>
         <div style="margin-top:8px">
           <div style="color:#ef4444;font-size:11px;font-weight:700;margin-bottom:5px">❌ Ore peggiori</div>
-          ${bt.worstHours.map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2535"><span style="color:#94a3b8;font-size:11px">${String(h.h).padStart(2,'0')}:00 (${h.n} trade)</span><span style="color:#ef4444;font-weight:700;font-size:11px">${h.wr}% WR · ${fmtPnl(h.pnl)}</span></div>`).join('')}
+          ${bt.worstHours.map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2535"><span style="color:#b0bdd0;font-size:11px">${String(h.h).padStart(2,'0')}:00 (${h.n} trade)</span><span style="color:#ef4444;font-weight:700;font-size:11px">${h.wr}% WR · ${fmtPnl(h.pnl)}</span></div>`).join('')}
         </div>`;
       }
       html+=`</div>`;
@@ -1354,7 +1358,7 @@ function renderDiary(){
         const wr=Math.round(s.w/s.n*100),col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
         html+=`<div style="margin-bottom:7px">
           <div class="row" style="margin-bottom:2px">
-            <span style="color:#94a3b8;font-size:11px">${s.label} (${s.n} trade)</span>
+            <span style="color:#b0bdd0;font-size:11px">${s.label} (${s.n} trade)</span>
             <div style="display:flex;gap:8px;align-items:center">
               <span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-size:10px">${fmtPnl(s.pnl)}</span>
               <span style="color:${col};font-size:11px;font-weight:700">${wr}%</span>
@@ -1371,7 +1375,7 @@ function renderDiary(){
         if(!s.n)return;
         const wr=Math.round(s.w/s.n*100),col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
         const sessColor={'Asia':'#3b82f6','Londra':'#f0b429','Overlap':'#ef4444','New York':'#f97316'}[sess]||'#64748b';
-        html+=`<div style="background:#1a2130;border-radius:9px;padding:10px 12px;margin-bottom:7px;border-left:3px solid ${sessColor}">
+        html+=`<div style="background:#1e2740;border-radius:9px;padding:10px 12px;margin-bottom:7px;border-left:3px solid ${sessColor}">
           <div class="row" style="margin-bottom:5px">
             <span style="color:#e2e8f0;font-size:12px;font-weight:700">${sess}</span>
             <div style="display:flex;gap:8px;align-items:center">
@@ -1379,7 +1383,7 @@ function renderDiary(){
               <span style="color:${col};font-size:13px;font-weight:800">${wr}%</span>
             </div>
           </div>
-          <div style="display:flex;gap:10px;font-size:10px;color:#64748b">
+          <div style="display:flex;gap:10px;font-size:10px;color:#b0bdd0">
             <span>${s.n} trade</span><span>${s.w} vinti</span><span>${s.n-s.w} persi</span>
           </div>
           <div class="bar-wrap" style="margin-top:5px"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
@@ -1393,7 +1397,7 @@ function renderDiary(){
         if(!s.n)return;
         const wr=Math.round(s.w/s.n*100),col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
         html+=`<div style="margin-bottom:7px">
-          <div class="row" style="margin-bottom:2px"><span style="color:#94a3b8;font-size:11px">${label} (${s.n} trade)</span><span style="color:${col};font-size:11px;font-weight:700">${wr}% · ${fmtPnl(s.pnl)}</span></div>
+          <div class="row" style="margin-bottom:2px"><span style="color:#b0bdd0;font-size:11px">${label} (${s.n} trade)</span><span style="color:${col};font-size:11px;font-weight:700">${wr}% · ${fmtPnl(s.pnl)}</span></div>
           <div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
         </div>`;
       });
@@ -1401,7 +1405,7 @@ function renderDiary(){
       const confHigh=bt.byConf['Alta (≥70)'],confLow=bt.byConf['Bassa (<45)'];
       if(confHigh?.n>=2&&confLow?.n>=2){
         const wrH=Math.round(confHigh.w/confHigh.n*100),wrL=Math.round(confLow.w/confLow.n*100);
-        if(wrH>wrL+15) html+=`<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:8px 10px;margin-top:6px;font-size:11px;color:#94a3b8">💡 I trade con confidence alta (${wrH}% WR) battono quelli a bassa confidenza (${wrL}% WR). <strong style="color:#22c55e">Filtra sotto 45.</strong></div>`;
+        if(wrH>wrL+15) html+=`<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:8px 10px;margin-top:6px;font-size:11px;color:#b0bdd0">💡 I trade con confidence alta (${wrH}% WR) battono quelli a bassa confidenza (${wrL}% WR). <strong style="color:#22c55e">Filtra sotto 45.</strong></div>`;
       }
       html+=`</div>`;
 
@@ -1411,10 +1415,10 @@ function renderDiary(){
         const s=bt.byDir[dir]; if(!s.n)return;
         const wr=Math.round(s.w/s.n*100),col=wr>=50?'#22c55e':'#ef4444';
         const dCol=dir==='BUY'?'#22c55e':'#ef4444';
-        html+=`<div style="background:#1a2130;border-radius:9px;padding:12px;border:1px solid ${dCol}33;text-align:center">
+        html+=`<div style="background:#1e2740;border-radius:9px;padding:12px;border:1px solid ${dCol}33;text-align:center">
           <div style="color:${dCol};font-size:18px;font-weight:800;margin-bottom:4px">${dir==='BUY'?'▲':'▼'} ${dir}</div>
           <div style="color:${col};font-size:22px;font-weight:900">${wr}%</div>
-          <div style="color:#64748b;font-size:10px;margin-top:3px">${s.n} trade · ${fmtPnl(s.pnl)}</div>
+          <div style="color:#b0bdd0;font-size:10px;margin-top:3px">${s.n} trade · ${fmtPnl(s.pnl)}</div>
         </div>`;
       });
       html+=`</div></div>`;
@@ -1425,7 +1429,7 @@ function renderDiary(){
         Object.entries(bt.byCond).sort((a,b)=>b[1].n-a[1].n).forEach(([cond,s])=>{
           const wr=Math.round(s.w/s.n*100),col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
           html+=`<div style="margin-bottom:7px">
-            <div class="row" style="margin-bottom:2px"><span style="color:#94a3b8;font-size:11px">${cond} (${s.n})</span><span style="color:${col};font-size:11px;font-weight:700">${wr}% · ${fmtPnl(s.pnl)}</span></div>
+            <div class="row" style="margin-bottom:2px"><span style="color:#b0bdd0;font-size:11px">${cond} (${s.n})</span><span style="color:${col};font-size:11px;font-weight:700">${wr}% · ${fmtPnl(s.pnl)}</span></div>
             <div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
           </div>`;
         });
@@ -1448,11 +1452,11 @@ function renderDiary(){
         <div style="display:inline-block;background:${ss.sessInfo.color}20;border:1px solid ${ss.sessInfo.color}44;border-radius:8px;padding:3px 14px;font-size:12px;font-weight:700;color:${ss.sessInfo.color}">Volatilità ${ss.sessInfo.vol}</div>
       </div>
       <div style="background:#080b10;border-radius:9px;padding:10px 12px;margin-bottom:10px;border-left:3px solid ${ss.sessInfo.color}">
-        <div style="color:#94a3b8;font-size:12px;line-height:1.6">${ss.sessInfo.desc}</div>
+        <div style="color:#b0bdd0;font-size:12px;line-height:1.6">${ss.sessInfo.desc}</div>
       </div>
-      ${ss.nextEvent?`<div style="display:flex;justify-content:space-between;align-items:center;background:#1a2130;border-radius:8px;padding:10px 12px">
-        <div><div style="color:#64748b;font-size:10px">Prossimo evento</div><div style="color:#e2e8f0;font-size:13px;font-weight:700;margin-top:2px">${ss.nextEvent.label}</div></div>
-        <div style="text-align:right"><div style="color:#f0b429;font-size:18px;font-weight:900">${ss.minToNext<60?ss.minToNext+'m':`${Math.floor(ss.minToNext/60)}h${ss.minToNext%60}m`}</div><div style="color:#64748b;font-size:9px">Impatto: ${ss.nextEvent.imp}</div></div>
+      ${ss.nextEvent?`<div style="display:flex;justify-content:space-between;align-items:center;background:#1e2740;border-radius:8px;padding:10px 12px">
+        <div><div style="color:#b0bdd0;font-size:10px">Prossimo evento</div><div style="color:#e2e8f0;font-size:13px;font-weight:700;margin-top:2px">${ss.nextEvent.label}</div></div>
+        <div style="text-align:right"><div style="color:#f0b429;font-size:18px;font-weight:900">${ss.minToNext<60?ss.minToNext+'m':`${Math.floor(ss.minToNext/60)}h${ss.minToNext%60}m`}</div><div style="color:#b0bdd0;font-size:9px">Impatto: ${ss.nextEvent.imp}</div></div>
       </div>`:''}
     </div>`;
 
@@ -1465,7 +1469,7 @@ function renderDiary(){
       {name:'🗽 New York', start:17, end:24, col:'#f97316', vol:'Alta'},
     ];
     const curH=ss.h+ss.m/60;
-    html+=`<div style="position:relative;height:40px;background:#1a2130;border-radius:8px;overflow:hidden;margin-bottom:12px">`;
+    html+=`<div style="position:relative;height:40px;background:#1e2740;border-radius:8px;overflow:hidden;margin-bottom:12px">`;
     sessions.forEach(s=>{
       const left=(s.start/24*100).toFixed(1);
       const width=((s.end-s.start)/24*100).toFixed(1);
@@ -1478,17 +1482,17 @@ function renderDiary(){
       const isNow=curH>=s.start&&curH<s.end;
       const myStats=bt?.bySess[s.name.replace(/^[^ ]+ /,'')]||null;
       const wr=myStats?.n?Math.round(myStats.w/myStats.n*100):null;
-      html+=`<div style="background:#1a2130;border-radius:9px;padding:10px 12px;margin-bottom:7px;border-left:3px solid ${s.col};${isNow?`box-shadow:0 0 12px ${s.col}44`:''}">
+      html+=`<div style="background:#1e2740;border-radius:9px;padding:10px 12px;margin-bottom:7px;border-left:3px solid ${s.col};${isNow?`box-shadow:0 0 12px ${s.col}44`:''}">
         <div class="row" style="margin-bottom:4px">
           <div style="display:flex;align-items:center;gap:6px">
             ${isNow?`<div style="width:8px;height:8px;border-radius:50%;background:${s.col};box-shadow:0 0 6px ${s.col}"></div>`:''}
             <span style="color:${isNow?s.col:'#94a3b8'};font-size:13px;font-weight:${isNow?800:600}">${s.name} ${isNow?'← ORA':''}</span>
           </div>
-          <span style="color:#64748b;font-size:11px">${String(s.start).padStart(2,'0')}:00 – ${s.end===24?'24':String(s.end).padStart(2,'0')}:00</span>
+          <span style="color:#b0bdd0;font-size:11px">${String(s.start).padStart(2,'0')}:00 – ${s.end===24?'24':String(s.end).padStart(2,'0')}:00</span>
         </div>
         <div style="display:flex;gap:10px;font-size:11px">
-          <span style="color:#64748b">Volatilità: <span style="color:${s.col};font-weight:700">${s.vol}</span></span>
-          ${wr!==null?`<span style="color:#64748b">Il tuo WR: <span style="color:${wr>=50?'#22c55e':'#ef4444'};font-weight:700">${wr}% (${myStats.n}t)</span></span>`:''}
+          <span style="color:#b0bdd0">Volatilità: <span style="color:${s.col};font-weight:700">${s.vol}</span></span>
+          ${wr!==null?`<span style="color:#b0bdd0">Il tuo WR: <span style="color:${wr>=50?'#22c55e':'#ef4444'};font-weight:700">${wr}% (${myStats.n}t)</span></span>`:''}
         </div>
       </div>`;
     });
@@ -1518,9 +1522,9 @@ function renderDiary(){
       }
       if(insights.length===0) insights.push({icon:'📊',col:'#64748b',text:'Aggiungi più trade al diario per ricevere insight personalizzati.'});
       insights.forEach(i=>{
-        html+=`<div style="display:flex;gap:10px;background:#1a2130;border-radius:9px;padding:11px 12px;margin-bottom:7px;border-left:3px solid ${i.col}">
+        html+=`<div style="display:flex;gap:10px;background:#1e2740;border-radius:9px;padding:11px 12px;margin-bottom:7px;border-left:3px solid ${i.col}">
           <span style="font-size:18px;flex-shrink:0">${i.icon}</span>
-          <div style="color:#94a3b8;font-size:12px;line-height:1.6">${i.text}</div>
+          <div style="color:#b0bdd0;font-size:12px;line-height:1.6">${i.text}</div>
         </div>`;
       });
       html+=`</div>`;
@@ -1687,7 +1691,7 @@ const SPREAD      = 0.04;   // $0.04 spread fisso bid/ask
 const RISK_PCT    = 0.01;   // 1% del capitale per trade (rischio per stop)
 const LEVERAGE    = 100;    // leva 1:100
 const MAX_POS_PCT = 0.05;   // max 5% capitale per singola posizione
-const MIN_CONF    = 65;     // confidence minima per entry
+const MIN_CONF    = 55;     // confidence minima per entry
 const MIN_SEMS    = 2;      // semafori verdi minimi
 const MAX_DD      = 0.10;   // max drawdown 10% prima di stop
 
@@ -1731,6 +1735,9 @@ function evaluateAutoEntry() {
 
   // Cooldown tra trade
   const nowTs = Date.now();
+  // Aggiorna UI timestamp
+  const evalEl = document.getElementById('paper-last-eval');
+  if(evalEl) evalEl.textContent = `Ultimo check: ${new Date().toLocaleTimeString('it-IT')}`;
   if (nowTs - p.lastSignalTs < p.cooldownMin * 60 * 1000) return;
 
   const sig = computeScalpSignal();
@@ -1778,6 +1785,16 @@ function evaluateAutoEntry() {
   savePaperState();
   renderPaperWidget();
   console.log('[PAPER] Trade aperto:', trade);
+
+  // Notifica push per paper trade aperto
+  if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification(`🤖 Paper Trade Aperto — ${trade.direction}`, {
+        body: `${trade.direction} XAU @ $${trade.entry} · SL $${trade.sl} · TP $${trade.tp1} · Lot ${trade.lots}`,
+        icon: '/icon-192.png', tag: 'paper-open', vibrate: [200,100,200],
+      });
+    }).catch(()=>{});
+  }
 }
 
 // Valuta se chiudere il trade aperto
@@ -1835,6 +1852,21 @@ function evaluateAutoExit(currentPrice) {
   savePaperState();
   renderPaperWidget();
   console.log('[PAPER] Trade chiuso:', closed_trade);
+
+  // Aggiorna timestamp ultimo check nel widget
+  const evalEl = document.getElementById('paper-last-eval');
+  if(evalEl) evalEl.textContent = `Chiusura: ${new Date().toLocaleTimeString('it-IT')} · ${exitReason} · €${pnlEur>0?'+':''}${pnlEur}`;
+
+  // Notifica push per chiusura
+  if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+    const emoji = isWin ? '✅' : exitReason==='BE'?'➖':'❌';
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification(`${emoji} Paper Trade Chiuso — ${exitReason}`, {
+        body: `${dir} XAU · P&L: €${pnlEur>0?'+':''}${pnlEur.toFixed(2)} · Capitale: €${p.capital.toFixed(0)}`,
+        icon: '/icon-192.png', tag: 'paper-close', vibrate: [300,100,300],
+      });
+    }).catch(()=>{});
+  }
 }
 
 function savePaperState() {
@@ -1887,7 +1919,7 @@ function renderPaperWidget() {
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
       <div>
         <div style="color:#f0b429;font-weight:800;font-size:13px">🤖 Paper Trading Auto</div>
-        <div style="color:#64748b;font-size:10px;margin-top:1px">Leva 1:100 · Spread $${SPREAD} · Rischio 1% · Max pos 5% · Capital €10K</div>
+        <div style="color:#b0bdd0;font-size:10px;margin-top:1px">Leva 1:100 · Spread $${SPREAD} · Rischio 1% · Max pos 5% · Capital €10K</div>
       </div>
       <button onclick="togglePaperTrading()" style="background:${p.enabled?'#ef4444':'#22c55e'};color:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;border:none">
         ${p.enabled?'⏹ Stop':'▶ Avvia'}
@@ -1898,21 +1930,21 @@ function renderPaperWidget() {
 
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:8px">
       <div style="background:#080b10;border-radius:8px;padding:8px;text-align:center">
-        <div style="color:#64748b;font-size:9px">Capitale</div>
+        <div style="color:#b0bdd0;font-size:9px">Capitale</div>
         <div style="color:#e2e8f0;font-size:13px;font-weight:800">€${p.capital.toFixed(0)}</div>
       </div>
       <div style="background:#080b10;border-radius:8px;padding:8px;text-align:center">
-        <div style="color:#64748b;font-size:9px">P&L</div>
+        <div style="color:#b0bdd0;font-size:9px">P&L</div>
         <div style="color:${pnlTotal>=0?'#22c55e':'#ef4444'};font-size:13px;font-weight:800">${pnlTotal>=0?'+':''}€${pnlTotal.toFixed(0)}</div>
         <div style="color:${pnlTotal>=0?'#22c55e':'#ef4444'};font-size:9px">${pnlPct>=0?'+':''}${pnlPct}%</div>
       </div>
       <div style="background:#080b10;border-radius:8px;padding:8px;text-align:center">
-        <div style="color:#64748b;font-size:9px">Win Rate</div>
+        <div style="color:#b0bdd0;font-size:9px">Win Rate</div>
         <div style="color:${wr>=50?'#22c55e':'#ef4444'};font-size:13px;font-weight:800">${wr}%</div>
-        <div style="color:#64748b;font-size:9px">${p.trades.length}T</div>
+        <div style="color:#b0bdd0;font-size:9px">${p.trades.length}T</div>
       </div>
       <div style="background:#080b10;border-radius:8px;padding:8px;text-align:center">
-        <div style="color:#64748b;font-size:9px">Drawdown</div>
+        <div style="color:#b0bdd0;font-size:9px">Drawdown</div>
         <div style="color:${dd>5?'#ef4444':dd>2?'#f97316':'#22c55e'};font-size:13px;font-weight:800">${dd>0?'-':''}${Math.abs(dd)}%</div>
       </div>
     </div>
@@ -1924,12 +1956,15 @@ function renderPaperWidget() {
         <span style="background:${p.openTrade.direction==='BUY'?'#22c55e':'#ef4444'}20;color:${p.openTrade.direction==='BUY'?'#22c55e':'#ef4444'};border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700">${p.openTrade.direction}</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px">
-        ${[['Entry','$'+fmtP(p.openTrade.entry),'#f0b429'],['SL','$'+fmtP(p.openTrade.sl),'#ef4444'],['TP1','$'+fmtP(p.openTrade.tp1),'#22c55e'],['Lot',p.openTrade.lots,'#94a3b8']].map(([l,v,c])=>`<div style="background:#080b10;border-radius:5px;padding:4px;text-align:center"><div style="color:#64748b;font-size:8px">${l}</div><div style="color:${c};font-size:10px;font-weight:700">${v}</div></div>`).join('')}
+        ${[['Entry','$'+fmtP(p.openTrade.entry),'#f0b429'],['SL','$'+fmtP(p.openTrade.sl),'#ef4444'],['TP1','$'+fmtP(p.openTrade.tp1),'#22c55e'],['Lot',p.openTrade.lots,'#94a3b8']].map(([l,v,c])=>`<div style="background:#080b10;border-radius:5px;padding:4px;text-align:center"><div style="color:#b0bdd0;font-size:10px">${l}</div><div style="color:${c};font-size:10px;font-weight:700">${v}</div></div>`).join('')}
       </div>
-      <div style="color:#64748b;font-size:9px;margin-top:5px">Rischio: €${p.openTrade.riskEur} · Conf: ${p.openTrade.confidence}/100 · ${new Date(p.openTrade.openedAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</div>
-    </div>` : p.enabled ? `<div style="background:#22c55e12;border:1px solid #22c55e22;border-radius:8px;padding:8px 10px;color:#22c55e;font-size:11px;text-align:center">✅ In ascolto — prossimo segnale conf ≥${MIN_CONF} e ${MIN_SEMS} semafori verdi</div>` : ''}
+      <div style="color:#b0bdd0;font-size:9px;margin-top:5px">Rischio: €${p.openTrade.riskEur} · Conf: ${p.openTrade.confidence}/100 · ${new Date(p.openTrade.openedAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>` : p.enabled ? `<div style="background:#22c55e12;border:1px solid #22c55e22;border-radius:8px;padding:8px 10px;color:#22c55e;font-size:11px;text-align:center">
+  ✅ In ascolto — conf ≥${MIN_CONF} · ${MIN_SEMS} semafori verdi<br>
+  <span id="paper-last-eval" style="color:#64748b;font-size:10px">Ultimo check: mai</span>
+</div>` : ''}
 
-    <button onclick="showDiary();setDiaryTabDirect('paper')" style="width:100%;margin-top:6px;background:#1a2130;border:1px solid #1e2535;color:#94a3b8;border-radius:8px;padding:7px 0;font-size:11px">
+    <button onclick="showDiary();setDiaryTabDirect('paper')" style="width:100%;margin-top:6px;background:#1e2740;border:1px solid #2a3550;color:#b0bdd0;border-radius:8px;padding:7px 0;font-size:11px">
       📊 Storico completo nel Diario →
     </button>
     <button onclick="resetPaperTrading()" style="width:100%;margin-top:5px;background:transparent;border:1px solid #334155;color:#475569;border-radius:8px;padding:6px 0;font-size:10px">
@@ -2454,7 +2489,7 @@ function renderScalpScreen() {
   const sig = computeScalpSignal();
 
   if (!sig) {
-    content.innerHTML = `<div style="text-align:center;padding:40px 0;color:#64748b">
+    content.innerHTML = `<div style="text-align:center;padding:40px 0;color:#b0bdd0">
       <div style="font-size:32px;margin-bottom:8px">⚡</div>
       <div>Servono almeno 20 candele 5M.</div>
       <button onclick="doScalpFetch()" style="margin-top:14px;background:#f97316;color:#000;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;border:none">Carica dati scalping</button>
@@ -2510,17 +2545,17 @@ function renderScalpScreen() {
   html += `<div class="card" style="border:2px solid ${sig.finalColor}33;padding:16px">
     <div style="text-align:center;margin-bottom:12px">
       <div style="font-size:36px;font-weight:900;color:${sig.finalColor}">${sig.finalDir}</div>
-      <div style="color:#94a3b8;font-size:12px;margin-top:3px">${sig.buyV} criteri bull · ${sig.sellV} criteri bear · TF: ${sig.tfLabel}</div>
+      <div style="color:#b0bdd0;font-size:12px;margin-top:3px">${sig.buyV} criteri bull · ${sig.sellV} criteri bear · TF: ${sig.tfLabel}</div>
     </div>
     <div style="margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="color:#94a3b8;font-size:12px;font-weight:600">Confidenza Scalping</span>
+        <span style="color:#b0bdd0;font-size:12px;font-weight:600">Confidenza Scalping</span>
         <span style="font-size:22px;font-weight:900;color:${sig.confColor}">${sig.confidence}/100</span>
       </div>
       <div class="conf-bar">
         <div class="conf-fill" style="width:${sig.confidence}%;background:${sig.confColor}"></div>
       </div>
-      <div style="text-align:center;color:#64748b;font-size:11px;margin-top:4px">
+      <div style="text-align:center;color:#b0bdd0;font-size:11px;margin-top:4px">
         ${sig.confidence>=75?'✅ Segnale FORTE — alta coerenza':sig.confidence>=50?'⚡ Segnale MODERATO':sig.confidence>=35?'⚠ Segnale DEBOLE':'❌ Incerto — non operare'}
       </div>
     </div>
@@ -2529,10 +2564,10 @@ function renderScalpScreen() {
   // ── Chart ────────────────────────────────────────────────────
   html += `<div class="card" style="padding:10px 5px 6px">
     <div style="display:flex;justify-content:space-between;padding:0 7px 4px">
-      <span style="color:#64748b;font-size:10px">XAU/USD ${sig.tfLabel} · Boll + VWAP</span>
+      <span style="color:#b0bdd0;font-size:10px">XAU/USD ${sig.tfLabel} · Boll + VWAP</span>
       <div style="display:flex;gap:8px">
-        <span style="color:#a855f7;font-size:8px">— Bollinger</span>
-        <span style="color:#f0b429;font-size:8px">— VWAP</span>
+        <span style="color:#a855f7;font-size:10px">— Bollinger</span>
+        <span style="color:#f0b429;font-size:10px">— VWAP</span>
       </div>
     </div>
     <svg width="100%" viewBox="0 0 340 140" style="display:block">${chartSvg}</svg>
@@ -2544,9 +2579,9 @@ function renderScalpScreen() {
   sig.sems.forEach(({label,sem,detail})=>{
     const col=sem==='green'?'#22c55e':sem==='red'?'#ef4444':sem==='orange'?'#f97316':'#334155';
     const shadow=sem==='green'?'0 0 8px #22c55e88':sem==='red'?'0 0 8px #ef444488':sem==='orange'?'0 0 8px #f9731688':'none';
-    html+=`<div style="background:#1a2130;border-radius:10px;padding:10px 12px;border:1px solid ${col}33;display:flex;align-items:center;gap:10px">
+    html+=`<div style="background:#1e2740;border-radius:10px;padding:10px 12px;border:1px solid ${col}33;display:flex;align-items:center;gap:10px">
       <div style="width:16px;height:16px;border-radius:50%;background:${col};box-shadow:${shadow};flex-shrink:0"></div>
-      <div><div style="color:#e2e8f0;font-size:12px;font-weight:700">${label}</div><div style="color:#64748b;font-size:10px;margin-top:1px">${detail}</div></div>
+      <div><div style="color:#e2e8f0;font-size:12px;font-weight:700">${label}</div><div style="color:#b0bdd0;font-size:10px;margin-top:1px">${detail}</div></div>
     </div>`;
   });
   html += '</div></div>';
@@ -2570,7 +2605,7 @@ function renderScalpScreen() {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div>
           <div style="color:#f97316;font-weight:800;font-size:14px">📡 Macro Anticipatori Scalping</div>
-          <div style="color:#64748b;font-size:10px;margin-top:2px">EUR/USD + TNX su 1M e 5M → impulso XAU</div>
+          <div style="color:#b0bdd0;font-size:10px;margin-top:2px">EUR/USD + TNX su 1M e 5M → impulso XAU</div>
         </div>
         <div style="text-align:right">
           <span style="background:${macro.macroColor}22;color:${macro.macroColor};border:1px solid ${macro.macroColor}44;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:800">${macro.macroLabel}</span>
@@ -2585,70 +2620,70 @@ function renderScalpScreen() {
     if (macro.hasEur) {
       const col1m = macroSem(macro.eurBias1m, macro.eurAligned, false);
       const eurDir1m = macro.eurBias1m === 'BUY' ? '→ ↑ XAU' : macro.eurBias1m === 'SELL' ? '→ ↓ XAU' : '→ neutro';
-      html += `<div style="background:#1a2130;border-radius:9px;padding:10px;border:1px solid ${col1m}33">
+      html += `<div style="background:#1e2740;border-radius:9px;padding:10px;border:1px solid ${col1m}33">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div style="width:12px;height:12px;border-radius:50%;background:${col1m};box-shadow:${semGlow(col1m)};flex-shrink:0"></div>
-          <span style="color:#94a3b8;font-size:10px;font-weight:700">${eurLabel} 1M</span>
+          <span style="color:#b0bdd0;font-size:10px;font-weight:700">${eurLabel} 1M</span>
         </div>
         <div style="color:${col1m};font-size:15px;font-weight:800">${macro.eurBias1m||'–'}</div>
-        <div style="color:#64748b;font-size:10px;margin-top:2px">Slope: ${macro.eur1mSlope>0?'+':''}${(macro.eur1mSlope*100||0).toFixed(3)}%</div>
+        <div style="color:#b0bdd0;font-size:10px;margin-top:2px">Slope: ${macro.eur1mSlope>0?'+':''}${(macro.eur1mSlope*100||0).toFixed(3)}%</div>
         <div style="color:${col1m};font-size:10px;font-weight:600">${eurDir1m}</div>
         ${macro.eur1mATR?.spike ? '<div style="color:#f97316;font-size:9px;margin-top:3px">⚡ Spike ATR → evento in corso</div>' : ''}
-        <div style="color:#64748b;font-size:9px;margin-top:2px">RSI7: ${macro.eur1mRSI} ${macro.eur1mLast?`· $${macro.eur1mLast.toFixed(4)}`:''}</div>
+        <div style="color:#b0bdd0;font-size:9px;margin-top:2px">RSI7: ${macro.eur1mRSI} ${macro.eur1mLast?`· $${macro.eur1mLast.toFixed(4)}`:''}</div>
       </div>`;
 
       // EUR/USD 5M
       const col5m = macroSem(macro.eurBias5m, macro.eurAligned, macro.eurDivergence);
       const eurDir5m = macro.eurBias5m === 'BUY' ? '→ ↑ XAU' : macro.eurBias5m === 'SELL' ? '→ ↓ XAU' : '→ neutro';
-      html += `<div style="background:#1a2130;border-radius:9px;padding:10px;border:1px solid ${col5m}33">
+      html += `<div style="background:#1e2740;border-radius:9px;padding:10px;border:1px solid ${col5m}33">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div style="width:12px;height:12px;border-radius:50%;background:${col5m};box-shadow:${semGlow(col5m)};flex-shrink:0"></div>
-          <span style="color:#94a3b8;font-size:10px;font-weight:700">${eurLabel} 5M</span>
-          ${macro.eurAligned ? '<span style="background:#22c55e20;color:#22c55e;border-radius:4px;padding:1px 5px;font-size:8px;font-weight:700">ALLINEATO</span>' : ''}
-          ${macro.eurDivergence ? '<span style="background:#f9731620;color:#f97316;border-radius:4px;padding:1px 5px;font-size:8px;font-weight:700">DIV</span>' : ''}
+          <span style="color:#b0bdd0;font-size:10px;font-weight:700">${eurLabel} 5M</span>
+          ${macro.eurAligned ? '<span style="background:#22c55e20;color:#22c55e;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">ALLINEATO</span>' : ''}
+          ${macro.eurDivergence ? '<span style="background:#f9731620;color:#f97316;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">DIV</span>' : ''}
         </div>
         <div style="color:${col5m};font-size:15px;font-weight:800">${macro.eurBias5m||'–'}</div>
-        <div style="color:#64748b;font-size:10px;margin-top:2px">Slope: ${macro.eur5mSlope>0?'+':''}${(macro.eur5mSlope*100||0).toFixed(3)}%</div>
+        <div style="color:#b0bdd0;font-size:10px;margin-top:2px">Slope: ${macro.eur5mSlope>0?'+':''}${(macro.eur5mSlope*100||0).toFixed(3)}%</div>
         <div style="color:${col5m};font-size:10px;font-weight:600">${eurDir5m}</div>
         ${macro.eurDivergence ? '<div style="color:#f97316;font-size:9px;margin-top:3px">⚠️ 1M vs 5M divergenti → esaurimento?</div>' : ''}
       </div>`;
     } else {
-      html += `<div style="background:#1a2130;border-radius:9px;padding:10px;opacity:0.4;grid-column:span 2"><div style="color:#64748b;font-size:11px">EUR/USD non disponibile nel piano</div></div>`;
+      html += `<div style="background:#1e2740;border-radius:9px;padding:10px;opacity:0.4;grid-column:span 2"><div style="color:#b0bdd0;font-size:11px">EUR/USD non disponibile nel piano</div></div>`;
     }
 
     // TNX 1M
     if (macro.hasTnx) {
       const tCol1m = macroSem(macro.tnxBias1m, macro.tnxAligned, false);
       const tnxDir1m = macro.tnxBias1m === 'BUY' ? '→ ↑ XAU' : macro.tnxBias1m === 'SELL' ? '→ ↓ XAU' : '→ neutro';
-      html += `<div style="background:#1a2130;border-radius:9px;padding:10px;border:1px solid ${tCol1m}33">
+      html += `<div style="background:#1e2740;border-radius:9px;padding:10px;border:1px solid ${tCol1m}33">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div style="width:12px;height:12px;border-radius:50%;background:${tCol1m};box-shadow:${semGlow(tCol1m)};flex-shrink:0"></div>
-          <span style="color:#94a3b8;font-size:10px;font-weight:700">${tnxLabel} 1M</span>
+          <span style="color:#b0bdd0;font-size:10px;font-weight:700">${tnxLabel} 1M</span>
         </div>
         <div style="color:${tCol1m};font-size:15px;font-weight:800">${macro.tnxBias1m||'–'}</div>
-        <div style="color:#64748b;font-size:10px;margin-top:2px">Slope: ${macro.tnx1mSlope>0?'+':''}${(macro.tnx1mSlope*100||0).toFixed(3)}%</div>
+        <div style="color:#b0bdd0;font-size:10px;margin-top:2px">Slope: ${macro.tnx1mSlope>0?'+':''}${(macro.tnx1mSlope*100||0).toFixed(3)}%</div>
         <div style="color:${tCol1m};font-size:10px;font-weight:600">${tnxDir1m}</div>
         ${macro.tnx1mATR?.spike ? '<div style="color:#f97316;font-size:9px;margin-top:3px">⚡ Spike ATR → movimento yield</div>' : ''}
-        <div style="color:#64748b;font-size:9px;margin-top:2px">RSI7: ${macro.tnx1mRSI} ${macro.tnx1mLast?`· ${macro.tnx1mLast.toFixed(3)}%`:''}</div>
+        <div style="color:#b0bdd0;font-size:9px;margin-top:2px">RSI7: ${macro.tnx1mRSI} ${macro.tnx1mLast?`· ${macro.tnx1mLast.toFixed(3)}%`:''}</div>
       </div>`;
 
       // TNX 5M
       const tCol5m = macroSem(macro.tnxBias5m, macro.tnxAligned, macro.tnxDivergence);
       const tnxDir5m = macro.tnxBias5m === 'BUY' ? '→ ↑ XAU' : macro.tnxBias5m === 'SELL' ? '→ ↓ XAU' : '→ neutro';
-      html += `<div style="background:#1a2130;border-radius:9px;padding:10px;border:1px solid ${tCol5m}33">
+      html += `<div style="background:#1e2740;border-radius:9px;padding:10px;border:1px solid ${tCol5m}33">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div style="width:12px;height:12px;border-radius:50%;background:${tCol5m};box-shadow:${semGlow(tCol5m)};flex-shrink:0"></div>
-          <span style="color:#94a3b8;font-size:10px;font-weight:700">${tnxLabel} 5M</span>
-          ${macro.tnxAligned ? '<span style="background:#22c55e20;color:#22c55e;border-radius:4px;padding:1px 5px;font-size:8px;font-weight:700">ALLINEATO</span>' : ''}
-          ${macro.tnxDivergence ? '<span style="background:#f9731620;color:#f97316;border-radius:4px;padding:1px 5px;font-size:8px;font-weight:700">DIV</span>' : ''}
+          <span style="color:#b0bdd0;font-size:10px;font-weight:700">${tnxLabel} 5M</span>
+          ${macro.tnxAligned ? '<span style="background:#22c55e20;color:#22c55e;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">ALLINEATO</span>' : ''}
+          ${macro.tnxDivergence ? '<span style="background:#f9731620;color:#f97316;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">DIV</span>' : ''}
         </div>
         <div style="color:${tCol5m};font-size:15px;font-weight:800">${macro.tnxBias5m||'–'}</div>
-        <div style="color:#64748b;font-size:10px;margin-top:2px">Slope: ${macro.tnx5mSlope>0?'+':''}${(macro.tnx5mSlope*100||0).toFixed(3)}%</div>
+        <div style="color:#b0bdd0;font-size:10px;margin-top:2px">Slope: ${macro.tnx5mSlope>0?'+':''}${(macro.tnx5mSlope*100||0).toFixed(3)}%</div>
         <div style="color:${tCol5m};font-size:10px;font-weight:600">${tnxDir5m}</div>
         ${macro.tnxDivergence ? '<div style="color:#f97316;font-size:9px;margin-top:3px">⚠️ 1M vs 5M divergenti → cautela</div>' : ''}
       </div>`;
     } else {
-      html += `<div style="background:#1a2130;border-radius:9px;padding:10px;opacity:0.4;grid-column:span 2"><div style="color:#64748b;font-size:11px">TNX non disponibile nel piano</div></div>`;
+      html += `<div style="background:#1e2740;border-radius:9px;padding:10px;opacity:0.4;grid-column:span 2"><div style="color:#b0bdd0;font-size:11px">TNX non disponibile nel piano</div></div>`;
     }
 
     html += `</div>`; // close grid
@@ -2665,12 +2700,12 @@ function renderScalpScreen() {
             : `${macro.macroStr} segnali macro su ${macro.macroDir === 'BUY' ? 'rialzo' : 'ribasso'} XAU.`}
           ${macro.accelConfirm ? ' Movimento in accelerazione.' : ''}
         </div>
-        <div style="color:#64748b;font-size:10px;margin-top:5px">Boost confidence: <span style="color:#f0b429;font-weight:700">+${boost} pt</span></div>
+        <div style="color:#b0bdd0;font-size:10px;margin-top:5px">Boost confidence: <span style="color:#f0b429;font-weight:700">+${boost} pt</span></div>
       </div>`;
     } else if (macro.eurDivergence || macro.tnxDivergence) {
       html += `<div style="background:#f9731612;border:1px solid #f9731633;border-radius:9px;padding:9px 11px">
         <div style="color:#f97316;font-weight:700;font-size:12px">⚠️ Divergenza 1M vs 5M rilevata</div>
-        <div style="color:#94a3b8;font-size:11px;margin-top:3px">Il momentum a breve contrasta con la struttura a medio termine. Attendi chiarimento prima di entrare.</div>
+        <div style="color:#b0bdd0;font-size:11px;margin-top:3px">Il momentum a breve contrasta con la struttura a medio termine. Attendi chiarimento prima di entrare.</div>
       </div>`;
     }
 
@@ -2680,16 +2715,16 @@ function renderScalpScreen() {
   // ── Pattern candele ──────────────────────────────────────────
   html += `<div class="card"><div class="section-title">🕯 Pattern Rilevati</div>`;
   if (sig.patterns.length === 0) {
-    html += `<div style="color:#64748b;font-size:12px;text-align:center;padding:8px 0">Nessun pattern significativo nelle ultime candele</div>`;
+    html += `<div style="color:#b0bdd0;font-size:12px;text-align:center;padding:8px 0">Nessun pattern significativo nelle ultime candele</div>`;
   } else {
     sig.patterns.forEach(p=>{
       const col=p.bias==='BUY'?'#22c55e':p.bias==='SELL'?'#ef4444':'#f97316';
-      html+=`<div style="background:#1a2130;border-radius:9px;padding:10px 12px;margin-bottom:7px;border-left:3px solid ${col}">
+      html+=`<div style="background:#1e2740;border-radius:9px;padding:10px 12px;margin-bottom:7px;border-left:3px solid ${col}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
           <span style="color:#e2e8f0;font-size:13px;font-weight:700">${p.name}</span>
           <span style="background:${col}20;color:${col};border:1px solid ${col}44;border-radius:5px;padding:1px 8px;font-size:10px;font-weight:700">${p.bias}</span>
         </div>
-        <div style="color:#94a3b8;font-size:11px">${p.desc}</div>
+        <div style="color:#b0bdd0;font-size:11px">${p.desc}</div>
       </div>`;
     });
   }
@@ -2704,17 +2739,17 @@ function renderScalpScreen() {
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px">
           ${[['Entry',sig.entry,'#f0b429'],['SL',sig.sl,'#ef4444'],['TP1',sig.tp1,'#22c55e'],['TP2',sig.tp2,'#14b8a6']].map(([l,v,c])=>`
           <div style="background:#141920;border-radius:6px;padding:6px 4px;text-align:center">
-            <div style="color:#64748b;font-size:9px">${l}</div>
+            <div style="color:#b0bdd0;font-size:9px">${l}</div>
             <div style="color:${c};font-size:12px;font-weight:700">$${fmtP(v)}</div>
           </div>`).join('')}
         </div>
         <div style="display:flex;gap:12px;margin-top:8px;font-size:11px">
-          <span style="color:#64748b">R/R: <span style="color:#f97316;font-weight:700">1:${(Math.abs(sig.tp1-sig.entry)/Math.abs(sig.sl-sig.entry)).toFixed(1)}</span></span>
-          <span style="color:#64748b">ATR: <span style="color:#e2e8f0;font-weight:700">${sig.atrVal}</span></span>
-          <span style="color:#64748b">SL dist: <span style="color:#ef4444;font-weight:700">${Math.abs(sig.sl-sig.entry).toFixed(1)} pts</span></span>
+          <span style="color:#b0bdd0">R/R: <span style="color:#f97316;font-weight:700">1:${(Math.abs(sig.tp1-sig.entry)/Math.abs(sig.sl-sig.entry)).toFixed(1)}</span></span>
+          <span style="color:#b0bdd0">ATR: <span style="color:#e2e8f0;font-weight:700">${sig.atrVal}</span></span>
+          <span style="color:#b0bdd0">SL dist: <span style="color:#ef4444;font-weight:700">${Math.abs(sig.sl-sig.entry).toFixed(1)} pts</span></span>
         </div>
       </div>
-      <div style="background:#f9731615;border:1px solid #f9731633;border-radius:8px;padding:8px 10px;font-size:11px;color:#94a3b8">
+      <div style="background:#f9731615;border:1px solid #f9731633;border-radius:8px;padding:8px 10px;font-size:11px;color:#b0bdd0">
         ⚠️ Setup basato su ATR x1.2 SL · x1.5/2.5 TP. Adatta alle tue regole di risk management. Max 1-2% del capitale per trade.
       </div>
     </div>`;
@@ -2725,9 +2760,9 @@ function renderScalpScreen() {
     html += `<div class="card"><div class="section-title">🔢 Livelli Psicologici Vicini</div>`;
     sig.psychLevels.forEach(l=>{
       const col = l.above ? '#f87171' : '#4ade80';
-      html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:7px;margin-bottom:4px;background:#1a2130">
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:7px;margin-bottom:4px;background:#1e2740">
         <span style="color:${col};font-weight:700;font-size:14px">$${l.level.toFixed(0)}</span>
-        <span style="color:#64748b;font-size:11px">${l.above?'▲ resistenza':'▼ supporto'} · dist ${l.dist} pts</span>
+        <span style="color:#b0bdd0;font-size:11px">${l.above?'▲ resistenza':'▼ supporto'} · dist ${l.dist} pts</span>
       </div>`;
     });
     html += '</div>';
@@ -2736,29 +2771,29 @@ function renderScalpScreen() {
   // ── ATR & Squeeze info ───────────────────────────────────────
   html += `<div class="card"><div class="section-title">📊 Volatilità & Squeeze</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div style="background:#1a2130;border-radius:9px;padding:10px">
-        <div style="color:#64748b;font-size:10px;margin-bottom:4px">ATR (7)</div>
+      <div style="background:#1e2740;border-radius:9px;padding:10px">
+        <div style="color:#b0bdd0;font-size:10px;margin-bottom:4px">ATR (7)</div>
         <div style="color:${sig.atr.spike?'#f97316':'#e2e8f0'};font-size:18px;font-weight:800">${sig.atr.current}</div>
-        <div style="color:#64748b;font-size:10px">ratio: x${sig.atr.ratio} vs avg ${sig.atr.avg}</div>
+        <div style="color:#b0bdd0;font-size:10px">ratio: x${sig.atr.ratio} vs avg ${sig.atr.avg}</div>
         ${sig.atr.spike?'<div style="color:#f97316;font-size:10px;margin-top:4px">⚡ SPIKE — momentum alto</div>':''}
       </div>
-      <div style="background:#1a2130;border-radius:9px;padding:10px">
-        <div style="color:#64748b;font-size:10px;margin-bottom:4px">Bollinger Squeeze</div>
+      <div style="background:#1e2740;border-radius:9px;padding:10px">
+        <div style="color:#b0bdd0;font-size:10px;margin-bottom:4px">Bollinger Squeeze</div>
         <div style="color:${sig.squeeze.squeeze?'#a855f7':'#e2e8f0'};font-size:18px;font-weight:800">${sig.squeeze.squeeze?'🤏 SÌ':'NO'}</div>
-        <div style="color:#64748b;font-size:10px">BW: ${sig.squeeze.bwCurrent} (${sig.squeeze.pct}°pct)</div>
+        <div style="color:#b0bdd0;font-size:10px">BW: ${sig.squeeze.bwCurrent} (${sig.squeeze.pct}°pct)</div>
         ${sig.squeeze.squeeze?'<div style="color:#a855f7;font-size:10px;margin-top:4px">Breakout imminente</div>':''}
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-      <div style="background:#1a2130;border-radius:9px;padding:10px">
-        <div style="color:#64748b;font-size:10px;margin-bottom:4px">VWAP</div>
+      <div style="background:#1e2740;border-radius:9px;padding:10px">
+        <div style="color:#b0bdd0;font-size:10px;margin-bottom:4px">VWAP</div>
         <div style="color:#f0b429;font-size:15px;font-weight:800">$${fmtP(sig.vwapNow)}</div>
         <div style="color:${sig.lastPrice>sig.vwapNow?'#22c55e':'#ef4444'};font-size:10px">Prezzo ${sig.lastPrice>sig.vwapNow?'sopra ▲':'sotto ▼'} VWAP</div>
       </div>
-      <div style="background:#1a2130;border-radius:9px;padding:10px">
-        <div style="color:#64748b;font-size:10px;margin-bottom:4px">RSI 7 vs RSI7/5M</div>
+      <div style="background:#1e2740;border-radius:9px;padding:10px">
+        <div style="color:#b0bdd0;font-size:10px;margin-bottom:4px">RSI 7 vs RSI7/5M</div>
         <div style="color:${sig.rsiDiv?'#f97316':'#e2e8f0'};font-size:15px;font-weight:800">${sig.rsi7} vs ${sig.rsi5m}</div>
-        ${sig.rsiDiv?`<div style="color:#f97316;font-size:10px;margin-top:2px">⚡ DIVERGENZA → ${sig.rsiDivDir}</div>`:'<div style="color:#64748b;font-size:10px">No divergenza</div>'}
+        ${sig.rsiDiv?`<div style="color:#f97316;font-size:10px;margin-top:2px">⚡ DIVERGENZA → ${sig.rsiDivDir}</div>`:'<div style="color:#b0bdd0;font-size:10px">No divergenza</div>'}
       </div>
     </div>
   </div>`;
@@ -2766,7 +2801,7 @@ function renderScalpScreen() {
   // ── Paper trading widget ────────────────────────────────────
   html += `<div class="card" id="paper-widget-card" style="border:1px solid #f0b42933"><div id="paper-widget"></div></div>`;
 
-  html += `<div style="text-align:center;color:#64748b;font-size:9px;line-height:1.5;padding:4px 8px;border-top:1px solid #1e2535">
+  html += `<div style="text-align:center;color:#b0bdd0;font-size:9px;line-height:1.5;padding:4px 8px;border-top:1px solid #1e2535">
     ⚠️ Solo scopo didattico. Lo scalping è ad alto rischio. Non operare senza money management.
   </div>`;
 
@@ -2777,17 +2812,27 @@ function renderScalpScreen() {
 
 // ── Fetch scalp dedicato ─────────────────────────────────────
 async function doScalpFetch() {
-  document.getElementById('refresh-btn').textContent='⟳';
+  const btn = document.getElementById('refresh-btn');
+  if(btn) btn.textContent='⟳';
   await fetchScalpCandles();
   renderScalpScreen();
-  // Paper trading: valuta exit prima (usa prezzo attuale) poi entry
-  const cur1m = state.candles['1m'];
-  const curPrice = cur1m.length ? cur1m[cur1m.length-1].c : (state.candles['5m'].slice(-1)[0]?.c || 0);
+
+  // Paper trading: prima exit poi entry
+  const cur1m = state.candles['1m'] || [];
+  const cur5m = state.candles['5m'] || [];
+  const curPrice = cur1m.length ? cur1m[cur1m.length-1].c
+    : cur5m.length ? cur5m[cur5m.length-1].c : 0;
+
   if (curPrice) {
     evaluateAutoExit(curPrice);
-    evaluateAutoEntry();
+    // Solo se non c'è già un trade aperto
+    if (!state.paper.openTrade) evaluateAutoEntry();
   }
-  document.getElementById('refresh-btn').textContent='↻';
+
+  // Aggiorna widget paper se visibile
+  setTimeout(() => renderPaperWidget(), 50);
+
+  if(btn) btn.textContent='↻';
 }
 
 // ── Mode switch ───────────────────────────────────────────────
@@ -2801,17 +2846,22 @@ function setMode(mode) {
 
   if (mode === 'swing') {
     swingBtn.style.background='#f0b429';swingBtn.style.color='#000';
-    scalpBtn.style.background='#141920';scalpBtn.style.color='#64748b';
+    scalpBtn.style.background='#141920';scalpBtn.style.color='#94a3b8';
     tfBar.style.display='flex';
     if(appContent) appContent.style.display='block';
     scalpScreen.style.display='none';
+    // Ferma auto-refresh scalp
+    if(state.scalpTimer) { clearInterval(state.scalpTimer); state.scalpTimer=null; }
   } else {
     scalpBtn.style.background='#f97316';scalpBtn.style.color='#000';
-    swingBtn.style.background='#141920';swingBtn.style.color='#64748b';
+    swingBtn.style.background='#141920';swingBtn.style.color='#94a3b8';
     tfBar.style.display='none';
     if(appContent) appContent.style.display='none';
     scalpScreen.style.display='block';
     doScalpFetch();
+    // Auto-refresh scalp ogni 1 minuto
+    if(state.scalpTimer) clearInterval(state.scalpTimer);
+    state.scalpTimer = setInterval(doScalpFetch, 60000);
   }
 }
 
@@ -2823,22 +2873,33 @@ let bgActive = false;
 async function registerSW() {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    // Usa path relativo per compatibilità con GitHub Pages subpath
-    const swPath = new URL('sw.js', window.location.href).pathname;
-    const scope  = new URL('./', window.location.href).pathname;
+    // Calcola path relativo alla pagina corrente (funziona su GitHub Pages subpath)
+    const base   = window.location.href.replace(/\/[^\/]*$/, '/');
+    const swPath = base + 'sw.js';
+    const scope  = base;
     swReg = await navigator.serviceWorker.register(swPath, { scope });
-    console.log('[PWA] SW registered, scope:', swReg.scope);
+    console.log('[PWA] SW registered:', swReg.scope);
 
-    // Aspetta che sia attivo
+    // Aspetta attivazione completa
+    if (swReg.installing) {
+      await new Promise(resolve => {
+        swReg.installing.addEventListener('statechange', e => {
+          if (e.target.state === 'activated') resolve();
+        });
+      });
+    }
     await navigator.serviceWorker.ready;
 
-    // Ascolta messaggi dal SW
+    // Ascolta messaggi
     navigator.serviceWorker.removeEventListener('message', handleSwMessage);
     navigator.serviceWorker.addEventListener('message', handleSwMessage);
 
+    console.log('[PWA] SW ready');
     return swReg;
   } catch(e) {
-    console.error('[PWA] SW registration failed:', e);
+    console.error('[PWA] SW failed:', e.message);
+    const statusEl = document.getElementById('bg-status');
+    if(statusEl) statusEl.textContent = '❌ SW: ' + e.message;
     return null;
   }
 }
@@ -2924,19 +2985,27 @@ function getAlertConfig() {
   };
 }
 
-// ── Invia messaggio al SW (con retry su worker non ancora attivo) ─
+// ── Invia messaggio al SW ────────────────────────────────────
 async function sendToSW(msg) {
-  if (!swReg) { swReg = await registerSW(); }
-  await navigator.serviceWorker.ready;
-  const worker = navigator.serviceWorker.controller;
-  if (worker) {
-    worker.postMessage(msg);
-    return true;
+  if (!swReg) swReg = await registerSW();
+  if (!swReg) return false;
+  try {
+    await navigator.serviceWorker.ready;
+  } catch(e) { return false; }
+  // Prova controller prima (worker che controlla la pagina)
+  const targets = [
+    navigator.serviceWorker.controller,
+    swReg.active,
+    swReg.waiting,
+    swReg.installing,
+  ].filter(Boolean);
+  if (!targets.length) {
+    console.warn('[PWA] No SW target available');
+    return false;
   }
-  // Fallback: prova tutti i worker disponibili
-  const w2 = swReg?.active || swReg?.waiting || swReg?.installing;
-  if (w2) { w2.postMessage(msg); return true; }
-  return false;
+  targets[0].postMessage(msg);
+  console.log('[PWA] Message sent to SW:', msg.type);
+  return true;
 }
 
 // ── Toggle alert panel ────────────────────────────────────────
@@ -2944,7 +3013,20 @@ function toggleAlertPanel() {
   const panel = document.getElementById('alert-panel');
   const visible = panel.style.display !== 'none';
   panel.style.display = visible ? 'none' : 'block';
-  if (!visible) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (!visible) {
+    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    updateNotifDebug();
+  }
+}
+
+function updateNotifDebug() {
+  const el = document.getElementById('notif-debug');
+  if (!el) return;
+  const perm = 'Notification' in window ? Notification.permission : 'non supportato';
+  const hasSW = 'serviceWorker' in navigator ? 'sì' : 'no';
+  const swCtrl = navigator.serviceWorker?.controller ? '✅ attivo' : '❌ non controlla';
+  const isHttps = location.protocol === 'https:' ? '✅' : '⚠️ HTTP (serve HTTPS)';
+  el.textContent = `Notifiche: ${perm} · SW: ${hasSW} · Controller: ${swCtrl} · HTTPS: ${isHttps}`;
 }
 
 // ── Salva config ──────────────────────────────────────────────
@@ -3014,18 +3096,31 @@ async function toggleBackground() {
 async function restoreBgState() {
   await registerSW();
   const wasActive = LS.get('bg_active');
-  const savedCfg  = LS.get('alert_config');
-  if (savedCfg) {
-    // Popola checkbox config
-    if (document.getElementById('cfg-pivot'))   document.getElementById('cfg-pivot').checked   = savedCfg.pivot   ?? true;
-    if (document.getElementById('cfg-rsi-ob'))  document.getElementById('cfg-rsi-ob').checked  = savedCfg.rsiOB   ?? true;
-    if (document.getElementById('cfg-rsi-os'))  document.getElementById('cfg-rsi-os').checked  = savedCfg.rsiOS   ?? true;
-    if (document.getElementById('cfg-spike'))   document.getElementById('cfg-spike').checked   = savedCfg.spike   ?? true;
-    if (document.getElementById('cfg-lead'))    document.getElementById('cfg-lead').checked    = savedCfg.lead    ?? true;
-    if (document.getElementById('cfg-price-above') && savedCfg.priceAbove) document.getElementById('cfg-price-above').value = savedCfg.priceAbove;
-    if (document.getElementById('cfg-price-below') && savedCfg.priceBelow) document.getElementById('cfg-price-below').value = savedCfg.priceBelow;
-  }
-  if (wasActive) {
+  const savedCfg  = LS.get('alert_config') || {};
+
+  // Popola checkbox config salvata
+  const setChk = (id, val) => { const el=document.getElementById(id); if(el) el.checked=val??true; };
+  setChk('cfg-pivot',  savedCfg.pivot);
+  setChk('cfg-rsi-ob', savedCfg.rsiOB);
+  setChk('cfg-rsi-os', savedCfg.rsiOS);
+  setChk('cfg-spike',  savedCfg.spike);
+  setChk('cfg-lead',   savedCfg.lead);
+  if (savedCfg.priceAbove) { const el=document.getElementById('cfg-price-above'); if(el) el.value=savedCfg.priceAbove; }
+  if (savedCfg.priceBelow) { const el=document.getElementById('cfg-price-below'); if(el) el.value=savedCfg.priceBelow; }
+
+  if (wasActive && state.tdKey && Notification.permission === 'granted') {
+    // Riattiva automaticamente senza chiedere permesso di nuovo
+    console.log('[PWA] Auto-restoring background monitoring...');
+    await navigator.serviceWorker.ready;
+    const cfg = savedCfg;
+    const ok = await sendToSW({ type: 'START_BG', tdKey: state.tdKey, config: cfg });
+    if (ok) {
+      updateBgUI(true);
+      console.log('[PWA] Background monitoring restored');
+    } else {
+      document.getElementById('bg-status').textContent = 'Era attivo — premi Attiva per riavviare';
+    }
+  } else if (wasActive) {
     document.getElementById('bg-status').textContent = 'Era attivo — premi Attiva per riavviare';
   }
 }
