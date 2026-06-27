@@ -121,10 +121,10 @@ button{cursor:pointer}
     </div>
     <!-- Mode + TF tabs -->
     <div style="display:flex;gap:5px;margin-top:8px">
-      <button id="mode-swing" onclick="setMode('swing')" style="flex:1;padding:8px 0;border-radius:8px;font-size:11px;font-weight:700;background:#f0b429;color:#000;border:none">📊 Swing</button>
+      <button id="mode-recap" onclick="setMode('recap')" style="flex:1;padding:8px 0;border-radius:8px;font-size:11px;font-weight:700;background:#a855f7;color:#000;border:none">🎯 Score</button>
+      <button id="mode-swing" onclick="setMode('swing')" style="flex:1;padding:8px 0;border-radius:8px;font-size:11px;font-weight:700;background:#141920;color:#b0bdd0;border:none">📊 Swing</button>
       <button id="mode-scalp" onclick="setMode('scalp')" style="flex:1;padding:8px 0;border-radius:8px;font-size:11px;font-weight:700;background:#141920;color:#b0bdd0;border:none">⚡ Scalp</button>
       <button id="mode-trend" onclick="setMode('trend')" style="flex:1;padding:8px 0;border-radius:8px;font-size:11px;font-weight:700;background:#141920;color:#b0bdd0;border:none">📈 Trend</button>
-      <button id="mode-recap" onclick="setMode('recap')" style="flex:1;padding:8px 0;border-radius:8px;font-size:11px;font-weight:700;background:#141920;color:#b0bdd0;border:none">🎯 Score</button>
       <button onclick="doRefreshCurrent()" id="refresh-btn" style="padding:5px 11px;border-radius:8px;border:1px solid #2a3550;background:transparent;color:#b0bdd0;font-size:14px">↻</button>
     </div>
     <!-- TF tabs (solo swing mode) -->
@@ -1019,7 +1019,10 @@ async function doFetch(){
     updateUI();
     // Paper trading: valuta exit con prezzo 1H aggiornato
     const cur1hPrice = state.candles['1h']?.slice(-1)[0]?.c;
-    if(cur1hPrice) evaluateAutoExit(cur1hPrice);
+    if(cur1hPrice) {
+      evaluateAutoExit(cur1hPrice);
+      if (!state.paper.openTrade && state.mode === 'recap') evaluateAutoEntry();
+    }
   }catch(e){
     setStatus('error',e.message||String(e));
   }
@@ -1742,80 +1745,73 @@ function calcLotSize(capital, entry, sl) {
   return Math.max(0.01, +lots.toFixed(2));
 }
 
-// Valuta se aprire un trade (chiamato dopo ogni fetch scalp)
+// Valuta se aprire un trade usando entry opportunity scoring
 function evaluateAutoEntry() {
   const p = state.paper;
   if (!p.enabled) return;
-  if (p.openTrade) return; // già in posizione
+  if (p.openTrade) return;
 
-  // Controllo drawdown
   const dd = (p.initialCapital - p.capital) / p.initialCapital;
   if (dd >= MAX_DD) {
-    console.log('[PAPER] Stop: drawdown massimo raggiunto');
+    console.log('[PAPER] Stop: max drawdown');
     p.enabled = false;
-    renderPaperWidget();
+    savePaperState();
+    if (state.mode === 'recap') renderRecapScreen();
     return;
   }
 
-  // Cooldown tra trade
   const nowTs = Date.now();
-  // Aggiorna UI timestamp
   const evalEl = document.getElementById('paper-last-eval');
-  if(evalEl) evalEl.textContent = `Ultimo check: ${new Date().toLocaleTimeString('it-IT')}`;
+  if (evalEl) evalEl.textContent = `Ultimo check: ${new Date().toLocaleTimeString('it-IT')}`;
   if (nowTs - p.lastSignalTs < p.cooldownMin * 60 * 1000) return;
 
-  const sig = computeScalpSignal();
-  if (!sig || sig.mainBias === 'WAIT') return;
-  if (sig.confidence < MIN_CONF) return;
+  // Usa il recap scoring per trovare il miglior scenario
+  const recap = computeAllScenarios();
+  if (!recap || !recap.best) return;
 
-  // Conta semafori verdi nella direzione del bias
-  const greenInDir = sig.sems.filter(s =>
-    s.sem === 'green' && s.bias === sig.mainBias
-  ).length;
-  if (greenInDir < MIN_SEMS) return;
-
-  // Controlla macro se disponibile
-  const macro = sig.macro;
-  if (macro && macro.macroStr >= 1 && macro.macroDir !== 'FLAT' && macro.macroDir !== sig.mainBias) return;
+  const best = recap.best;
+  const es   = best.es;
+  if (!es.setup || es.dir === 'WAIT') return;
 
   // Entry con spread
-  const rawEntry = sig.lastPrice;
-  const entry = sig.mainBias === 'BUY'
-    ? +(rawEntry + SPREAD / 2).toFixed(2)   // compri all'ask
-    : +(rawEntry - SPREAD / 2).toFixed(2);  // vendi al bid
+  const rawEntry = es.setup.entry;
+  const entry = es.dir === 'BUY'
+    ? +(rawEntry + SPREAD / 2).toFixed(2)
+    : +(rawEntry - SPREAD / 2).toFixed(2);
 
-  const sl  = sig.sl;
-  const tp1 = sig.tp1;
-  const tp2 = sig.tp2;
+  const sl  = es.setup.sl;
+  const tp1 = es.setup.tp1;
+  const tp2 = es.setup.tp2;
   const lots = calcLotSize(p.capital, entry, sl);
   const riskEur = +(Math.abs(entry - sl) * lots * 100).toFixed(2);
 
   const trade = {
-    id: Date.now(),
-    direction: sig.mainBias,
-    entry, sl, tp1, tp2, lots,
-    riskEur,
-    confidence: sig.confidence,
-    openedAt: new Date().toISOString(),
-    capitalAtOpen: p.capital,
-    spread: SPREAD,
-    pattern: sig.patterns[0]?.name || '–',
-    macroDir: macro?.macroDir || '–',
-    atrAtEntry: sig.atr.current,
+    id:           Date.now(),
+    direction:    es.dir,
+    entry, sl, tp1, tp2, lots, riskEur,
+    confidence:   es.score,
+    openedAt:     new Date().toISOString(),
+    capitalAtOpen:p.capital,
+    spread:       SPREAD,
+    pattern:      `Auto [${best.label}]`,
+    macroDir:     '–',
+    atrAtEntry:   0,
+    scenario:     best.id,
+    entryReasons: es.reasons.slice(0, 3),
   };
 
-  p.openTrade = trade;
+  p.openTrade    = trade;
   p.lastSignalTs = nowTs;
   savePaperState();
-  renderPaperWidget();
-  console.log('[PAPER] Trade aperto:', trade);
+  if (state.mode === 'recap') renderRecapScreen();
+  console.log('[PAPER] Trade aperto via scoring:', trade);
 
-  // Notifica push per paper trade aperto
   if ('serviceWorker' in navigator && Notification.permission === 'granted') {
     navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification(`🤖 Paper Trade Aperto — ${trade.direction}`, {
-        body: `${trade.direction} XAU @ $${trade.entry} · SL $${trade.sl} · TP $${trade.tp1} · Lot ${trade.lots}`,
-        icon: '/icon-192.png', tag: 'paper-open', vibrate: [200,100,200],
+      reg.showNotification(`🤖 Paper Trade — ${trade.direction} [${best.label}]`, {
+        body: `${trade.direction} XAU @ $${fmtP(entry)} · Score ${es.score}/100 · SL $${fmtP(sl)} · TP $${fmtP(tp1)}`,
+        icon: '/icon-192.png', tag: 'paper-open', vibrate: [200,100,200,100,200],
+        requireInteraction: false,
       });
     }).catch(()=>{});
   }
@@ -1874,7 +1870,8 @@ function evaluateAutoExit(currentPrice) {
   p.openTrade = null;
 
   savePaperState();
-  renderPaperWidget();
+  if (state.mode === 'recap') renderRecapScreen();
+  else renderPaperWidget();
   console.log('[PAPER] Trade chiuso:', closed_trade);
 
   // Aggiorna timestamp ultimo check nel widget
@@ -2822,8 +2819,6 @@ function renderScalpScreen() {
     </div>
   </div>`;
 
-  // ── Paper trading widget ────────────────────────────────────
-  html += `<div class="card" id="paper-widget-card" style="border:1px solid #f0b42933"><div id="paper-widget"></div></div>`;
 
   html += `<div style="text-align:center;color:#b0bdd0;font-size:9px;line-height:1.5;padding:4px 8px;border-top:1px solid #1e2535">
     ⚠️ Solo scopo didattico. Lo scalping è ad alto rischio. Non operare senza money management.
@@ -3240,8 +3235,6 @@ function renderTrendScreen() {
     </div>`;
   }
 
-  // ── Paper widget ─────────────────────────────────────────
-  html += `<div class="card" id="paper-widget-card-trend" style="border:1px solid #f0b42933"><div id="paper-widget-trend"></div></div>`;
 
   html += `<div style="text-align:center;color:#94a3b8;font-size:9px;line-height:1.5;padding:4px 8px;border-top:1px solid #2a3550">
     ⚠️ Solo scopo didattico. Il trend following richiede pazienza e gestione rigida del rischio.
@@ -3286,166 +3279,462 @@ function renderPaperWidgetIn(el) {
 function computeAllScenarios() {
   const swing  = computeDashboard();
   const scalp  = computeScalpSignal();
-  const trend  = computeTrendSignal(state.candles['1d']||[], state.candles4h||[], state.candles['1h']||[]);
+  const trend  = computeTrendSignal(state.candles["1d"]||[], state.candles4h||[], state.candles["1h"]||[]);
   const sess   = getSessionStatus();
 
-  // Normalizza confidence 0-100
-  const swingConf = swing ? swing.confidence : 0;
-  const scalpConf = scalp ? scalp.confidence : 0;
-  const trendConf = trend ? trend.confidence : 0;
+  // ── ENTRY OPPORTUNITY SCORING ──────────────────────────────
+  // Non è confidence generica — è quanto è buona l'OPPORTUNITÀ DI ENTRY ORA
+  // Criteri specifici per ciascuno scenario
 
-  // Bias direzionale normalizzato
-  const swingDir = swing?.mainDir || 'FLAT';
-  const scalpDir = scalp?.mainBias || 'WAIT';
-  const trendDir = trend?.mainBias || 'WAIT';
+  function scoreSwingEntry(s) {
+    if (!s) return { score:0, dir:"WAIT", reasons:[], setup:null };
+    const reasons = [], penalties = [];
+    let score = 0;
 
-  // Punteggio composito (confidence pesata per scenario)
-  // Trend conta di più se ADX > 25
-  const trendWeight = trend?.d_adx?.adx > 25 ? 1.3 : 1.0;
-  const scalpWeight = sess.sess === 'Overlap' || sess.sess === 'New York' ? 1.2 : 0.9;
-  const swingWeight = 1.0;
+    // 1. MTF allineamento (peso 30)
+    if (s.align === 3) { score += 30; reasons.push("✅ 3/3 TF allineati"); }
+    else if (s.align === 2) { score += 18; reasons.push("⚡ 2/3 TF allineati"); }
+    else { score += 0; penalties.push("❌ TF in conflitto"); }
+
+    // 2. Lead macro (peso 20)
+    const macro = computeLeadSignal(state.corrData?.dxy||[], state.corrData?.us10y||[], state.candles["1h"]||[], state.corrData?.dxyInverted||false);
+    if (macro && macro.biasStrength === 2) {
+      if (macro.mainDir === s.signal) { score += 20; reasons.push("✅ Lead macro concorda"); }
+      else { score -= 10; penalties.push("⚠️ Lead macro opposto"); }
+    } else if (macro && macro.biasStrength === 1) { score += 8; reasons.push("⚡ Lead macro debole"); }
+
+    // 3. RSI zona entry (peso 15): 40-60 = neutro buono per entry trend, <35 = buy, >65 = sell
+    const last1h = (state.candles["1h"]||[]).slice(-1)[0];
+    if (last1h) {
+      const rsi = last1h.rsi || 50;
+      const dir = s.signal;
+      if (dir === "BUY" && rsi < 45) { score += 15; reasons.push(`✅ RSI ${rsi} oversold → entry long`); }
+      else if (dir === "SELL" && rsi > 55) { score += 15; reasons.push(`✅ RSI ${rsi} overbought → entry short`); }
+      else if (rsi >= 45 && rsi <= 55) { score += 8; reasons.push(`⚡ RSI ${rsi} neutro`); }
+      else { score += 3; penalties.push(`⚠️ RSI ${rsi} sfavorevole`); }
+    }
+
+    // 4. Pivot position (peso 15)
+    const pv = state.pivots;
+    if (last1h && pv.pivot) {
+      const abovePivot = last1h.c > pv.pivot;
+      const nearR1 = Math.abs(last1h.c - pv.r1) < (last1h.atr||15);
+      const nearS1 = Math.abs(last1h.c - pv.s1) < (last1h.atr||15);
+      if (s.signal === "BUY" && abovePivot && !nearR1) { score += 15; reasons.push("✅ Sopra Pivot, spazio a R1"); }
+      else if (s.signal === "SELL" && !abovePivot && !nearS1) { score += 15; reasons.push("✅ Sotto Pivot, spazio a S1"); }
+      else if (nearR1 || nearS1) { score -= 5; penalties.push("⚠️ Vicino a resistenza/supporto"); }
+      else { score += 5; }
+    }
+
+    // 5. Sessione favorevole (peso 10)
+    if (sess.sess === "Overlap" || sess.sess === "New York") { score += 10; reasons.push(`✅ Sessione ${sess.sess} attiva`); }
+    else if (sess.sess === "Londra") { score += 7; reasons.push("⚡ Sessione Londra"); }
+    else { score += 2; penalties.push("⚠️ Sessione Asia — bassa liquidità"); }
+
+    // 6. Confidenza semafori (peso 10)
+    const greens = s.semList?.filter(s=>s.sem==="green").length || 0;
+    score += Math.round(greens / 6 * 10);
+    if (greens >= 4) reasons.push(`✅ ${greens}/6 semafori verdi`);
+
+    score = Math.max(0, Math.min(100, score));
+    const dir = s.mainDir === "UP" ? "BUY" : s.mainDir === "DOWN" ? "SELL" : "WAIT";
+
+    // Setup
+    const atr = last1h?.atr || 15;
+    const entry = last1h?.c || 0;
+    const setup = dir !== "WAIT" ? {
+      direction: dir,
+      entry,
+      sl:  dir==="BUY" ? +(entry - atr*1.5).toFixed(2) : +(entry + atr*1.5).toFixed(2),
+      tp1: dir==="BUY" ? +(entry + atr*2.0).toFixed(2) : +(entry - atr*2.0).toFixed(2),
+      tp2: dir==="BUY" ? +(entry + atr*3.5).toFixed(2) : +(entry - atr*3.5).toFixed(2),
+    } : null;
+
+    return { score, dir, reasons:[...reasons,...penalties], setup };
+  }
+
+  function scoreScalpEntry(s) {
+    if (!s) return { score:0, dir:"WAIT", reasons:[], setup:null };
+    const reasons = [], penalties = [];
+    let score = 0;
+
+    // 1. Confidence semafori scalping (peso 25)
+    const greenN = s.sems?.filter(x=>x.sem==="green").length || 0;
+    score += Math.round(greenN / s.sems.length * 25);
+    if (greenN >= 4) reasons.push(`✅ ${greenN} semafori verdi`);
+
+    // 2. Pattern candela forte (peso 20)
+    if (s.patterns?.length) {
+      const p = s.patterns[0];
+      if (p.strength === "FORTE" && p.bias === s.mainBias) { score += 20; reasons.push(`✅ Pattern: ${p.name}`); }
+      else { score += 8; reasons.push(`⚡ Pattern: ${p.name}`); }
+    } else { penalties.push("❌ Nessun pattern candela"); }
+
+    // 3. Confluenza macro 1M/5M (peso 20)
+    const macro = s.macro;
+    if (macro && macro.macroStr >= 3) { score += 20; reasons.push("✅ Confluenza macro forte"); }
+    else if (macro && macro.macroStr === 2) { score += 12; reasons.push("⚡ Confluenza macro moderata"); }
+    else if (macro && macro.macroStr === 1) { score += 5; }
+    else { penalties.push("⚠️ Nessuna confluenza macro"); }
+
+    // 4. ATR spike = momentum (peso 15)
+    if (s.atr?.spike) { score += 15; reasons.push(`✅ ATR spike x${s.atr.ratio}`); }
+    else if (s.atr?.ratio > 1.2) { score += 8; reasons.push("⚡ ATR elevato"); }
+
+    // 5. Bollinger squeeze o breakout (peso 10)
+    if (s.squeeze?.squeeze) { score += 10; reasons.push("✅ Bollinger squeeze → breakout"); }
+    else if (s.boll && (s.lastPrice < s.boll.lower*1.001 || s.lastPrice > s.boll.upper*0.999)) {
+      score += 7; reasons.push("⚡ Prezzo su banda Bollinger");
+    }
+
+    // 6. Sessione (peso 10)
+    if (sess.sess === "Overlap" || sess.sess === "New York") { score += 10; reasons.push(`✅ Sessione ${sess.sess}`); }
+    else if (sess.sess === "Londra") { score += 6; }
+    else { score += 1; penalties.push("⚠️ Sessione Asia"); }
+
+    score = Math.max(0, Math.min(100, score));
+    const setup = s.mainBias !== "WAIT" && s.entry ? {
+      direction: s.mainBias, entry: s.entry, sl: s.sl, tp1: s.tp1, tp2: s.tp2
+    } : null;
+
+    return { score, dir: s.mainBias || "WAIT", reasons:[...reasons,...penalties], setup };
+  }
+
+  function scoreTrendEntry(s) {
+    if (!s) return { score:0, dir:"WAIT", reasons:[], setup:null };
+    const reasons = [], penalties = [];
+    let score = 0;
+
+    // 1. Daily + 4H allineamento struttura (peso 30)
+    const bothAligned = s.dailyBias !== "NEUTRAL" && s.dailyBias === s.h4Bias;
+    if (bothAligned) { score += 30; reasons.push(`✅ Daily + ${s.tf4hLabel} allineati: ${s.dailyBias}`); }
+    else if (s.dailyBias !== "NEUTRAL") { score += 15; reasons.push(`⚡ Solo Daily: ${s.dailyBias}`); }
+    else { penalties.push("❌ Struttura non definita"); }
+
+    // 2. ADX forza trend (peso 20)
+    if (s.d_adx.adx > 35) { score += 20; reasons.push(`✅ ADX ${s.d_adx.adx} — trend molto forte`); }
+    else if (s.d_adx.adx > 25) { score += 14; reasons.push(`✅ ADX ${s.d_adx.adx} — trend forte`); }
+    else if (s.d_adx.adx > 18) { score += 7; reasons.push(`⚡ ADX ${s.d_adx.adx} — trend moderato`); }
+    else { penalties.push(`❌ ADX ${s.d_adx.adx} — laterale`); }
+
+    // 3. Pullback entry (peso 20) — il fattore più importante per entry qualità
+    if (s.pullbackToEma20) { score += 20; reasons.push("✅ Pullback su EMA20 — entry ottimale"); }
+    else if (s.pullbackToEma50) { score += 14; reasons.push("✅ Pullback su EMA50 — buona entry"); }
+    else { score += 3; penalties.push("⚠️ Nessun pullback — entry non ottimale"); }
+
+    // 4. Supertrend (peso 15)
+    if (s.h4_stLast) {
+      const stOk = (s.mainBias === "BUY" && s.h4_stLast.dir === -1) || (s.mainBias === "SELL" && s.h4_stLast.dir === 1);
+      if (stOk) { score += 15; reasons.push(`✅ Supertrend ${s.tf4hLabel} conforme`); }
+      else { score -= 5; penalties.push(`⚠️ Supertrend contrario`); }
+    }
+
+    // 5. EMA 200 (peso 10)
+    if (s.d_ema200n) {
+      const aboveEma200 = s.lastPrice > s.d_ema200n;
+      if ((s.mainBias === "BUY" && aboveEma200) || (s.mainBias === "SELL" && !aboveEma200)) {
+        score += 10; reasons.push("✅ Sopra/sotto EMA200");
+      } else { score -= 5; penalties.push("⚠️ Contro EMA200"); }
+    }
+
+    // 6. Sessione (peso 5) — trend non dipende dalla sessione ma meglio Londra/NY
+    if (sess.sess !== "Asia") { score += 5; }
+
+    score = Math.max(0, Math.min(100, score));
+    const setup = s.mainBias !== "WAIT" && s.entry ? {
+      direction: s.mainBias, entry: s.entry, sl: s.sl, tp1: s.tp1, tp2: s.tp2
+    } : null;
+
+    return { score, dir: s.mainBias || "WAIT", reasons:[...reasons,...penalties], setup };
+  }
+
+  // ── Calcola entry scores ──────────────────────────────────
+  const swingDir = swing?.mainDir === "UP" ? "BUY" : swing?.mainDir === "DOWN" ? "SELL" : "WAIT";
+  const swingES = scoreSwingEntry(swing ? {...swing, signal: swingDir} : null);
+  const scalpES = scoreScalpEntry(scalp);
+  const trendES = scoreTrendEntry(trend);
+
+  // ── Soglie per paper trading auto ────────────────────────
+  // Swing: ≥60, Scalp: ≥65, Trend: ≥60
+  const THRESHOLDS = { swing: 60, scalp: 65, trend: 60 };
+  const eligible = [
+    { id:"swing", label:"📊 Swing",       es:swingES, color:"#f0b429", tf:"1H/4H",       threshold:THRESHOLDS.swing },
+    { id:"scalp", label:"⚡ Scalp",        es:scalpES, color:"#f97316", tf:"1M/5M",       threshold:THRESHOLDS.scalp },
+    { id:"trend", label:"📈 Trend Follow", es:trendES, color:"#22c55e", tf:"Daily/4H/1H", threshold:THRESHOLDS.trend },
+  ].filter(s => s.es.score >= s.threshold && s.es.dir !== "WAIT");
+
+  // ── Migliore scenario per paper trade ────────────────────
+  const best = eligible.sort((a,b) => b.es.score - a.es.score)[0] || null;
+
+  // ── Consenso direzionale ─────────────────────────────────
+  const allDirs = [swingES.dir, scalpES.dir, trendES.dir].filter(d => d !== "WAIT");
+  const upN = allDirs.filter(d=>d==="BUY").length;
+  const dnN = allDirs.filter(d=>d==="SELL").length;
+  const consensus = upN===3?"BUY FORTE":dnN===3?"SELL FORTE":upN===2?"BUY MODERATO":dnN===2?"SELL MODERATO":"MISTO";
+  const consensusColor = consensus.includes("BUY")?"#22c55e":consensus.includes("SELL")?"#ef4444":"#94a3b8";
 
   const scores = [
-    { id:'swing',  label:'📊 Swing',        conf:swingConf, dir:swingDir, weight:swingWeight, color:'#f0b429', tf:'1H/4H',  sig:swing },
-    { id:'scalp',  label:'⚡ Scalp',         conf:scalpConf, dir:scalpDir, weight:scalpWeight, color:'#f97316', tf:'1M/5M',  sig:scalp },
-    { id:'trend',  label:'📈 Trend Follow',  conf:trendConf, dir:trendDir, weight:trendWeight, color:'#22c55e', tf:'1H/4H/Daily', sig:trend },
-  ].map(s => ({ ...s, score: Math.round(s.conf * s.weight) }));
+    { id:"swing", label:"📊 Swing",       es:swingES, color:"#f0b429", tf:"1H/4H",       threshold:THRESHOLDS.swing },
+    { id:"scalp", label:"⚡ Scalp",        es:scalpES, color:"#f97316", tf:"1M/5M",       threshold:THRESHOLDS.scalp },
+    { id:"trend", label:"📈 Trend Follow", es:trendES, color:"#22c55e", tf:"Daily/4H/1H", threshold:THRESHOLDS.trend },
+  ];
 
-  // Trova scenario migliore
-  const active = scores.filter(s => s.dir !== 'FLAT' && s.dir !== 'WAIT' && s.conf >= 45);
-  const best = active.sort((a,b) => b.score - a.score)[0] || null;
-
-  // Verifica confluenza direzionale tra scenari
-  const dirs = scores.map(s => s.dir).filter(d => d !== 'FLAT' && d !== 'WAIT');
-  const upN = dirs.filter(d => d === 'BUY').length;
-  const dnN = dirs.filter(d => d === 'SELL').length;
-  const consensus = upN === 3 ? 'BUY FORTE' : dnN === 3 ? 'SELL FORTE' : upN === 2 ? 'BUY MODERATO' : dnN === 2 ? 'SELL MODERATO' : 'MISTO';
-  const consensusColor = consensus.includes('BUY') ? '#22c55e' : consensus.includes('SELL') ? '#ef4444' : '#94a3b8';
-
-  return { scores, best, consensus, consensusColor, sess, swingConf, scalpConf, trendConf };
+  return { scores, best, consensus, consensusColor, sess };
 }
 
+
 function renderRecapScreen() {
-  const content = document.getElementById('recap-content');
+  const content = document.getElementById("recap-content");
+  if (!content) return;
   const recap = computeAllScenarios();
-  if (!recap) { content.innerHTML = '<div style="text-align:center;padding:40px 0;color:#94a3b8">Carica i dati prima.</div>'; return; }
+  if (!recap) {
+    content.innerHTML = `<div style="text-align:center;padding:40px 0;color:#94a3b8">
+      <div style="font-size:32px;margin-bottom:8px">🎯</div>
+      <div>Caricamento dati in corso...</div>
+      <div style="color:#64748b;font-size:11px;margin-top:8px">Attendi il completamento del fetch</div>
+    </div>`;
+    return;
+  }
 
   const { scores, best, consensus, consensusColor, sess } = recap;
-  let html = '';
+  let html = "";
 
-  // ── Header consenso ───────────────────────────────────────
-  html += `<div class="card" style="border:2px solid ${consensusColor}44;text-align:center">
-    <div style="color:#94a3b8;font-size:11px;margin-bottom:6px">CONSENSO TRE SCENARI</div>
-    <div style="color:${consensusColor};font-size:28px;font-weight:900">${consensus}</div>
-    <div style="color:#94a3b8;font-size:11px;margin-top:4px">
-      Sessione: ${sess.sessInfo.emoji} ${sess.sess} · Volatilità ${sess.sessInfo.vol}
+  // ── 1. Header consenso ────────────────────────────────────
+  const lastXau = (state.candles["1h"]||[]).slice(-1)[0];
+  const p = state.paper;
+  const pnlTot = +(p.capital - p.initialCapital).toFixed(2);
+
+  html += `<div class="card" style="border:2px solid ${consensusColor}55;padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+      <div>
+        <div style="color:#94a3b8;font-size:10px;font-weight:700;letter-spacing:.05em">CONSENSO SCENARI</div>
+        <div style="color:${consensusColor};font-size:26px;font-weight:900;line-height:1.1">${consensus}</div>
+        <div style="color:#94a3b8;font-size:11px;margin-top:3px">
+          ${sess.sessInfo.emoji} ${sess.sess} · Vol ${sess.sessInfo.vol} · ${sess.timeStr}
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="color:#e2e8f0;font-size:22px;font-weight:800">$${fmtP(lastXau?.c)}</div>
+        <div style="color:${pnlTot>=0?"#22c55e":"#ef4444"};font-size:12px;font-weight:700">
+          🤖 ${pnlTot>=0?"+":""}€${pnlTot.toFixed(0)}
+        </div>
+        <div style="color:${p.enabled?"#22c55e":"#64748b"};font-size:10px">
+          ${p.enabled?"● Auto ON":"○ Auto OFF"}
+          ${p.openTrade?` · Trade ${p.openTrade.direction} aperto`:""}
+        </div>
+      </div>
+    </div>
+    <!-- Prossimo evento -->
+    ${sess.nextEvent ? `<div style="background:#1e2740;border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+      <span style="color:#94a3b8;font-size:11px">${sess.nextEvent.label}</span>
+      <span style="color:#f0b429;font-weight:700;font-size:12px">${sess.minToNext<60?sess.minToNext+"m":Math.floor(sess.minToNext/60)+"h"+sess.minToNext%60+"m"}</span>
+    </div>` : ""}
+  </div>`;
+
+  // ── 2. Card scenari con entry score ──────────────────────
+  html += `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">`;
+
+  scores.forEach(s => {
+    const es = s.es;
+    const isBest = best && s.id === best.id;
+    const eligible = es.score >= s.threshold;
+    const dirCol = es.dir==="BUY"?"#22c55e":es.dir==="SELL"?"#ef4444":"#94a3b8";
+    const barCol = es.score>=70?"#22c55e":es.score>=50?"#f0b429":"#ef4444";
+
+    // Semaforo entry
+    const entrySem = eligible
+      ? (es.score>=75?"🟢":es.score>=60?"🟡":"🟠")
+      : "🔴";
+    const entryLabel = eligible
+      ? (es.score>=75?"ENTRY FORTE":es.score>=60?"ENTRY BUONA":"ENTRY DEBOLE")
+      : `SOTTO SOGLIA (${s.threshold})`;
+
+    html += `<div class="card" style="border:${isBest?`2px solid ${s.color}`:`1px solid ${eligible?"#2a3550":"#1e2535"}`};padding:14px;opacity:${eligible?1:0.7}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+            ${isBest?`<span style="background:${s.color}20;color:${s.color};border:1px solid ${s.color}44;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700">🥇 MIGLIORE</span>`:""}
+            <span style="color:#e2e8f0;font-size:15px;font-weight:800">${s.label}</span>
+          </div>
+          <div style="color:#64748b;font-size:10px">${s.tf}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="color:${dirCol};font-size:20px;font-weight:900">${es.dir==="BUY"?"▲":es.dir==="SELL"?"▼":"●"} ${es.dir}</div>
+          <div style="font-size:10px;margin-top:2px">${entrySem} ${entryLabel}</div>
+        </div>
+      </div>
+
+      <!-- Score bar -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="color:#94a3b8;font-size:11px">Entry Opportunity Score</span>
+        <span style="color:${barCol};font-weight:900;font-size:18px">${es.score}<span style="font-size:11px;color:#64748b">/100</span></span>
+      </div>
+      <div style="background:#1e2535;border-radius:99px;height:8px;overflow:hidden;margin-bottom:6px;position:relative">
+        <div style="width:${es.score}%;height:100%;background:${barCol};border-radius:99px;transition:width .6s"></div>
+        <!-- Soglia marker -->
+        <div style="position:absolute;left:${s.threshold}%;top:-2px;width:2px;height:12px;background:#fff;opacity:.5;border-radius:1px"></div>
+      </div>
+      <div style="color:#64748b;font-size:9px;margin-bottom:8px">Soglia entry: ${s.threshold}/100</div>
+
+      <!-- Setup levels se eligible -->
+      ${eligible && es.setup ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-bottom:8px">
+        ${[["Entry",es.setup.entry,"#f0b429"],["SL",es.setup.sl,"#ef4444"],["TP1",es.setup.tp1,"#22c55e"],["TP2",es.setup.tp2,"#14b8a6"]].map(([l,v,cv])=>`
+        <div style="background:#1e2740;border-radius:6px;padding:5px;text-align:center">
+          <div style="color:#64748b;font-size:8px">${l}</div>
+          <div style="color:${cv};font-size:11px;font-weight:700">$${fmtP(v)}</div>
+        </div>`).join("")}
+      </div>` : ""}
+
+      <!-- Motivazioni top 3 -->
+      <div style="display:flex;flex-direction:column;gap:3px">
+        ${es.reasons.slice(0,3).map(r=>`<div style="color:${r.startsWith("✅")?"#22c55e":r.startsWith("⚡")?"#f0b429":"#ef4444"};font-size:10px;line-height:1.4">${r}</div>`).join("")}
+      </div>
+
+      <!-- Bottone entry manuale -->
+      ${eligible && es.setup && !p.openTrade ? `<button onclick="launchPaperFromRecap(${JSON.stringify({
+        direction:es.setup.direction, entry:es.setup.entry, sl:es.setup.sl,
+        tp1:es.setup.tp1, tp2:es.setup.tp2, confidence:es.score,
+        scenario:s.id, label:s.label
+      }).replace(/"/g,"&quot;")})"
+        style="width:100%;margin-top:8px;background:${dirCol};color:#000;border-radius:8px;padding:9px 0;font-size:12px;font-weight:700;border:none">
+        ▶ Apri Paper Trade
+      </button>` : ""}
+      ${p.openTrade && isBest ? `<div style="margin-top:8px;background:#f0b42915;border:1px solid #f0b42933;border-radius:7px;padding:7px 10px;font-size:11px;color:#f0b429;text-align:center">
+        Trade aperto — gestione automatica attiva
+      </div>` : ""}
+    </div>`;
+  });
+
+  html += `</div>`;
+
+  // ── 3. Panel paper trading auto centralizzato ─────────────
+  const wins  = p.trades.filter(t=>t.isWin).length;
+  const wr    = p.trades.length ? Math.round(wins/p.trades.length*100) : 0;
+  const dd    = +((p.initialCapital-p.capital)/p.initialCapital*100).toFixed(1);
+  const ddReached = dd >= MAX_DD*100;
+
+  html += `<div class="card" style="border:2px solid ${p.enabled?"#22c55e44":"#f0b42944"}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div>
+        <div style="color:#f0b429;font-weight:800;font-size:14px">🤖 Paper Trading Automatico</div>
+        <div style="color:#64748b;font-size:10px;margin-top:2px">
+          Leva 1:100 · Spread $${SPREAD} · Rischio 1% · Max 5%
+        </div>
+      </div>
+      <button onclick="togglePaperTrading()" style="background:${p.enabled?"#ef4444":"#22c55e"};color:#000;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;border:none">
+        ${p.enabled?"⏹ Stop":"▶ Avvia"}
+      </button>
+    </div>
+
+    <!-- KPI riga -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:10px">
+      <div style="background:#1e2740;border-radius:8px;padding:8px;text-align:center">
+        <div style="color:#64748b;font-size:9px">Capitale</div>
+        <div style="color:#e2e8f0;font-size:14px;font-weight:800">€${p.capital.toFixed(0)}</div>
+      </div>
+      <div style="background:#1e2740;border-radius:8px;padding:8px;text-align:center">
+        <div style="color:#64748b;font-size:9px">P&L</div>
+        <div style="color:${pnlTot>=0?"#22c55e":"#ef4444"};font-size:14px;font-weight:800">${pnlTot>=0?"+":""}€${pnlTot.toFixed(0)}</div>
+      </div>
+      <div style="background:#1e2740;border-radius:8px;padding:8px;text-align:center">
+        <div style="color:#64748b;font-size:9px">Win Rate</div>
+        <div style="color:${wr>=50?"#22c55e":"#ef4444"};font-size:14px;font-weight:800">${wr}%</div>
+      </div>
+      <div style="background:#1e2740;border-radius:8px;padding:8px;text-align:center">
+        <div style="color:#64748b;font-size:9px">DD</div>
+        <div style="color:${dd>7?"#ef4444":dd>3?"#f97316":"#22c55e"};font-size:14px;font-weight:800">${dd>0?"-":""}${Math.abs(dd)}%</div>
+      </div>
+    </div>
+
+    ${ddReached ? `<div style="background:#ef444415;border:1px solid #ef444433;border-radius:8px;padding:8px 10px;margin-bottom:8px;color:#ef4444;font-size:11px">
+      ⛔ Drawdown max raggiunto. <button onclick="resetPaperTrading()" style="background:#ef4444;color:#fff;border-radius:5px;padding:2px 8px;font-size:10px;border:none;margin-left:6px">Reset</button>
+    </div>` : ""}
+
+    <!-- Trade aperto -->
+    ${p.openTrade ? `<div style="background:#f0b42912;border:1px solid #f0b42933;border-radius:9px;padding:10px 12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="color:#f0b429;font-weight:700;font-size:12px">📈 Trade Aperto</span>
+        <span style="background:${p.openTrade.direction==="BUY"?"#22c55e":"#ef4444"}20;color:${p.openTrade.direction==="BUY"?"#22c55e":"#ef4444"};border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700">${p.openTrade.direction}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-bottom:5px">
+        ${[["Entry","$"+fmtP(p.openTrade.entry),"#f0b429"],["SL","$"+fmtP(p.openTrade.sl),"#ef4444"],["TP1","$"+fmtP(p.openTrade.tp1),"#22c55e"],["Lot",p.openTrade.lots,"#94a3b8"]].map(([l,v,cv])=>`
+        <div style="background:#080b10;border-radius:5px;padding:4px;text-align:center">
+          <div style="color:#64748b;font-size:8px">${l}</div>
+          <div style="color:${cv};font-size:11px;font-weight:700">${v}</div>
+        </div>`).join("")}
+      </div>
+      <div style="color:#64748b;font-size:10px">
+        Scenario: ${p.openTrade.pattern||"–"} · Conf: ${p.openTrade.confidence}/100 · 
+        ${new Date(p.openTrade.openedAt).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}
+      </div>
+    </div>` : p.enabled ? `<div style="background:#22c55e12;border:1px solid #22c55e22;border-radius:8px;padding:8px 10px;color:#22c55e;font-size:11px;text-align:center">
+      ✅ In ascolto — entra automaticamente quando score ≥ soglia
+      <div id="paper-last-eval" style="color:#64748b;font-size:10px;margin-top:3px">Ultimo check: mai</div>
+    </div>` : ""}
+
+    <!-- Ultimi 3 trade -->
+    ${p.trades.length > 0 ? `<div style="margin-top:8px">
+      <div style="color:#64748b;font-size:10px;font-weight:700;margin-bottom:5px">ULTIMI TRADE</div>
+      ${p.trades.slice(0,3).map(t=>{
+        const tc = t.isWin?"#22c55e":t.pnlEur===0?"#64748b":"#ef4444";
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #1e2535">
+          <div style="display:flex;gap:5px;align-items:center">
+            <span style="color:${t.direction==="BUY"?"#22c55e":"#ef4444"};font-size:11px;font-weight:700">${t.direction}</span>
+            <span style="color:#94a3b8;font-size:10px">${t.exitReason||"–"}</span>
+            <span style="color:#64748b;font-size:9px">${new Date(t.openedAt).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span>
+          </div>
+          <span style="color:${tc};font-weight:700;font-size:12px">${t.pnlEur>=0?"+":""}€${t.pnlEur?.toFixed(2)||"0"}</span>
+        </div>`;
+      }).join("")}
+    </div>` : ""}
+
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <button onclick="showDiary();setDiaryTabDirect('paper')" style="flex:2;background:#1e2740;border:1px solid #2a3550;color:#b0bdd0;border-radius:8px;padding:8px 0;font-size:11px">📋 Storico completo</button>
+      <button onclick="resetPaperTrading()" style="flex:1;background:transparent;border:1px solid #334155;color:#475569;border-radius:8px;padding:8px 0;font-size:10px">🗑 Reset</button>
     </div>
   </div>`;
 
-  // ── Rating scenari ─────────────────────────────────────────
-  html += `<div class="card"><div class="section-title">🏆 Rating Scenari</div>`;
-  scores.sort((a,b) => b.score - a.score).forEach((s, idx) => {
-    const isBest = best && s.id === best.id;
-    const dirCol = s.dir === 'BUY' ? '#22c55e' : s.dir === 'SELL' ? '#ef4444' : '#94a3b8';
-    const barW   = Math.round(s.conf);
-    html += `<div style="background:#1e2740;border-radius:10px;padding:12px;margin-bottom:8px;border:${isBest?`2px solid ${s.color}`:`1px solid #2a3550`}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="display:flex;align-items:center;gap:8px">
-          ${isBest?`<div style="background:${s.color}20;color:${s.color};border:1px solid ${s.color}44;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700">🥇 MIGLIORE</div>`:`<div style="color:#94a3b8;font-size:12px;font-weight:700">#${idx+1}</div>`}
-          <span style="color:#e2e8f0;font-size:14px;font-weight:800">${s.label}</span>
-        </div>
-        <div style="text-align:right">
-          <div style="color:${dirCol};font-size:16px;font-weight:900">${s.dir==='BUY'?'▲ BUY':s.dir==='SELL'?'▼ SELL':'● WAIT'}</div>
-          <div style="color:#94a3b8;font-size:10px">TF: ${s.tf}</div>
-        </div>
+  // ── 4. Bottone notifiche ──────────────────────────────────
+  html += `<div class="card" style="border:1px solid ${bgActive?"#22c55e44":"#2a3550"}">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="color:#f0b429;font-weight:700;font-size:13px">🔔 Notifiche Background</div>
+        <div id="bg-status" style="color:#64748b;font-size:10px;margin-top:2px">${bgActive?"✅ Attivo":"Non attivo"}</div>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="color:#94a3b8;font-size:11px">Confidence</span>
-        <span style="color:${s.conf>=70?'#22c55e':s.conf>=45?'#f0b429':'#ef4444'};font-weight:800;font-size:15px">${s.conf}/100</span>
+      <button id="bg-toggle" onclick="toggleBackground()" style="background:${bgActive?"#ef4444":"#f0b429"};color:#000;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;border:none">
+        ${bgActive?"Disattiva":"Attiva"}
+      </button>
+    </div>
+    <div id="bg-last-check" style="color:#64748b;font-size:10px;margin-top:6px;display:none"></div>
+    <div id="notif-debug" style="color:#475569;font-size:9px;margin-top:4px;padding:3px;background:#080b10;border-radius:5px"></div>
+
+    <!-- Config alert (compatta) -->
+    <div id="alert-config" style="display:${bgActive?"block":"none"};margin-top:10px">
+      <div style="color:#94a3b8;font-size:10px;font-weight:700;margin-bottom:6px">Alert attivi:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${[["cfg-pivot","📍 Pivot/R1/S1"],["cfg-rsi-ob","⚠️ RSI OB/OS"],["cfg-spike","⚡ Spike ATR"],["cfg-lead","📡 Lead DXY"]].map(([id,label])=>`
+        <label style="display:flex;align-items:center;gap:6px;background:#1e2740;border-radius:7px;padding:7px 9px;cursor:pointer">
+          <input type="checkbox" id="${id}" checked style="width:16px;height:16px;accent-color:#f0b429"/>
+          <span style="color:#b0bdd0;font-size:11px">${label}</span>
+        </label>`).join("")}
       </div>
-      <div class="conf-bar"><div class="conf-fill" style="width:${barW}%;background:${s.conf>=70?'#22c55e':s.conf>=45?'#f0b429':'#ef4444'}"></div></div>
-      <div style="display:flex;gap:10px;margin-top:6px;font-size:10px;color:#94a3b8">
-        <span>Score pesato: <span style="color:${s.color};font-weight:700">${s.score}</span></span>
-        <span>Peso sessione: x${s.weight.toFixed(1)}</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px">
+        <div><div style="color:#64748b;font-size:9px;margin-bottom:2px">Alert sopra $</div>
+          <input type="number" id="cfg-price-above" placeholder="es. 4400" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:6px;padding:6px 8px;color:#e2e8f0;font-size:12px"/></div>
+        <div><div style="color:#64748b;font-size:9px;margin-bottom:2px">Alert sotto $</div>
+          <input type="number" id="cfg-price-below" placeholder="es. 4100" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:6px;padding:6px 8px;color:#e2e8f0;font-size:12px"/></div>
       </div>
-    </div>`;
-  });
-  html += `</div>`;
+      <button onclick="saveAlertConfig()" style="width:100%;margin-top:6px;background:#f0b429;color:#000;border-radius:7px;padding:7px 0;font-size:12px;font-weight:700;border:none">Salva config</button>
+    </div>
+  </div>`;
 
-  // ── Mappa confluenza ───────────────────────────────────────
-  html += `<div class="card"><div class="section-title">🗺️ Mappa Confluenza</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">`;
-  scores.forEach(s => {
-    const dirCol = s.dir==='BUY'?'#22c55e':s.dir==='SELL'?'#ef4444':'#94a3b8';
-    const bg = s.dir==='BUY'?'#22c55e15':s.dir==='SELL'?'#ef444415':'#1e2740';
-    html += `<div style="background:${bg};border-radius:9px;padding:10px;border:1px solid ${dirCol}33;text-align:center">
-      <div style="color:#94a3b8;font-size:10px;margin-bottom:4px">${s.label}</div>
-      <div style="color:${dirCol};font-size:20px;font-weight:900">${s.dir==='BUY'?'▲':s.dir==='SELL'?'▼':'—'}</div>
-      <div style="color:${s.conf>=70?'#22c55e':s.conf>=45?'#f0b429':'#ef4444'};font-size:13px;font-weight:800;margin-top:3px">${s.conf}</div>
-    </div>`;
-  });
-  html += `</div></div>`;
-
-  // ── Setup migliore + Paper trade ──────────────────────────
-  if (best) {
-    const b = best;
-    const bCol = b.dir==='BUY'?'#22c55e':'#ef4444';
-    let entry, sl, tp1, tp2;
-    if (b.id === 'scalp' && b.sig) { entry=b.sig.entry; sl=b.sig.sl; tp1=b.sig.tp1; tp2=b.sig.tp2; }
-    else if (b.id === 'trend' && b.sig) { entry=b.sig.entry; sl=b.sig.sl; tp1=b.sig.tp1; tp2=b.sig.tp2; }
-    else if (b.id === 'swing') {
-      const last = state.candles['1h']?.slice(-1)[0];
-      if (last) {
-        const atr = last.atr || 15;
-        entry = last.c;
-        sl  = b.dir==='BUY' ? +(entry-atr*1.5).toFixed(2) : +(entry+atr*1.5).toFixed(2);
-        tp1 = b.dir==='BUY' ? +(entry+atr*2.0).toFixed(2) : +(entry-atr*2.0).toFixed(2);
-        tp2 = b.dir==='BUY' ? +(entry+atr*3.5).toFixed(2) : +(entry-atr*3.5).toFixed(2);
-      }
-    }
-
-    if (entry) {
-      const rr = (Math.abs(tp1-entry)/Math.abs(sl-entry)).toFixed(1);
-      html += `<div class="card" style="border:2px solid ${bCol}55">
-        <div class="section-title" style="color:${bCol}">🚀 Setup Consigliato — ${b.label}</div>
-        <div style="background:#080b10;border-radius:9px;padding:10px;margin-bottom:10px">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:6px">
-            ${[['Entry',entry,'#f0b429'],['SL',sl,'#ef4444'],['TP1',tp1,'#22c55e'],['TP2',tp2,'#14b8a6']].map(([l,v,c])=>`
-            <div style="background:#141920;border-radius:6px;padding:6px 4px;text-align:center">
-              <div style="color:#94a3b8;font-size:9px">${l}</div>
-              <div style="color:${c};font-size:12px;font-weight:700">$${fmtP(v)}</div>
-            </div>`).join('')}
-          </div>
-          <div style="font-size:11px;color:#94a3b8">R/R: <span style="color:#f97316;font-weight:700">1:${rr}</span> · Scenario: ${b.label} · Conf: ${b.conf}/100</div>
-        </div>
-
-        <!-- Bottone avvia paper trade con questo scenario -->
-        <button onclick="launchPaperFromRecap(${JSON.stringify({direction:b.dir,entry,sl,tp1,tp2,confidence:b.conf,scenario:b.id,label:b.label}).replace(/"/g,'&quot;')})" style="width:100%;background:${bCol};color:#000;border-radius:10px;padding:13px 0;font-size:14px;font-weight:800;border:none;margin-bottom:6px">
-          🤖 Avvia Paper Trade — ${b.dir}
-        </button>
-        <div style="color:#94a3b8;font-size:10px;text-align:center">Leva 1:100 · Spread $0.04 · Rischio 1% · Max 5% capitale</div>
-      </div>`;
-    }
-  } else {
-    html += `<div class="card" style="text-align:center;padding:16px">
-      <div style="font-size:24px;margin-bottom:8px">⏳</div>
-      <div style="color:#94a3b8;font-size:13px">Nessuno scenario con confidence ≥ 45.<br>Attendi un setup più chiaro.</div>
-    </div>`;
-  }
-
-  // ── Paper widget riepilogo ────────────────────────────────
-  html += `<div class="card" style="border:1px solid #f0b42933"><div id="paper-widget-recap"></div></div>`;
-
-  html += `<div style="text-align:center;color:#94a3b8;font-size:9px;line-height:1.5;padding:4px 8px;border-top:1px solid #2a3550">
-    ⚠️ Solo scopo didattico. Non costituisce consulenza finanziaria.
+  html += `<div style="text-align:center;color:#64748b;font-size:9px;line-height:1.5;padding:4px 8px;border-top:1px solid #1e2535;margin-top:4px">
+    ⚠️ Solo scopo didattico · Non costituisce consulenza finanziaria · Paper trading simulato
   </div>`;
 
   content.innerHTML = html;
-  setTimeout(() => {
-    const el = document.getElementById('paper-widget-recap');
-    if (el) renderPaperWidgetIn(el);
-  }, 0);
 }
+
 
 // ── Avvia paper trade dal recap ───────────────────────────────
 function launchPaperFromRecap(tradeData) {
@@ -3543,16 +3832,26 @@ function setMode(mode) {
   } else if (mode === 'recap') {
     tfBar.style.display='none';
     if(screens.recap) screens.recap.style.display='block';
-    // Aggiorna recap (usa dati già in memoria + fetch se mancano 4H)
-    if (!state.candles4h.length) {
-      fetchTrendCandles().then(() => renderRecapScreen());
-    } else {
+    // Carica tutto e mostra Score
+    const loadAndRender = async () => {
+      await Promise.all([
+        state.candles['1h'].length < 5 ? doFetch() : Promise.resolve(),
+        state.candles['5m'].length < 5 ? doScalpFetch() : Promise.resolve(),
+        state.candles4h.length < 5 ? fetchTrendCandles() : Promise.resolve(),
+      ]);
       renderRecapScreen();
-    }
-    // Auto-refresh recap ogni 5 min
-    state.trendTimer = setInterval(() => {
-      fetchTrendCandles().then(() => renderRecapScreen());
-    }, 5*60000);
+      // Valuta auto-entry dopo ogni aggiornamento
+      if (!state.paper.openTrade) evaluateAutoEntry();
+    };
+    loadAndRender();
+    // Auto-refresh ogni 60s: fetch + score + auto-entry/exit
+    state.trendTimer = setInterval(async () => {
+      const curPrice = (state.candles['1h']||[]).slice(-1)[0]?.c || 0;
+      if (curPrice) evaluateAutoExit(curPrice);
+      await Promise.all([doFetch(), doScalpFetch(), fetchTrendCandles()]);
+      renderRecapScreen();
+      if (!state.paper.openTrade) evaluateAutoEntry();
+    }, 60000);
   }
 }
 
@@ -3834,9 +4133,16 @@ async function restoreBgState() {
   if(state.tdKey){
     document.getElementById('setup-screen').style.display='none';
     document.getElementById('app-screen').style.display='block';
-    document.getElementById('alert-panel').style.display='block';
-    doFetch();
-    state.fetchTimer=setInterval(doFetch,5*60000);
+    document.getElementById('alert-panel').style.display='none'; // nascosto di default
+    // Carica tutti i dati in parallelo poi mostra Score
+    Promise.all([
+      doFetch(),
+      doScalpFetch(),
+      fetchTrendCandles(),
+    ]).then(() => {
+      setMode('recap');
+    });
+    state.fetchTimer = setInterval(doFetch, 5*60000);
     restoreBgState();
   }
 })();
