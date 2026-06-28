@@ -359,6 +359,7 @@ button{cursor:pointer}
       <button class="tab inactive" onclick="setDiaryTab('backtest')">🧪 Backtest</button>
       <button class="tab inactive" onclick="setDiaryTab('session')">🕐 Session</button>
       <button class="tab inactive" onclick="setDiaryTab('paper')">🤖 Auto</button>
+      <button class="tab inactive" onclick="setDiaryTab('analytics')">📊 Analytics</button>
     </div>
   </div>
   <div class="content" id="diary-content"></div>
@@ -1558,6 +1559,66 @@ function renderDiary(){
     }
   }
 
+  // ── ANALYTICS TAB ──────────────────────────────────────────
+  else if(state.diaryTab==='analytics'){
+    const p=state.paper, trades=p.trades||[];
+    if(!trades.length){
+      html+=`<div style="text-align:center;padding:40px 0;color:#94a3b8"><div style="font-size:32px;margin-bottom:8px">📊</div>Nessun trade automatico ancora.<br><span style="font-size:11px;color:#64748b">Avvia dalla pagina 🎯 Score</span></div>`;
+    } else {
+      const wins=trades.filter(t=>t.isWin), losses=trades.filter(t=>!t.isWin&&t.pnlEur<0);
+      const pnlTot=+trades.reduce((s,t)=>s+(t.pnlEur||0),0).toFixed(2);
+      const pfNum=wins.reduce((s,t)=>s+(t.pnlEur||0),0), pfDen=Math.abs(losses.reduce((s,t)=>s+(t.pnlEur||0),0));
+      const pf=pfDen>0?+(pfNum/pfDen).toFixed(2):'∞';
+      const withBE=trades.filter(t=>t.breakEvenSet).length, withTR=trades.filter(t=>t.trailingActive).length;
+      const withPA=trades.filter(t=>t.exitReason?.startsWith('PA')||t.exitReason==='TP1_PA').length;
+      html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div class="kpi" style="border-color:${pnlTot>=0?'#22c55e33':'#ef444433'}"><div class="lbl">P&amp;L Totale</div><div class="val" style="color:${pnlTot>=0?'#22c55e':'#ef4444'}">${pnlTot>=0?'+':''}€${pnlTot}</div><div class="sub">${trades.length} trade</div></div>
+        <div class="kpi"><div class="lbl">Profit Factor</div><div class="val" style="color:${pf==='∞'||pf>=1.5?'#22c55e':pf>=1?'#f0b429':'#ef4444'}">${pf}</div></div>
+        <div class="kpi"><div class="lbl">Breakeven</div><div class="val" style="color:#f0b429">${withBE}</div><div class="sub">trade protetti</div></div>
+        <div class="kpi"><div class="lbl">PA Exit</div><div class="val" style="color:#a855f7">${withPA}</div><div class="sub">chiusi da PA</div></div>
+      </div>`;
+      html+=`<div class="card"><div class="section-title">🏆 Win Rate per Scenario</div>`;
+      ['swing','scalp','trend'].forEach(id=>{
+        const ts=trades.filter(t=>t.scenario===id); if(!ts.length) return;
+        const tw=ts.filter(t=>t.isWin).length, wr=Math.round(tw/ts.length*100);
+        const tpnl=+ts.reduce((s,t)=>s+(t.pnlEur||0),0).toFixed(2);
+        const col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
+        const lbl={'swing':'📊 Swing','scalp':'⚡ Scalp','trend':'📈 Trend'}[id];
+        html+=`<div style="background:#1e2740;border-radius:9px;padding:10px 12px;margin-bottom:7px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#e2e8f0;font-size:13px;font-weight:700">${lbl}</span><div><span style="color:${tpnl>=0?'#22c55e':'#ef4444'};font-size:11px">${tpnl>=0?'+':''}€${tpnl}</span><span style="color:${col};font-size:14px;font-weight:800;margin-left:8px">${wr}%</span></div></div>
+          <div style="color:#64748b;font-size:10px;margin-bottom:4px">${ts.length} trade · ${tw} vinti</div>
+          <div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div></div>`;
+      });
+      html+=`</div>`;
+      html+=`<div class="card"><div class="section-title">🚪 Distribuzione Exit</div>`;
+      const exitMap={};
+      trades.forEach(t=>{const r=t.exitReason||'?';if(!exitMap[r])exitMap[r]={n:0,w:0,pnl:0};exitMap[r].n++;if(t.isWin)exitMap[r].w++;exitMap[r].pnl+=(t.pnlEur||0);});
+      const exitCols={'TP2':'#14b8a6','TP1':'#22c55e','TP1_PA':'#22c55e','BE':'#64748b','SL':'#ef4444'};
+      Object.entries(exitMap).sort((a,b)=>b[1].n-a[1].n).forEach(([r,s])=>{
+        const wr=Math.round(s.w/s.n*100),col=exitCols[r]||'#f97316';
+        html+=`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1e2535"><div><span style="color:${col};font-weight:700;font-size:12px">${r}</span><span style="color:#64748b;font-size:10px;margin-left:6px">${s.n}x</span></div><div><span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-size:11px;font-weight:700">${s.pnl>=0?'+':''}€${s.pnl.toFixed(0)}</span><span style="color:#64748b;font-size:10px;margin-left:5px">${wr}% WR</span></div></div>`;
+      });
+      html+=`</div>`;
+      html+=`<div class="card"><div class="section-title">⭐ Score Entry vs Esito</div>`;
+      [['Alta (≥75)',75,101],['Media (55-74)',55,75],['Bassa (<55)',0,55]].forEach(([lbl,lo,hi])=>{
+        const ts=trades.filter(t=>t.confidence>=lo&&t.confidence<hi); if(!ts.length) return;
+        const tw=ts.filter(t=>t.isWin).length, wr=Math.round(tw/ts.length*100);
+        const col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
+        html+=`<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#94a3b8;font-size:11px">${lbl} (${ts.length})</span><span style="color:${col};font-size:11px;font-weight:700">${wr}%</span></div><div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div></div>`;
+      });
+      html+=`</div>`;
+      html+=`<div class="card" style="border:1px solid #f0b42933">
+        <div class="section-title">⬇️ Esporta Log Completo</div>
+        <div style="color:#94a3b8;font-size:11px;margin-bottom:10px;line-height:1.6">CSV con score breakdown per ogni criterio di tutti e 3 gli scenari + log PA. Per ottimizzazione soglie ex post.</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="exportPaperLog()" style="flex:1;background:#f0b429;color:#000;border-radius:8px;padding:11px 0;font-size:13px;font-weight:700;border:none">⬇️ CSV</button>
+          <button onclick="exportPaperLogJSON()" style="flex:1;background:#3b82f6;color:#000;border-radius:8px;padding:11px 0;font-size:13px;font-weight:700;border:none">⬇️ JSON</button>
+        </div>
+        <div style="color:#64748b;font-size:9px;margin-top:5px;text-align:center">CSV → Excel/Sheets · JSON → Python/analisi avanzata</div>
+      </div>`;
+    }
+  }
+
   content.innerHTML=html;
 }
 
@@ -1785,19 +1846,56 @@ function evaluateAutoEntry() {
   const lots = calcLotSize(p.capital, entry, sl);
   const riskEur = +(Math.abs(entry - sl) * lots * 100).toFixed(2);
 
+  // Salva snapshot completo dello score al momento dell'entry
+  const scoreSnapshot = {
+    scenario:   best.id,
+    label:      best.label,
+    totalScore: es.score,
+    threshold:  best.threshold,
+    direction:  es.dir,
+    reasons:    es.reasons,
+    // Dati di mercato al momento dell'entry
+    marketSnapshot: {
+      price:    es.setup.entry,
+      rsi1h:    (state.candles['1h']||[]).slice(-1)[0]?.rsi || null,
+      macd1h:   (state.candles['1h']||[]).slice(-1)[0]?.macd || null,
+      atr1h:    (state.candles['1h']||[]).slice(-1)[0]?.atr || null,
+      rsi5m:    (state.candles['5m']||[]).slice(-1)[0]?.rsi || null,
+      rsi1m:    (state.candles['1m']||[]).slice(-1)[0]?.rsi || null,
+      session:  getSessionStatus().sess,
+      ts:       new Date().toISOString(),
+    },
+    // Score breakdown per tutti gli scenari al momento dell'entry
+    allScores: recap.scores.map(s => ({
+      id:       s.id,
+      label:    s.label,
+      score:    s.es.score,
+      dir:      s.es.dir,
+      reasons:  s.es.reasons,
+      eligible: s.es.score >= s.threshold,
+    })),
+  };
+
   const trade = {
-    id:           Date.now(),
-    direction:    es.dir,
+    id:            Date.now(),
+    direction:     es.dir,
     entry, sl, tp1, tp2, lots, riskEur,
-    confidence:   es.score,
-    openedAt:     new Date().toISOString(),
-    capitalAtOpen:p.capital,
-    spread:       SPREAD,
-    pattern:      `Auto [${best.label}]`,
-    macroDir:     '–',
-    atrAtEntry:   0,
-    scenario:     best.id,
-    entryReasons: es.reasons.slice(0, 3),
+    confidence:    es.score,
+    openedAt:      new Date().toISOString(),
+    capitalAtOpen: p.capital,
+    spread:        SPREAD,
+    pattern:       `Auto [${best.label}]`,
+    macroDir:      '–',
+    atrAtEntry:    (state.candles['1h']||[]).slice(-1)[0]?.atr || 0,
+    scenario:      best.id,
+    entryReasons:  es.reasons,
+    scoreSnapshot,
+    managementLog: [],
+    trailingActive: false,
+    breakEvenSet:   false,
+    partialClosed:  false,
+    maxFavorable:   es.setup.entry,
+    minAdverse:     es.setup.entry,
   };
 
   p.openTrade    = trade;
@@ -2111,6 +2209,143 @@ function loadPaperState() {
   p.equity       = LS.get('paper_equity')    ?? [10000];
   p.enabled      = LS.get('paper_enabled')   ?? false;
   p.lastSignalTs = LS.get('paper_lastSig')   ?? 0;
+}
+
+// ══ PAPER TRADING LOG EXPORT ═════════════════════════════════
+
+// Genera CSV completo con score breakdown per ogni trade
+function exportPaperLog() {
+  const p = state.paper;
+  const trades = p.trades || [];
+  if (!trades.length) { alert('Nessun trade da esportare.'); return; }
+
+  // ── Intestazioni CSV ────────────────────────────────────
+  const headers = [
+    // Dati trade base
+    'ID', 'Aperto_il', 'Chiuso_il', 'Durata_min',
+    'Scenario', 'Direzione',
+    'Entry', 'SL_iniziale', 'TP1_iniziale', 'TP2_iniziale',
+    'Exit_Price', 'Exit_Reason',
+    'Lotti', 'Rischio_EUR', 'PnL_EUR', 'RR_realizzato',
+    'Capitale_dopo', 'Vittoria',
+    // Score entry
+    'Score_entry', 'Soglia_scenario',
+    'Sessione_entry', 'RSI_1H_entry', 'MACD_1H_entry', 'ATR_1H_entry',
+    'RSI_5M_entry', 'RSI_1M_entry',
+    // Gestione trade
+    'BreakevenSet', 'TrailingAttivato',
+    'N_azioni_gestione', 'Log_gestione',
+    // Price action alla chiusura
+    'PA_WarnScore_close', 'PA_StrScore_close', 'PA_TopWarning_close',
+    // Score breakdown tutti gli scenari (Swing)
+    'Swing_score', 'Swing_dir', 'Swing_eligible',
+    'Swing_reason1', 'Swing_reason2', 'Swing_reason3',
+    // Score breakdown (Scalp)
+    'Scalp_score', 'Scalp_dir', 'Scalp_eligible',
+    'Scalp_reason1', 'Scalp_reason2', 'Scalp_reason3',
+    // Score breakdown (Trend)
+    'Trend_score', 'Trend_dir', 'Trend_eligible',
+    'Trend_reason1', 'Trend_reason2', 'Trend_reason3',
+    // Motivazioni entry scenario vincente
+    'Entry_reason1', 'Entry_reason2', 'Entry_reason3',
+    'Entry_reason4', 'Entry_reason5',
+  ];
+
+  const rows = trades.map(t => {
+    const openDt  = new Date(t.openedAt);
+    const closeDt = t.closedAt ? new Date(t.closedAt) : null;
+    const durMin  = closeDt ? Math.round((closeDt - openDt) / 60000) : '';
+    const snap    = t.scoreSnapshot || {};
+    const mkt     = snap.marketSnapshot || {};
+    const all     = snap.allScores || [];
+    const sw      = all.find(s => s.id === 'swing') || {};
+    const sc      = all.find(s => s.id === 'scalp') || {};
+    const tr      = all.find(s => s.id === 'trend') || {};
+    const mgLog   = (t.managementLog || []).map(l => `[${new Date(l.ts).toLocaleTimeString('it-IT')}] ${l.action}`).join(' | ');
+    const reasons = t.entryReasons || [];
+    const pa      = t.paAtClose || {};
+
+    return [
+      t.id, t.openedAt, t.closedAt || '', durMin,
+      t.scenario || '', t.direction,
+      t.entry, t.sl, t.tp1, t.tp2,
+      t.exitPrice || '', t.exitReason || '',
+      t.lots, t.riskEur, t.pnlEur || '', t.rr || '',
+      t.capitalAfter || '', t.isWin ? 'SI' : 'NO',
+      // Score entry
+      snap.totalScore || '', snap.threshold || '',
+      mkt.session || '', mkt.rsi1h || '', mkt.macd1h || '', mkt.atr1h || '',
+      mkt.rsi5m || '', mkt.rsi1m || '',
+      // Gestione
+      t.breakEvenSet ? 'SI' : 'NO',
+      t.trailingActive ? 'SI' : 'NO',
+      (t.managementLog || []).length,
+      `"${mgLog.replace(/"/g, "'")}"`,
+      // PA close
+      pa.warnScore || '', pa.strScore || '', pa.topWarning || '',
+      // Swing breakdown
+      sw.score || '', sw.dir || '', sw.eligible ? 'SI' : 'NO',
+      (sw.reasons || [])[0] || '', (sw.reasons || [])[1] || '', (sw.reasons || [])[2] || '',
+      // Scalp breakdown
+      sc.score || '', sc.dir || '', sc.eligible ? 'SI' : 'NO',
+      (sc.reasons || [])[0] || '', (sc.reasons || [])[1] || '', (sc.reasons || [])[2] || '',
+      // Trend breakdown
+      tr.score || '', tr.dir || '', tr.eligible ? 'SI' : 'NO',
+      (tr.reasons || [])[0] || '', (tr.reasons || [])[1] || '', (tr.reasons || [])[2] || '',
+      // Entry reasons
+      reasons[0] || '', reasons[1] || '', reasons[2] || '', reasons[3] || '', reasons[4] || '',
+    ].map(v => {
+      // Escape per CSV
+      const s = String(v === null || v === undefined ? '' : v);
+      return s.includes(',') || s.includes('
+') ? `"${s.replace(/"/g, "'")}"` : s;
+    });
+  });
+
+  const csvContent = [headers, ...rows].map(r => r.join(',')).join('
+');
+  downloadFile(csvContent, `xauusd_paper_log_${new Date().toISOString().slice(0,10)}.csv`, 'text/csv');
+}
+
+// Export JSON completo (per analisi più avanzata)
+function exportPaperLogJSON() {
+  const p = state.paper;
+  const data = {
+    exportedAt:     new Date().toISOString(),
+    capitalInitial: p.initialCapital,
+    capitalCurrent: p.capital,
+    equity:         p.equity,
+    trades:         p.trades,
+    stats: {
+      total:      p.trades.length,
+      wins:       p.trades.filter(t=>t.isWin).length,
+      losses:     p.trades.filter(t=>!t.isWin&&t.pnlEur<0).length,
+      winRate:    p.trades.length ? +(p.trades.filter(t=>t.isWin).length/p.trades.length*100).toFixed(1) : 0,
+      pnlTotal:   +(p.capital - p.initialCapital).toFixed(2),
+      byScenario: ['swing','scalp','trend'].map(id => {
+        const ts = p.trades.filter(t=>t.scenario===id);
+        return { id, n:ts.length, wins:ts.filter(t=>t.isWin).length, pnl:+ts.reduce((s,t)=>s+(t.pnlEur||0),0).toFixed(2) };
+      }),
+      byExitReason: [...new Set(p.trades.map(t=>t.exitReason))].map(r => {
+        const ts = p.trades.filter(t=>t.exitReason===r);
+        return { reason:r, n:ts.length, pnl:+ts.reduce((s,t)=>s+(t.pnlEur||0),0).toFixed(2) };
+      }),
+    }
+  };
+  downloadFile(JSON.stringify(data, null, 2), `xauusd_paper_full_${new Date().toISOString().slice(0,10)}.json`, 'application/json');
+}
+
+// Helper download file
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function resetPaperTrading() {
