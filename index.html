@@ -1817,76 +1817,279 @@ function evaluateAutoEntry() {
   }
 }
 
-// Valuta se chiudere il trade aperto
+// ── Analisi forza prezzo per gestione trade ──────────────────
+function analyzePriceAction(candles, direction) {
+  if (!candles || candles.length < 5) return null;
+  const last  = candles[candles.length - 1];
+  const prev  = candles[candles.length - 2];
+  const prev2 = candles[candles.length - 3];
+  if (!last || !prev) return null;
+
+  const body      = Math.abs(last.c - last.o);
+  const range     = last.h - last.l || 0.001;
+  const upperWick = last.h - Math.max(last.c, last.o);
+  const lowerWick = Math.min(last.c, last.o) - last.l;
+  const isBull    = last.c > last.o;
+  const rsi       = last.rsi || 50;
+  const macd      = last.macd || 0;
+  const prevMacd  = prev.macd || 0;
+
+  // Momentum micro: slope ultime 3 candele
+  const closes = candles.slice(-5).map(c => c.c);
+  const slope3 = closes[closes.length-1] - closes[closes.length-3];
+  const slope5 = closes[closes.length-1] - closes[0];
+
+  // Forza candela corrente
+  const bodyRatio     = body / range;       // >0.6 = candela forte
+  const wickRatioUp   = upperWick / range;
+  const wickRatioDown = lowerWick / range;
+
+  // Segnali di DEBOLEZZA del movimento (warning per chiudere/trailing)
+  const warnings = [];
+  const strengths = [];
+
+  if (direction === 'BUY') {
+    // Debolezza rialzo
+    if (wickRatioUp > 0.4 && bodyRatio < 0.3)
+      warnings.push({ code: 'SHOOT_STAR', msg: 'Shooting star — rifiuto in alto', weight: 3 });
+    if (rsi > 72)
+      warnings.push({ code: 'RSI_OB', msg: `RSI ${rsi} overbought`, weight: 2 });
+    if (macd < prevMacd && macd > 0)
+      warnings.push({ code: 'MACD_DIV', msg: 'MACD divergenza bearish', weight: 2 });
+    if (!isBull && body > range * 0.5)
+      warnings.push({ code: 'BEAR_CANDLE', msg: 'Candela bear forte — pressione venditori', weight: 3 });
+    if (slope3 < 0 && slope5 > 0)
+      warnings.push({ code: 'MICRO_BEARISH', msg: 'Micro-trend ribassista', weight: 1 });
+    if (last.vol && prev.vol && last.vol < prev.vol * 0.5)
+      warnings.push({ code: 'VOL_DROP', msg: 'Volume in calo — momentum esaurito', weight: 2 });
+
+    // Forza rialzo
+    if (isBull && bodyRatio > 0.65 && lowerWick < body * 0.2)
+      strengths.push({ code: 'BULL_MARUBOZU', msg: 'Marubozu bull — momentum forte', weight: 3 });
+    if (rsi > 50 && rsi < 68)
+      strengths.push({ code: 'RSI_BULL', msg: `RSI ${rsi} zona rialzista sana`, weight: 2 });
+    if (macd > prevMacd)
+      strengths.push({ code: 'MACD_UP', msg: 'MACD in salita', weight: 2 });
+    if (slope3 > 0)
+      strengths.push({ code: 'MICRO_BULL', msg: 'Micro-trend rialzista', weight: 1 });
+
+  } else { // SELL
+    // Debolezza ribasso
+    if (wickRatioDown > 0.4 && bodyRatio < 0.3)
+      warnings.push({ code: 'HAMMER', msg: 'Hammer — rifiuto in basso', weight: 3 });
+    if (rsi < 28)
+      warnings.push({ code: 'RSI_OS', msg: `RSI ${rsi} oversold`, weight: 2 });
+    if (macd > prevMacd && macd < 0)
+      warnings.push({ code: 'MACD_DIV', msg: 'MACD divergenza bullish', weight: 2 });
+    if (isBull && body > range * 0.5)
+      warnings.push({ code: 'BULL_CANDLE', msg: 'Candela bull forte — pressione compratori', weight: 3 });
+    if (slope3 > 0 && slope5 < 0)
+      warnings.push({ code: 'MICRO_BULLISH', msg: 'Micro-trend rialzista contro posizione', weight: 1 });
+
+    // Forza ribasso
+    if (!isBull && bodyRatio > 0.65 && upperWick < body * 0.2)
+      strengths.push({ code: 'BEAR_MARUBOZU', msg: 'Marubozu bear — momentum ribassista', weight: 3 });
+    if (rsi < 50 && rsi > 32)
+      strengths.push({ code: 'RSI_BEAR', msg: `RSI ${rsi} zona ribassista sana`, weight: 2 });
+    if (macd < prevMacd)
+      strengths.push({ code: 'MACD_DOWN', msg: 'MACD in discesa', weight: 2 });
+    if (slope3 < 0)
+      strengths.push({ code: 'MICRO_BEAR', msg: 'Micro-trend ribassista', weight: 1 });
+  }
+
+  const warnScore = warnings.reduce((s, w) => s + w.weight, 0);
+  const strScore  = strengths.reduce((s, w) => s + w.weight, 0);
+  const netScore  = strScore - warnScore; // positivo = posizione forte
+
+  return {
+    warnings, strengths, warnScore, strScore, netScore,
+    rsi, macd, slope3, slope5, isBull, bodyRatio,
+    wickRatioUp, wickRatioDown, last, range,
+  };
+}
+
+// ── Gestione intelligente trade aperto ────────────────────────
 function evaluateAutoExit(currentPrice) {
   const p = state.paper;
   if (!p.enabled || !p.openTrade) return;
 
-  const t = p.openTrade;
+  const t   = p.openTrade;
   const dir = t.direction;
-  let closed = false, exitReason = '', exitPrice = 0;
 
-  // Check SL
+  // Inizializza campi gestione se non presenti
+  if (!t.managementLog) t.managementLog = [];
+  if (!t.trailingActive) t.trailingActive = false;
+  if (!t.partialClosed)  t.partialClosed  = false;
+  if (!t.breakEvenSet)   t.breakEvenSet   = false;
+  if (!t.maxFavorable)   t.maxFavorable   = dir === 'BUY' ? currentPrice : currentPrice;
+  if (!t.minAdverse)     t.minAdverse     = dir === 'BUY' ? currentPrice : currentPrice;
+
+  // Aggiorna max favorevole (MFE)
+  if (dir === 'BUY')  t.maxFavorable = Math.max(t.maxFavorable, currentPrice);
+  if (dir === 'SELL') t.maxFavorable = Math.min(t.maxFavorable, currentPrice);
+
+  const slDist = Math.abs(t.entry - t.sl);
+  const atr    = t.atrAtEntry || slDist * 0.6 || 15;
+
+  // Profitto corrente in punti
+  const profitPts = dir === 'BUY' ? currentPrice - t.entry : t.entry - currentPrice;
+  const profitRR  = slDist > 0 ? profitPts / slDist : 0;
+
+  // ── Analisi price action su 1M poi 5M ─────────────────────
+  const useCandles = (state.candles['1m']?.length >= 5)
+    ? state.candles['1m']
+    : (state.candles['5m']?.length >= 5 ? state.candles['5m'] : state.candles['1h'] || []);
+  const pa = analyzePriceAction(useCandles, dir);
+
+  let closed      = false;
+  let exitPrice   = 0;
+  let exitReason  = '';
+  let action      = ''; // per log
+
+  // ── 1. CHIUSURA FORZATA: SL colpito ───────────────────────
   if (dir === 'BUY'  && currentPrice <= t.sl) { exitReason = 'SL'; exitPrice = t.sl; closed = true; }
   if (dir === 'SELL' && currentPrice >= t.sl) { exitReason = 'SL'; exitPrice = t.sl; closed = true; }
 
-  // Check TP1
-  if (!closed && dir === 'BUY'  && currentPrice >= t.tp1) { exitReason = 'TP1'; exitPrice = t.tp1; closed = true; }
-  if (!closed && dir === 'SELL' && currentPrice <= t.tp1) { exitReason = 'TP1'; exitPrice = t.tp1; closed = true; }
+  // ── 2. CHIUSURA FORZATA: TP2 colpito ──────────────────────
+  if (!closed) {
+    if (dir === 'BUY'  && currentPrice >= t.tp2) { exitReason = 'TP2'; exitPrice = t.tp2; closed = true; }
+    if (dir === 'SELL' && currentPrice <= t.tp2) { exitReason = 'TP2'; exitPrice = t.tp2; closed = true; }
+  }
 
-  // Check TP2
-  if (!closed && dir === 'BUY'  && currentPrice >= t.tp2) { exitReason = 'TP2'; exitPrice = t.tp2; closed = true; }
-  if (!closed && dir === 'SELL' && currentPrice <= t.tp2) { exitReason = 'TP2'; exitPrice = t.tp2; closed = true; }
+  // ── 3. GESTIONE INTELLIGENTE (solo se non già chiuso) ─────
+  if (!closed && pa) {
 
-  if (!closed) return;
+    // 3a. BREAKEVEN: sposta SL a entry quando profitto > 0.7x SL dist
+    if (!t.breakEvenSet && profitRR >= 0.7) {
+      const newSL = dir === 'BUY'
+        ? +(t.entry + SPREAD).toFixed(2)   // leggermente sopra entry per coprire spread
+        : +(t.entry - SPREAD).toFixed(2);
+      if ((dir === 'BUY' && newSL > t.sl) || (dir === 'SELL' && newSL < t.sl)) {
+        t.sl = newSL;
+        t.breakEvenSet = true;
+        action = `BE: SL → $${fmtP(newSL)}`;
+        t.managementLog.push({ ts: Date.now(), action, price: currentPrice });
+      }
+    }
 
-  // Calcola P&L con spread
+    // 3b. TRAILING STOP: attiva quando profitto > 1x SL dist
+    if (profitRR >= 1.0) {
+      t.trailingActive = true;
+      // Trail: mantieni SL a 1.2x ATR dal massimo favorevole
+      const trailDist = atr * 1.2;
+      const trailSL   = dir === 'BUY'
+        ? +(t.maxFavorable - trailDist).toFixed(2)
+        : +(t.maxFavorable + trailDist).toFixed(2);
+
+      if ((dir === 'BUY' && trailSL > t.sl) || (dir === 'SELL' && trailSL < t.sl)) {
+        action = `TRAIL: SL $${fmtP(t.sl)} → $${fmtP(trailSL)}`;
+        t.sl = trailSL;
+        t.managementLog.push({ ts: Date.now(), action, price: currentPrice });
+      }
+    }
+
+    // 3c. CHIUSURA ANTICIPATA per price action debole
+    // Se profitto > 0.5x SL E price action fortemente negativa → chiudi
+    if (!closed && profitRR >= 0.5 && pa.warnScore >= 5) {
+      exitReason = `PA_EXIT (${pa.warnings.map(w=>w.code).join(',')})`;
+      exitPrice  = currentPrice;
+      closed     = true;
+      action     = `Chiusura PA: ${pa.warnings[0]?.msg}`;
+      t.managementLog.push({ ts: Date.now(), action, price: currentPrice });
+    }
+
+    // 3d. CHIUSURA A TP1 anticipata se price action mostra esaurimento
+    // profitto vicino a TP1 (>80%) E warning moderati
+    if (!closed) {
+      const tp1Pct = Math.abs(currentPrice - t.entry) / Math.abs(t.tp1 - t.entry);
+      if (tp1Pct >= 0.8 && pa.warnScore >= 3 && pa.netScore < 0) {
+        exitReason = 'TP1_PA';
+        exitPrice  = currentPrice;
+        closed     = true;
+        action     = `TP1 anticipato (PA debole): ${pa.warnings[0]?.msg}`;
+        t.managementLog.push({ ts: Date.now(), action, price: currentPrice });
+      }
+    }
+
+    // 3e. CHIUSURA A TP1 se TP1 colpito
+    if (!closed) {
+      if (dir === 'BUY'  && currentPrice >= t.tp1) { exitReason = 'TP1'; exitPrice = t.tp1; closed = true; }
+      if (dir === 'SELL' && currentPrice <= t.tp1) { exitReason = 'TP1'; exitPrice = t.tp1; closed = true; }
+    }
+
+    // 3f. ESTENDI TARGET se price action molto forte oltre TP1
+    if (!closed && profitRR >= 1.0 && pa.strScore >= 5 && pa.warnScore === 0) {
+      // Alza TP2 del 20% se momentum fortissimo
+      const extraPts = atr * 1.5;
+      const newTP2   = dir === 'BUY'
+        ? +(t.tp2 + extraPts).toFixed(2)
+        : +(t.tp2 - extraPts).toFixed(2);
+      if (newTP2 !== t.tp2) {
+        action = `TP2 esteso: $${fmtP(t.tp2)} → $${fmtP(newTP2)} (PA forte: ${pa.strengths[0]?.msg})`;
+        t.tp2  = newTP2;
+        t.managementLog.push({ ts: Date.now(), action, price: currentPrice });
+      }
+    }
+  }
+
+  // ── 4. AGGIORNA UI senza chiudere ─────────────────────────
+  if (!closed) {
+    p.openTrade = t;
+    savePaperState();
+    // Aggiorna Score screen se visibile
+    if (state.mode === 'recap') renderRecapScreen();
+    return;
+  }
+
+  // ── 5. CHIUDI IL TRADE ────────────────────────────────────
   const exitWithSpread = dir === 'BUY'
-    ? +(exitPrice - SPREAD / 2).toFixed(2)  // chiudi al bid
-    : +(exitPrice + SPREAD / 2).toFixed(2); // chiudi all'ask
+    ? +(exitPrice - SPREAD / 2).toFixed(2)
+    : +(exitPrice + SPREAD / 2).toFixed(2);
 
   const pnlPts = dir === 'BUY' ? exitWithSpread - t.entry : t.entry - exitWithSpread;
   const pnlEur = +(pnlPts * t.lots * 100).toFixed(2);
   const isWin  = pnlEur > 0;
 
-  // Aggiorna capitale
   p.capital = +(p.capital + pnlEur).toFixed(2);
   p.equity.push(p.capital);
-  if (p.equity.length > 200) p.equity.shift(); // cap array
+  if (p.equity.length > 200) p.equity.shift();
 
   const closed_trade = {
     ...t,
-    exitPrice: exitWithSpread,
+    exitPrice:    exitWithSpread,
     exitReason,
     pnlEur,
     isWin,
-    closedAt: new Date().toISOString(),
+    closedAt:     new Date().toISOString(),
     capitalAfter: p.capital,
-    rr: +(pnlPts / Math.abs(t.entry - t.sl)).toFixed(2),
+    rr:           +(pnlPts / Math.abs(t.entry - (t.breakEvenSet ? t.entry : t.sl))).toFixed(2),
+    paAtClose:    pa ? { warnScore: pa.warnScore, strScore: pa.strScore, topWarning: pa.warnings[0]?.msg } : null,
   };
 
-  p.trades.unshift(closed_trade); // più recente prima
+  p.trades.unshift(closed_trade);
   if (p.trades.length > 100) p.trades.pop();
   p.openTrade = null;
 
   savePaperState();
   if (state.mode === 'recap') renderRecapScreen();
   else renderPaperWidget();
-  console.log('[PAPER] Trade chiuso:', closed_trade);
 
-  // Aggiorna timestamp ultimo check nel widget
+  console.log('[PAPER] Trade chiuso:', exitReason, pnlEur);
+
+  // Aggiorna last check
   const evalEl = document.getElementById('paper-last-eval');
-  if(evalEl) evalEl.textContent = `Chiusura: ${new Date().toLocaleTimeString('it-IT')} · ${exitReason} · €${pnlEur>0?'+':''}${pnlEur}`;
+  if (evalEl) evalEl.textContent = `Chiusura: ${new Date().toLocaleTimeString('it-IT')} · ${exitReason} · €${pnlEur > 0 ? '+' : ''}${pnlEur}`;
 
-  // Notifica push per chiusura
+  // Notifica push
   if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-    const emoji = isWin ? '✅' : exitReason==='BE'?'➖':'❌';
+    const emoji = isWin ? '✅' : exitReason.startsWith('SL') ? '❌' : '➖';
+    const paNote = closed_trade.paAtClose?.topWarning ? ` · ${closed_trade.paAtClose.topWarning}` : '';
     navigator.serviceWorker.ready.then(reg => {
       reg.showNotification(`${emoji} Paper Trade Chiuso — ${exitReason}`, {
-        body: `${dir} XAU · P&L: €${pnlEur>0?'+':''}${pnlEur.toFixed(2)} · Capitale: €${p.capital.toFixed(0)}`,
-        icon: '/icon-192.png', tag: 'paper-close', vibrate: [300,100,300],
+        body: `${dir} XAU · P&L: €${pnlEur > 0 ? '+' : ''}${pnlEur.toFixed(2)} · Cap: €${p.capital.toFixed(0)}${paNote}`,
+        icon: '/icon-192.png', tag: 'paper-close', vibrate: [300, 100, 300],
       });
-    }).catch(()=>{});
+    }).catch(() => {});
   }
 }
 
@@ -3663,10 +3866,37 @@ function renderRecapScreen() {
           <div style="color:${cv};font-size:11px;font-weight:700">${v}</div>
         </div>`).join("")}
       </div>
-      <div style="color:#64748b;font-size:10px">
+      <div style="color:#64748b;font-size:10px;margin-bottom:4px">
         Scenario: ${p.openTrade.pattern||"–"} · Conf: ${p.openTrade.confidence}/100 · 
         ${new Date(p.openTrade.openedAt).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}
       </div>
+      <!-- P&L corrente -->
+      ${(() => {
+        const t = p.openTrade;
+        const cur = (state.candles["1h"]||[]).slice(-1)[0]?.c || t.entry;
+        const pnlPts = t.direction === "BUY" ? cur - t.entry : t.entry - cur;
+        const pnlEur = +(pnlPts * t.lots * 100).toFixed(2);
+        const col = pnlEur >= 0 ? "#22c55e" : "#ef4444";
+        const slDist = Math.abs(t.entry - t.sl);
+        const profRR = slDist > 0 ? (pnlPts / slDist).toFixed(2) : "–";
+        return `<div style="display:flex;justify-content:space-between;align-items:center;background:#080b10;border-radius:7px;padding:7px 10px;margin-bottom:4px">
+          <span style="color:#94a3b8;font-size:11px">P&L corrente</span>
+          <span style="color:${col};font-weight:800;font-size:14px">${pnlEur>=0?"+":""}€${pnlEur.toFixed(2)} <span style="font-size:10px">(${profRR}R)</span></span>
+        </div>
+        <div style="display:flex;gap:8px;font-size:10px;color:#94a3b8">
+          ${t.breakEvenSet?"<span style='color:#22c55e'>✅ Breakeven</span>":""}
+          ${t.trailingActive?"<span style='color:#f0b429'>📍 Trail attivo</span>":""}
+        </div>`;
+      })()}
+      <!-- Management log ultime 3 azioni -->
+      ${p.openTrade.managementLog?.length ? `<div style="margin-top:6px;border-top:1px solid #1e2535;padding-top:6px">
+        <div style="color:#64748b;font-size:9px;font-weight:700;margin-bottom:3px">GESTIONE AUTOMATICA</div>
+        ${p.openTrade.managementLog.slice(-3).reverse().map(l=>`
+          <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:10px">
+            <span style="color:#94a3b8">${l.action}</span>
+            <span style="color:#64748b">${new Date(l.ts).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span>
+          </div>`).join("")}
+      </div>` : ""}
     </div>` : p.enabled ? `<div style="background:#22c55e12;border:1px solid #22c55e22;border-radius:8px;padding:8px 10px;color:#22c55e;font-size:11px;text-align:center">
       ✅ In ascolto — entra automaticamente quando score ≥ soglia
       <div id="paper-last-eval" style="color:#64748b;font-size:10px;margin-top:3px">Ultimo check: mai</div>
