@@ -3715,209 +3715,643 @@ function renderPaperWidgetIn(el) {
 // ══ SCENARIO RECAP ENGINE ═════════════════════════════════════
 
 function computeAllScenarios() {
+  const sess    = getSessionStatus();
+  const cc1h    = state.candles["1h"]  || [];
+  const cc4h    = state.candles4h      || [];
+  const cc1d    = state.candles["1d"]  || [];
+  const cc5m    = state.candles["5m"]  || [];
+  const cc1m    = state.candles["1m"]  || [];
+  const pv      = state.pivots || {};
+
+  // Ultime candele per ogni TF
+  const last1h  = cc1h[cc1h.length-1];
+  const last4h  = cc4h[cc4h.length-1];
+  const last1d  = cc1d[cc1d.length-1];
+  const last5m  = cc5m[cc5m.length-1];
+  const last1m  = cc1m[cc1m.length-1];
+
+  // ATR per TF
+  const atr1h   = last1h?.atr || 15;
+  const atr5m   = last5m?.atr || 4;
+  const atr1m   = last1m?.atr || 2;
+
+  const toBias  = d => d==="UP"||d==="BULL"?"BUY":d==="DOWN"||d==="BEAR"?"SELL":"WAIT";
+
+  // ── Helper: slope % su N candele ─────────────────────────
+  function slopePct(arr, n=3) {
+    if (!arr||arr.length<n+1) return 0;
+    const sl=arr.slice(-(n+1));
+    const base=sl[0].c; if(!base) return 0;
+    return (sl[sl.length-1].c - base) / base * 100;
+  }
+
+  // ── Helper: RSI divergenza (prezzo HH ma RSI LH = bearish div) ──
+  function detectRsiDivergence(arr, dir, lookback=10) {
+    if (arr.length < lookback*2) return null;
+    const recent  = arr.slice(-lookback);
+    const earlier = arr.slice(-lookback*2, -lookback);
+    const rPriceH = Math.max(...recent.map(c=>c.h));
+    const ePriceH = Math.max(...earlier.map(c=>c.h));
+    const rPriceL = Math.min(...recent.map(c=>c.l));
+    const ePriceL = Math.min(...earlier.map(c=>c.l));
+    const rRsiH   = Math.max(...recent.map(c=>c.rsi||50));
+    const eRsiH   = Math.max(...earlier.map(c=>c.rsi||50));
+    const rRsiL   = Math.min(...recent.map(c=>c.rsi||50));
+    const eRsiL   = Math.min(...earlier.map(c=>c.rsi||50));
+    // Bearish divergence: prezzo HH ma RSI LH
+    const bearishDiv = rPriceH > ePriceH*1.001 && rRsiH < eRsiH - 3;
+    // Bullish divergence: prezzo LL ma RSI HL
+    const bullishDiv = rPriceL < ePriceL*0.999 && rRsiL > eRsiL + 3;
+    if (dir==="BUY"  && bullishDiv) return { type:"BULLISH", strength:"forte" };
+    if (dir==="SELL" && bearishDiv) return { type:"BEARISH", strength:"forte" };
+    if (dir==="BUY"  && bearishDiv) return { type:"BEARISH_WARN", strength:"warning" };
+    if (dir==="SELL" && bullishDiv) return { type:"BULLISH_WARN", strength:"warning" };
+    return null;
+  }
+
+  // ── Helper: distanza % di un prezzo da un livello ────────
+  const distPct  = (price, level) => level ? Math.abs(price-level)/level*100 : 999;
+  const distAbs  = (price, level) => Math.abs(price - (level||0));
+
+  // ── Helper: pullback qualità calcolato live ───────────────
+  // Restituisce {quality, ema, pct, rsiOk, slopeOk, direction}
+  function calcPullbackQuality(cc, ema20arr, ema50arr, dir, rsiArr) {
+    if (!cc.length || !ema20arr.length) return null;
+    const price    = cc[cc.length-1].c;
+    const rsiNow   = cc[cc.length-1].rsi || 50;
+    const ema20    = ema20arr[ema20arr.length-1];
+    const ema50    = ema50arr[ema50arr.length-1];
+    const atr      = cc[cc.length-1].atr || 15;
+
+    const distEma20 = distAbs(price, ema20);
+    const distEma50 = distAbs(price, ema50);
+    const pct20     = distEma20 / atr; // distanza in multipli ATR
+    const pct50     = distEma50 / atr;
+
+    // Slope delle ultime 3 candele: per BUY vogliamo che il prezzo
+    // stia scendendo VERSO l'EMA (pullback), non già rimbalzato
+    const sl3 = slopePct(cc, 3);
+    const approachingEma = dir==="BUY" ? sl3<0 : sl3>0; // prezzo va verso EMA
+
+    // RSI in zona entry sana per un pullback
+    const rsiInZone = dir==="BUY"
+      ? rsiNow>=35 && rsiNow<=58   // pullback sano in uptrend
+      : rsiNow>=42 && rsiNow<=65;  // pullback sano in downtrend
+
+    // Proximity score
+    if (pct20 <= 0.3) return { quality:"OTTIMA",  ema:"EMA20", ema20, ema50, distAtr:pct20, rsiOk:rsiInZone, approachingEma, rsiNow };
+    if (pct20 <= 0.6) return { quality:"BUONA",   ema:"EMA20", ema20, ema50, distAtr:pct20, rsiOk:rsiInZone, approachingEma, rsiNow };
+    if (pct50 <= 0.4) return { quality:"BUONA",   ema:"EMA50", ema20, ema50, distAtr:pct50, rsiOk:rsiInZone, approachingEma, rsiNow };
+    if (pct50 <= 0.8) return { quality:"DISCRETA",ema:"EMA50", ema20, ema50, distAtr:pct50, rsiOk:rsiInZone, approachingEma, rsiNow };
+    return { quality:"ASSENTE", ema:null, ema20, ema50, distAtr:Math.min(pct20,pct50), rsiOk:rsiInZone, approachingEma, rsiNow };
+  }
+
+  // ── Helper: posizione vs livelli pivot con direzione ──────
+  function pivotContext(price, dir, atr) {
+    if (!pv.pivot||!price) return null;
+    const near = atr * 0.4;
+    const levels = [
+      { name:"R2", val:pv.r2, type:"resist" },
+      { name:"R1", val:pv.r1, type:"resist" },
+      { name:"Pivot", val:pv.pivot, type:"neutral" },
+      { name:"S1", val:pv.s1, type:"support" },
+      { name:"S2", val:pv.s2, type:"support" },
+    ].filter(l=>l.val);
+
+    const nearest  = levels.reduce((a,b)=>distAbs(price,b.val)<distAbs(price,a.val)?b:a);
+    const distNear = distAbs(price, nearest.val);
+    const approaching = (dir==="BUY"&&price<nearest.val)||(dir==="SELL"&&price>nearest.val);
+    // Prossimo livello nella direzione del trade
+    const nextInDir = dir==="BUY"
+      ? levels.filter(l=>l.val>price).sort((a,b)=>a.val-b.val)[0]
+      : levels.filter(l=>l.val<price).sort((a,b)=>b.val-a.val)[0];
+    const spaceToNext = nextInDir ? distAbs(price, nextInDir.val) : 999;
+
+    return { nearest, distNear, approaching, nextInDir, spaceToNext, near };
+  }
+
+  // ── Regime di mercato ─────────────────────────────────────
+  const trend  = computeTrendSignal(cc1d, cc4h, cc1h);
   const swing  = computeDashboard();
   const scalp  = computeScalpSignal();
-  const trend  = computeTrendSignal(state.candles["1d"]||[], state.candles4h||[], state.candles["1h"]||[]);
-  const sess   = getSessionStatus();
+  const macro  = computeLeadSignal(
+    state.corrData?.dxy||[], state.corrData?.us10y||[],
+    cc1h, state.corrData?.dxyInverted||false
+  );
 
-  // ── ENTRY OPPORTUNITY SCORING ──────────────────────────────
-  // Non è confidence generica — è quanto è buona l'OPPORTUNITÀ DI ENTRY ORA
-  // Criteri specifici per ciascuno scenario
+  const adx        = trend?.d_adx || {adx:0,pdi:0,mdi:0};
+  const regime     = adx.adx>28?"TRENDING":adx.adx>18?"WEAK_TREND":"RANGING";
+  const macroDir   = macro?.mainDir==="UP"?"BUY":macro?.mainDir==="DOWN"?"SELL":"FLAT";
+  const macroStr   = macro?.biasStrength||0;
+  const dailyBias  = toBias(trend?.dailyBias||"NEUTRAL");
+  const toBias2    = d => toBias(d);
 
+  // EMA arrays calcolati una volta sola
+  const ema20_1h = calcEMA ? calcEMA(cc1h.map(c=>c.c),20) : [];
+  const ema50_1h = calcEMA ? calcEMA(cc1h.map(c=>c.c),50) : [];
+  const ema20_4h = calcEMA && cc4h.length ? calcEMA(cc4h.map(c=>c.c),20) : [];
+  const ema50_4h = calcEMA && cc4h.length ? calcEMA(cc4h.map(c=>c.c),50) : [];
+  const ema200_1d= calcEMA && cc1d.length>30 ? calcEMA(cc1d.map(c=>c.c),200) : [];
+
+
+  // ── Coherence check: verifica coerenza direzionale ────────────────────
+  // Conta quanti segnali concordano vs contraddicono il bias
+  // Restituisce un moltiplicatore 0.5–1.2 che scala il punteggio finale
+  function coherenceMultiplier(dir, checks) {
+    // checks = array di { signal: "BUY"|"SELL"|"NEUTRAL", weight: 1-3, label: string }
+    if (!dir || dir === "WAIT" || !checks.length) return 1.0;
+
+    let agree = 0, disagree = 0, neutral = 0;
+    let agreeW = 0, disagreeW = 0;
+    const conflicts = [], confirms = [];
+
+    checks.forEach(ch => {
+      if (!ch.signal || ch.signal === "NEUTRAL") { neutral++; return; }
+      if (ch.signal === dir) {
+        agree++;
+        agreeW += ch.weight;
+        confirms.push(ch.label);
+      } else {
+        disagree++;
+        disagreeW += ch.weight;
+        conflicts.push(ch.label);
+      }
+    });
+
+    const total = agreeW + disagreeW;
+    if (total === 0) return 1.0;
+
+    const cohRatio = agreeW / total; // 0 = tutto contro, 1 = tutto a favore
+
+    // Moltiplica: piena coerenza +20%, piena contraddizione -50%
+    const mult = 0.5 + cohRatio * 0.7; // range 0.5 (0% agree) → 1.2 (100% agree)
+    return { mult: Math.min(1.2, Math.max(0.5, +mult.toFixed(3))), cohRatio: +cohRatio.toFixed(2), confirms, conflicts, agree, disagree };
+  }
+
+  // ════════════════════════════════════════════════════════
+  // SCORE SWING — regime: trending 1H/4H
+  // ════════════════════════════════════════════════════════
   function scoreSwingEntry(s) {
-    if (!s) return { score:0, dir:"WAIT", reasons:[], setup:null };
-    const reasons = [], penalties = [];
-    let score = 0;
+    if (!s) return {score:0,dir:"WAIT",R:[],P:[],reasons:[],setup:null};
+    const dir = toBias2(s.mainDir);
+    if (dir==="WAIT") return {score:0,dir:"WAIT",R:[],P:["⏳ Nessun bias MTF"],reasons:["⏳ Nessun bias MTF"],setup:null};
+    const R=[],P=[];
+    let score=0;
 
-    // 1. MTF allineamento (peso 30)
-    if (s.align === 3) { score += 30; reasons.push("✅ 3/3 TF allineati"); }
-    else if (s.align === 2) { score += 18; reasons.push("⚡ 2/3 TF allineati"); }
-    else { score += 0; penalties.push("❌ TF in conflitto"); }
+    // PESI adattivi al regime
+    const w = regime==="TRENDING"
+      ? {mtf:28,adx:18,macro:14,rsi:12,pivot:12,macd:8,div:5,sess:3}
+      : regime==="WEAK_TREND"
+      ? {mtf:22,adx:12,macro:14,rsi:15,pivot:14,macd:8,div:5,sess:3} // pivot+RSI valgono di più
+      : {mtf:18,adx:5, macro:12,rsi:18,pivot:18,macd:8,div:5,sess:3}; // ranging: pivot domina
 
-    // 2. Lead macro (peso 20)
-    const macro = computeLeadSignal(state.corrData?.dxy||[], state.corrData?.us10y||[], state.candles["1h"]||[], state.corrData?.dxyInverted||false);
-    if (macro && macro.biasStrength === 2) {
-      if (macro.mainDir === s.signal) { score += 20; reasons.push("✅ Lead macro concorda"); }
-      else { score -= 10; penalties.push("⚠️ Lead macro opposto"); }
-    } else if (macro && macro.biasStrength === 1) { score += 8; reasons.push("⚡ Lead macro debole"); }
+    if (regime==="RANGING") P.push(`⚠️ Regime LATERALE (ADX ${adx.adx}) — swing meno affidabile`);
 
-    // 3. RSI zona entry (peso 15): 40-60 = neutro buono per entry trend, <35 = buy, >65 = sell
-    const last1h = (state.candles["1h"]||[]).slice(-1)[0];
+    // 1. MTF: quanti TF sono nella dir (peso w.mtf)
+    const d1t=toBias2(tfTrend(cc1d)), h4t=toBias2(tfTrend(cc4h)), h1t=toBias2(tfTrend(cc1h));
+    const tfsFor=[d1t,h4t,h1t].filter(t=>t===dir).length;
+    const tfsAg =[d1t,h4t,h1t].filter(t=>t!=="WAIT"&&t!==dir).length;
+    if (tfsFor===3)      {score+=w.mtf;   R.push(`✅ Daily+4H+1H tutti ${dir}`);}
+    else if (tfsFor===2) {score+=w.mtf*.7;R.push(`⚡ 2/3 TF ${dir} (${[d1t,h4t,h1t].map((t,i)=>t===dir?["D","4H","1H"][i]:"").filter(Boolean).join(",")})`); }
+    else if (tfsFor===1) {score+=w.mtf*.25;P.push(`⚠️ Solo 1 TF ${dir}`);}
+    else                 {P.push(`❌ Nessun TF ${dir}`);}
+    if (tfsAg>=2)        {score-=10; P.push(`❌ ${tfsAg} TF opposti — conflitto`);}
+
+    // 2. ADX direzionale (peso w.adx)
+    const diDir=dir==="BUY"?adx.pdi:adx.mdi;
+    const diOpp=dir==="BUY"?adx.mdi:adx.pdi;
+    const diLead=diDir-diOpp;
+    if (adx.adx>30&&diLead>8)      {score+=w.adx;    R.push(`✅ ADX ${adx.adx} · DI${dir==="BUY"?"+":"-"} ${diDir} >+8 vs ${diOpp}`);}
+    else if (adx.adx>22&&diLead>3) {score+=w.adx*.7; R.push(`⚡ ADX ${adx.adx} DI${dir==="BUY"?"+":"-"} prevalente`);}
+    else if (adx.adx>16&&diLead>0) {score+=w.adx*.4; R.push(`⚡ ADX moderato`);}
+    else if (diLead<-5)             {score-=8;P.push(`❌ DI contrario (${diOpp}) supera DI${dir==="BUY"?"+":"-"} (${diDir})`);}
+
+    // 3. Lead macro (peso w.macro)
+    if (macroStr>=2&&macroDir===dir)                            {score+=w.macro;    R.push(`✅ Lead macro ${macroDir} concorda (str ${macroStr})`);}
+    else if (macroStr>=2&&macroDir!=="FLAT"&&macroDir!==dir)   {score-=12;         P.push(`❌ Lead macro ${macroDir} OPPOSTO a ${dir}`);}
+    else if (macroStr===1&&macroDir===dir)                      {score+=w.macro*.5; R.push(`⚡ Lead macro debole concorda`);}
+    else                                                         {score+=2;          R.push("⚪ Macro neutro");}
+
+    // 4. RSI 1H con divergenza (peso w.rsi)
     if (last1h) {
-      const rsi = last1h.rsi || 50;
-      const dir = s.signal;
-      if (dir === "BUY" && rsi < 45) { score += 15; reasons.push(`✅ RSI ${rsi} oversold → entry long`); }
-      else if (dir === "SELL" && rsi > 55) { score += 15; reasons.push(`✅ RSI ${rsi} overbought → entry short`); }
-      else if (rsi >= 45 && rsi <= 55) { score += 8; reasons.push(`⚡ RSI ${rsi} neutro`); }
-      else { score += 3; penalties.push(`⚠️ RSI ${rsi} sfavorevole`); }
+      const rsi=last1h.rsi||50;
+      const div=detectRsiDivergence(cc1h.slice(-20), dir, 8);
+      if (div?.type==="BULLISH"&&dir==="BUY")       {score+=w.rsi;    R.push(`✅ RSI ${rsi} + divergenza bullish 1H`);}
+      else if (div?.type==="BEARISH"&&dir==="SELL")  {score+=w.rsi;    R.push(`✅ RSI ${rsi} + divergenza bearish 1H`);}
+      else if (div?.type==="BEARISH_WARN"&&dir==="BUY") {score-=8;    P.push(`❌ Divergenza bearish RSI — BUY rischiosa`);}
+      else if (div?.type==="BULLISH_WARN"&&dir==="SELL"){score-=8;    P.push(`❌ Divergenza bullish RSI — SELL rischiosa`);}
+      else if (dir==="BUY") {
+        if (rsi<38)          {score+=w.rsi;    R.push(`✅ RSI ${rsi} oversold — zona BUY ottimale`);}
+        else if (rsi<50)     {score+=w.rsi*.7; R.push(`⚡ RSI ${rsi} — lato BUY`);}
+        else if (rsi<60)     {score+=w.rsi*.3; R.push(`⚡ RSI ${rsi} neutro`);}
+        else if (rsi<70)     {score-=4;P.push(`⚠️ RSI ${rsi} — BUY in zona satura`);}
+        else                 {score-=10;P.push(`❌ RSI ${rsi} OB — BUY ipercomprato`);}
+      } else {
+        if (rsi>62)          {score+=w.rsi;    R.push(`✅ RSI ${rsi} overbought — zona SELL ottimale`);}
+        else if (rsi>50)     {score+=w.rsi*.7; R.push(`⚡ RSI ${rsi} — lato SELL`);}
+        else if (rsi>40)     {score+=w.rsi*.3; R.push(`⚡ RSI ${rsi} neutro`);}
+        else if (rsi>30)     {score-=4;P.push(`⚠️ RSI ${rsi} — SELL in zona depressa`);}
+        else                 {score-=10;P.push(`❌ RSI ${rsi} OS — SELL ipervenduto`);}
+      }
     }
 
-    // 4. Pivot position (peso 15)
-    const pv = state.pivots;
+    // 5. Pivot con spazio nella direzione (peso w.pivot)
     if (last1h && pv.pivot) {
-      const abovePivot = last1h.c > pv.pivot;
-      const nearR1 = Math.abs(last1h.c - pv.r1) < (last1h.atr||15);
-      const nearS1 = Math.abs(last1h.c - pv.s1) < (last1h.atr||15);
-      if (s.signal === "BUY" && abovePivot && !nearR1) { score += 15; reasons.push("✅ Sopra Pivot, spazio a R1"); }
-      else if (s.signal === "SELL" && !abovePivot && !nearS1) { score += 15; reasons.push("✅ Sotto Pivot, spazio a S1"); }
-      else if (nearR1 || nearS1) { score -= 5; penalties.push("⚠️ Vicino a resistenza/supporto"); }
-      else { score += 5; }
+      const pc=pivotContext(last1h.c, dir, atr1h);
+      if (pc) {
+        const spaceOk = pc.spaceToNext > atr1h * 1.2;
+        const blockNear = pc.distNear < atr1h * 0.35;
+        // Blocco imminente: prossimo livello contro dir è vicino
+        const nextAgainst = dir==="BUY"
+          ? [pv.r1,pv.r2].filter(Boolean).find(l=>l>last1h.c&&l-last1h.c<atr1h*0.8)
+          : [pv.s1,pv.s2].filter(Boolean).find(l=>l<last1h.c&&last1h.c-l<atr1h*0.8);
+        if (nextAgainst)     {score-=10;P.push(`❌ ${dir==="BUY"?"R1/R2":"S1/S2"} a $${fmtP(nextAgainst)} — ostacolo imminente`);}
+        else if (spaceOk)    {score+=w.pivot;   R.push(`✅ ${pc.nextInDir?.name||"spazio"} a ${pc.spaceToNext.toFixed(1)} pts — traiettoria libera`);}
+        else if (blockNear)  {
+          // Siamo vicini a un livello: supporto per BUY, resistenza per SELL
+          const isSupport = (dir==="BUY"&&pc.nearest.type==="support")||(dir==="SELL"&&pc.nearest.type==="resist");
+          if (isSupport)     {score+=w.pivot*.8;R.push(`✅ Vicino ${pc.nearest.name} $${fmtP(pc.nearest.val)} — ${dir==="BUY"?"supporto":"resistenza"}`);}
+          else               {score-=6;P.push(`⚠️ Vicino a ${pc.nearest.name} $${fmtP(pc.nearest.val)} — ostacolo`);}
+        } else               {score+=w.pivot*.4; R.push(`⚡ Pivot context moderato`);}
+      }
     }
 
-    // 5. Sessione favorevole (peso 10)
-    if (sess.sess === "Overlap" || sess.sess === "New York") { score += 10; reasons.push(`✅ Sessione ${sess.sess} attiva`); }
-    else if (sess.sess === "Londra") { score += 7; reasons.push("⚡ Sessione Londra"); }
-    else { score += 2; penalties.push("⚠️ Sessione Asia — bassa liquidità"); }
+    // 6. MACD 1H slope + incrocio (peso w.macd)
+    if (last1h && cc1h.length>=3) {
+      const macd=last1h.macd||0, prev=cc1h[cc1h.length-2]?.macd||0, prev2=cc1h[cc1h.length-3]?.macd||0;
+      const sl=macd-prev2; // slope su 2 candele
+      const cross=prev<0&&macd>0; // cross bullish recente
+      const crossBear=prev>0&&macd<0;
+      if (dir==="BUY") {
+        if (cross)                {score+=w.macd;    R.push(`✅ MACD cross bullish recente`);}
+        else if (macd>0&&sl>0)    {score+=w.macd*.8; R.push(`✅ MACD positivo in salita`);}
+        else if (macd>0&&sl<=0)   {score+=w.macd*.4; R.push(`⚡ MACD positivo ma decelerante`);}
+        else if (macd<0&&sl>0)    {score+=w.macd*.2; P.push(`⚠️ MACD negativo ma in risalita`);}
+        else                      {score-=5;P.push(`❌ MACD negativo in discesa — contro BUY`);}
+      } else {
+        if (crossBear)            {score+=w.macd;    R.push(`✅ MACD cross bearish recente`);}
+        else if (macd<0&&sl<0)    {score+=w.macd*.8; R.push(`✅ MACD negativo in discesa`);}
+        else if (macd<0&&sl>=0)   {score+=w.macd*.4; R.push(`⚡ MACD negativo ma decelerante`);}
+        else if (macd>0&&sl<0)    {score+=w.macd*.2; P.push(`⚠️ MACD positivo ma in discesa`);}
+        else                      {score-=5;P.push(`❌ MACD positivo in salita — contro SELL`);}
+      }
+    }
 
-    // 6. Confidenza semafori (peso 10)
-    const greens = s.semList?.filter(s=>s.sem==="green").length || 0;
-    score += Math.round(greens / 6 * 10);
-    if (greens >= 4) reasons.push(`✅ ${greens}/6 semafori verdi`);
+    // 7. Divergenza RSI come segnale extra se trovata (peso w.div)
+    // già gestita nel punto 4
 
-    score = Math.max(0, Math.min(100, score));
-    const dir = s.mainDir === "UP" ? "BUY" : s.mainDir === "DOWN" ? "SELL" : "WAIT";
+    // 8. Sessione (peso w.sess)
+    if (sess.sess==="Overlap"||sess.sess==="New York") {score+=w.sess;    R.push(`✅ Sessione ${sess.sess}`);}
+    else if (sess.sess==="Londra")                      {score+=w.sess*.6;}
+    else                                                {P.push("⚠️ Asia — swing inefficienti");}
 
-    // Setup
-    const atr = last1h?.atr || 15;
-    const entry = last1h?.c || 0;
-    const setup = dir !== "WAIT" ? {
-      direction: dir,
-      entry,
-      sl:  dir==="BUY" ? +(entry - atr*1.5).toFixed(2) : +(entry + atr*1.5).toFixed(2),
-      tp1: dir==="BUY" ? +(entry + atr*2.0).toFixed(2) : +(entry - atr*2.0).toFixed(2),
-      tp2: dir==="BUY" ? +(entry + atr*3.5).toFixed(2) : +(entry - atr*3.5).toFixed(2),
-    } : null;
+    score=Math.max(0,Math.min(100,Math.round(score)));
+    const entry=last1h?.c||0;
+    const sl1=dir==="BUY"?+(entry-atr1h*1.8).toFixed(2):+(entry+atr1h*1.8).toFixed(2);
+    const tp1=dir==="BUY"?+(entry+atr1h*2.2).toFixed(2):+(entry-atr1h*2.2).toFixed(2);
+    const tp2=dir==="BUY"?+(entry+atr1h*4.0).toFixed(2):+(entry-atr1h*4.0).toFixed(2);
+    const setup=entry&&dir!=="WAIT"?{direction:dir,entry,sl:sl1,tp1,tp2}:null;
+    // ── Coherence check swing ────────────────────────────
+    const swingChecks = [
+      // Struttura TF
+      { signal: d1t, weight:3, label:"Daily trend" },
+      { signal: h4t, weight:3, label:"4H trend" },
+      { signal: h1t, weight:2, label:"1H trend" },
+      // Momentum
+      { signal: (() => { if(!last1h) return "NEUTRAL"; const m=last1h.macd||0; return m>0?"BUY":m<0?"SELL":"NEUTRAL"; })(), weight:2, label:"MACD 1H" },
+      { signal: (() => { if(!last1h) return "NEUTRAL"; const r=last1h.rsi||50; return r<45?"BUY":r>55?"SELL":"NEUTRAL"; })(), weight:2, label:"RSI 1H" },
+      // Lead macro
+      { signal: macroDir==="FLAT"?"NEUTRAL":macroDir, weight:2, label:"Lead macro" },
+      // ADX direzionale
+      { signal: adx.pdi>adx.mdi?"BUY":adx.mdi>adx.pdi?"SELL":"NEUTRAL", weight:2, label:"ADX DI" },
+      // Pivot posizione
+      { signal: last1h ? (last1h.c>pv.pivot?"BUY":"SELL") : "NEUTRAL", weight:1, label:"vs Pivot" },
+    ].filter(ch => ch.signal !== "NEUTRAL");
 
-    return { score, dir, reasons:[...reasons,...penalties], setup };
+    const swingCoh = coherenceMultiplier(dir, swingChecks);
+    if (swingCoh && swingCoh.mult < 1.0) {
+      if (swingCoh.conflicts.length > 0)
+        P.push(`⚠️ Coerenza ${Math.round(swingCoh.cohRatio*100)}% — contro: ${swingCoh.conflicts.slice(0,2).join(", ")}`);
+    } else if (swingCoh && swingCoh.mult >= 1.1) {
+      R.push(`✅ Coerenza ALTA ${Math.round(swingCoh.cohRatio*100)}% — ${swingCoh.agree}/${swingCoh.agree+swingCoh.disagree} segnali concordano`);
+    }
+    const finalScoreSwing = swingCoh ? Math.max(0, Math.min(100, Math.round(score * swingCoh.mult))) : score;
+
+    return {score:finalScoreSwing, rawScore:score, cohRatio:swingCoh?.cohRatio, dir,R,P,reasons:[...R,...P],setup,regime};
   }
 
+  // ════════════════════════════════════════════════════════
+  // SCORE SCALP — regime: breve 1M/5M con confluenza macro
+  // ════════════════════════════════════════════════════════
   function scoreScalpEntry(s) {
-    if (!s) return { score:0, dir:"WAIT", reasons:[], setup:null };
-    const reasons = [], penalties = [];
-    let score = 0;
+    if (!s) return {score:0,dir:"WAIT",R:[],P:[],reasons:[],setup:null};
+    const dir=s.mainBias||"WAIT";
+    if (dir==="WAIT") return {score:0,dir:"WAIT",R:[],P:["⏳ Nessun bias scalp"],reasons:["⏳ Nessun bias scalp"],setup:null};
+    const R=[],P=[];
+    let score=0;
 
-    // 1. Confidence semafori scalping (peso 25)
-    const greenN = s.sems?.filter(x=>x.sem==="green").length || 0;
-    score += Math.round(greenN / s.sems.length * 25);
-    if (greenN >= 4) reasons.push(`✅ ${greenN} semafori verdi`);
+    // Contesto macro: scalp in linea col trend Daily è più sicuro
+    if (dailyBias===dir)                          {score+=6;  R.push(`✅ Scalp ${dir} in linea col Daily ${dailyBias}`);}
+    else if (dailyBias!=="WAIT"&&dailyBias!==dir) {score-=5;  P.push(`⚠️ Scalp ${dir} CONTRO Daily ${dailyBias} — rischio`);}
 
-    // 2. Pattern candela forte (peso 20)
-    if (s.patterns?.length) {
-      const p = s.patterns[0];
-      if (p.strength === "FORTE" && p.bias === s.mainBias) { score += 20; reasons.push(`✅ Pattern: ${p.name}`); }
-      else { score += 8; reasons.push(`⚡ Pattern: ${p.name}`); }
-    } else { penalties.push("❌ Nessun pattern candela"); }
+    // 1. Semafori scalping nella dir (peso 20)
+    const sems=s.sems||[];
+    const favS=sems.filter(sem=>sem.bias===dir&&(sem.sem==="green"||sem.sem==="orange")).length;
+    const agS =sems.filter(sem=>sem.bias&&sem.bias!=="WAIT"&&sem.bias!==dir&&sem.sem==="green").length;
+    const totS=sems.length||1;
+    score+=Math.round(favS/totS*20);
+    if (agS>=2)   {score-=10;P.push(`❌ ${agS} semafori contro ${dir}`);}
+    if (favS>=4)  {R.push(`✅ ${favS}/${totS} semafori a favore ${dir}`);}
+    else if (favS>=2){R.push(`⚡ ${favS}/${totS} semafori a favore`);}
+    else          {P.push(`❌ Solo ${favS} semafori a favore — segnale debole`);}
 
-    // 3. Confluenza macro 1M/5M (peso 20)
-    const macro = s.macro;
-    if (macro && macro.macroStr >= 3) { score += 20; reasons.push("✅ Confluenza macro forte"); }
-    else if (macro && macro.macroStr === 2) { score += 12; reasons.push("⚡ Confluenza macro moderata"); }
-    else if (macro && macro.macroStr === 1) { score += 5; }
-    else { penalties.push("⚠️ Nessuna confluenza macro"); }
+    // 2. Pattern candela BIAS = dir (peso 18)
+    const hitPat=( s.patterns||[]).find(p=>p.bias===dir);
+    const missPat=(s.patterns||[]).find(p=>p.bias&&p.bias!=="WAIT"&&p.bias!==dir);
+    if (hitPat&&hitPat.strength==="FORTE")  {score+=18;R.push(`✅ ${hitPat.name} — conf ${dir} forte`);}
+    else if (hitPat)                         {score+=9; R.push(`⚡ ${hitPat.name} — conf ${dir}`);}
+    else if (missPat&&missPat.strength==="FORTE"){score-=14;P.push(`❌ ${missPat.name} — CONTRO ${dir}`);}
+    else if (missPat)                        {score-=6; P.push(`⚠️ ${missPat.name} — segnale contro`);}
+    else                                     {P.push("⚠️ Nessun pattern nella dir");}
 
-    // 4. ATR spike = momentum (peso 15)
-    if (s.atr?.spike) { score += 15; reasons.push(`✅ ATR spike x${s.atr.ratio}`); }
-    else if (s.atr?.ratio > 1.2) { score += 8; reasons.push("⚡ ATR elevato"); }
+    // 3. Confluenza macro 1M/5M VERSO dir + accelerazione (peso 18)
+    const m=s.macro;
+    if (m) {
+      const md=m.macroDir||"FLAT";
+      if (m.macroStr>=3&&md===dir&&m.accelConfirm)   {score+=18;R.push(`✅ Confluenza macro FORTE + accelerazione → ${dir}`);}
+      else if (m.macroStr>=3&&md===dir)               {score+=14;R.push(`✅ Confluenza macro FORTE → ${dir}`);}
+      else if (m.macroStr>=2&&md===dir)               {score+=10;R.push(`⚡ Confluenza macro → ${dir}`);}
+      else if (m.macroStr>=1&&md===dir)               {score+=5; R.push(`⚡ Segnale macro debole → ${dir}`);}
+      else if (md!=="FLAT"&&md!==dir)                 {score-=15;P.push(`❌ Macro ${md} CONTRO ${dir}`);}
+      else                                             {R.push("⚪ Macro neutro");}
+      if (m.eurDivergence&&m.tnxDivergence)           {score-=8; P.push("❌ Doppia divergenza 1M/5M — momentum incerto");}
+      else if (m.eurDivergence||m.tnxDivergence)      {score-=4; P.push("⚠️ Divergenza 1M/5M su un asset");}
+    } else {P.push("⚪ Dati macro 1M non disponibili");}
 
-    // 5. Bollinger squeeze o breakout (peso 10)
-    if (s.squeeze?.squeeze) { score += 10; reasons.push("✅ Bollinger squeeze → breakout"); }
-    else if (s.boll && (s.lastPrice < s.boll.lower*1.001 || s.lastPrice > s.boll.upper*0.999)) {
-      score += 7; reasons.push("⚡ Prezzo su banda Bollinger");
+    // 4. ATR spike con slope VERSO dir sul TF più piccolo disponibile (peso 14)
+    const useCC=cc1m.length>=5?cc1m:cc5m;
+    const priceSlN=slopePct(useCC,3);
+    const slopeOk=(dir==="BUY"&&priceSlN>0)||(dir==="SELL"&&priceSlN<0);
+    const slopeStr=Math.abs(priceSlN)>0.01?"forte":"debole";
+    if (s.atr?.spike&&slopeOk)           {score+=14;R.push(`✅ ATR spike x${s.atr.ratio} con momentum ${dir} ${slopeStr}`);}
+    else if (s.atr?.spike&&!slopeOk)     {score+=2; P.push(`⚠️ ATR spike ma momentum CONTRO ${dir}`);}
+    else if (s.atr?.ratio>1.3&&slopeOk)  {score+=8; R.push(`⚡ ATR elevato x${s.atr.ratio} verso ${dir}`);}
+    else if (!slopeOk)                   {P.push(`⚠️ Momentum corrente verso ${dir==="BUY"?"ribasso":"rialzo"}`);}
+
+    // 5. Bollinger con squeeze percentile (peso 10)
+    const lastC=useCC[useCC.length-1];
+    if (s.boll&&lastC) {
+      const price=lastC.c;
+      const pct=s.squeeze?.pct||50;
+      if (dir==="BUY") {
+        if (pct<=10)                  {score+=10;R.push(`✅ Squeeze estremo (${pct}°pct) → BUY`);}
+        else if (s.squeeze?.squeeze)   {score+=7; R.push(`✅ Squeeze → breakout BUY`);}
+        else if (price<=s.boll.lower*1.001){score+=10;R.push(`✅ Lower band $${fmtP(s.boll.lower)} → rimbalzo BUY`);}
+        else if (price>=s.boll.upper*0.997){score-=8; P.push(`❌ Upper band → BUY in ipercomprato`);}
+        else if (price>s.boll.mid)     {score+=3; R.push("⚡ Sopra mid Bollinger");}
+      } else {
+        if (pct<=10)                  {score+=10;R.push(`✅ Squeeze estremo (${pct}°pct) → SELL`);}
+        else if (s.squeeze?.squeeze)   {score+=7; R.push(`✅ Squeeze → breakout SELL`);}
+        else if (price>=s.boll.upper*0.997){score+=10;R.push(`✅ Upper band $${fmtP(s.boll.upper)} → rifiuto SELL`);}
+        else if (price<=s.boll.lower*1.001){score-=8; P.push(`❌ Lower band → SELL in ipervenduto`);}
+        else if (price<s.boll.mid)     {score+=3; R.push("⚡ Sotto mid Bollinger");}
+      }
     }
 
-    // 6. Sessione (peso 10)
-    if (sess.sess === "Overlap" || sess.sess === "New York") { score += 10; reasons.push(`✅ Sessione ${sess.sess}`); }
-    else if (sess.sess === "Londra") { score += 6; }
-    else { score += 1; penalties.push("⚠️ Sessione Asia"); }
+    // 6. VWAP posizione (peso 6)
+    if (s.vwapNow&&lastC) {
+      const aboveV=lastC.c>s.vwapNow;
+      if (dir==="BUY"&&aboveV)         {score+=6; R.push(`✅ Sopra VWAP $${fmtP(s.vwapNow)} → momentum BUY`);}
+      else if (dir==="SELL"&&!aboveV)  {score+=6; R.push(`✅ Sotto VWAP $${fmtP(s.vwapNow)} → momentum SELL`);}
+      else if (dir==="BUY"&&!aboveV)   {score-=5; P.push(`⚠️ BUY sotto VWAP → contro momentum`);}
+      else                              {score-=5; P.push(`⚠️ SELL sopra VWAP → contro momentum`);}
+    }
 
-    score = Math.max(0, Math.min(100, score));
-    const setup = s.mainBias !== "WAIT" && s.entry ? {
-      direction: s.mainBias, entry: s.entry, sl: s.sl, tp1: s.tp1, tp2: s.tp2
-    } : null;
+    // 7. RSI7 e divergenza RSI su 5M (peso 6)
+    if (s.rsi7) {
+      const r7=s.rsi7, r5=s.rsi5m||50;
+      const div5=detectRsiDivergence(cc5m.slice(-16),dir,6);
+      if (div5?.type==="BULLISH"&&dir==="BUY")   {score+=6; R.push(`✅ RSI7 ${r7} + div bullish 5M → ${dir}`);}
+      else if (div5?.type==="BEARISH"&&dir==="SELL"){score+=6;R.push(`✅ RSI7 ${r7} + div bearish 5M → ${dir}`);}
+      else if (dir==="BUY"&&r7<32)                {score+=4; R.push(`✅ RSI7 ${r7} OS reattivo BUY`);}
+      else if (dir==="SELL"&&r7>68)               {score+=4; R.push(`✅ RSI7 ${r7} OB reattivo SELL`);}
+      else if (dir==="BUY"&&r7>72)                {score-=6; P.push(`❌ RSI7 ${r7} OB — BUY esausta`);}
+      else if (dir==="SELL"&&r7<28)               {score-=6; P.push(`❌ RSI7 ${r7} OS — SELL esausta`);}
+      // Divergenza 1M vs 5M
+      if (s.rsiDiv&&s.rsiDivDir===dir)            {score+=4; R.push(`✅ Div RSI 1M vs 5M verso ${dir}`);}
+      else if (s.rsiDiv&&s.rsiDivDir!==dir)       {score-=4; P.push("⚠️ Div RSI contro dir");}
+    }
 
-    return { score, dir: s.mainBias || "WAIT", reasons:[...reasons,...penalties], setup };
+    // 8. Sessione (peso 4)
+    if (sess.sess==="Overlap"||sess.sess==="New York"){score+=4;R.push(`✅ ${sess.sess} — spread minimo`);}
+    else if (sess.sess==="Londra")                   {score+=2;}
+    else                                             {score-=4;P.push("❌ Asia — spread alto per scalp");}
+
+    score=Math.max(0,Math.min(100,Math.round(score)));
+    const setup=dir!=="WAIT"&&s.entry?{direction:dir,entry:s.entry,sl:s.sl,tp1:s.tp1,tp2:s.tp2}:null;
+    // ── Coherence check scalp ────────────────────────────
+    const lastScalpC = (cc1m.length>=3?cc1m:cc5m).slice(-1)[0];
+    const scalpChecks = [
+      // Semafori: bias prevalente
+      { signal: s.sems?.filter(x=>x.bias==="BUY").length > s.sems?.filter(x=>x.bias==="SELL").length ? "BUY":"SELL", weight:3, label:"Semafori" },
+      // Pattern
+      { signal: (s.patterns||[])[0]?.bias||"NEUTRAL", weight:3, label:"Pattern candela" },
+      // Macro EUR/USD 1M
+      { signal: s.macro?.eurBias1m||"NEUTRAL", weight:2, label:"EUR/USD 1M" },
+      // Macro TNX 1M (invertito: tnx sale = oro scende)
+      { signal: s.macro?.tnxBias1m||"NEUTRAL", weight:2, label:"TNX 1M" },
+      // VWAP
+      { signal: (lastScalpC&&s.vwapNow) ? (lastScalpC.c>s.vwapNow?"BUY":"SELL") : "NEUTRAL", weight:1, label:"VWAP" },
+      // RSI7
+      { signal: s.rsi7 ? (s.rsi7<45?"BUY":s.rsi7>55?"SELL":"NEUTRAL") : "NEUTRAL", weight:2, label:"RSI7" },
+      // ATR slope
+      { signal: lastScalpC ? (slopePct(cc1m.length>=3?cc1m:cc5m,2)>0?"BUY":"SELL") : "NEUTRAL", weight:2, label:"Momentum" },
+      // Daily bias (contesto macro)
+      { signal: dailyBias==="WAIT"?"NEUTRAL":dailyBias, weight:1, label:"Daily bias" },
+    ].filter(ch => ch.signal && ch.signal !== "NEUTRAL");
+
+    const scalpCoh = coherenceMultiplier(dir, scalpChecks);
+    if (scalpCoh && scalpCoh.mult < 1.0) {
+      if (scalpCoh.conflicts.length > 0)
+        P.push(`⚠️ Coerenza ${Math.round(scalpCoh.cohRatio*100)}% — conflitti: ${scalpCoh.conflicts.slice(0,3).join(", ")}`);
+    } else if (scalpCoh && scalpCoh.mult >= 1.1) {
+      R.push(`✅ Alta coerenza ${Math.round(scalpCoh.cohRatio*100)}% — ${scalpCoh.agree}/${scalpCoh.agree+scalpCoh.disagree} segnali ${dir}`);
+    }
+    const finalScoreScalp = scalpCoh ? Math.max(0, Math.min(100, Math.round(score * scalpCoh.mult))) : score;
+
+    return {score:finalScoreScalp, rawScore:score, cohRatio:scalpCoh?.cohRatio, dir,R,P,reasons:[...R,...P],setup};
   }
 
+  // ════════════════════════════════════════════════════════
+  // SCORE TREND — regime: trending Daily/4H con pullback qualità
+  // ════════════════════════════════════════════════════════
   function scoreTrendEntry(s) {
-    if (!s) return { score:0, dir:"WAIT", reasons:[], setup:null };
-    const reasons = [], penalties = [];
-    let score = 0;
+    if (!s) return {score:0,dir:"WAIT",R:[],P:[],reasons:[],setup:null};
+    const dir=s.mainBias||"WAIT";
+    if (dir==="WAIT") return {score:0,dir:"WAIT",R:[],P:["⏳ Nessun trend definito"],reasons:["⏳ Nessun trend definito"],setup:null};
+    const R=[],P=[];
+    let score=0;
 
-    // 1. Daily + 4H allineamento struttura (peso 30)
-    const bothAligned = s.dailyBias !== "NEUTRAL" && s.dailyBias === s.h4Bias;
-    if (bothAligned) { score += 30; reasons.push(`✅ Daily + ${s.tf4hLabel} allineati: ${s.dailyBias}`); }
-    else if (s.dailyBias !== "NEUTRAL") { score += 15; reasons.push(`⚡ Solo Daily: ${s.dailyBias}`); }
-    else { penalties.push("❌ Struttura non definita"); }
+    // Il trend following RICHIEDE un regime trending
+    if (regime==="RANGING")    {score-=25;P.push(`❌ ADX ${adx.adx} — mercato LATERALE. Trend following NON applicabile`);}
+    else if (regime==="WEAK_TREND"){score-=10;P.push(`⚠️ ADX ${adx.adx} — trend debole. Ridurre size`);}
+    else                       {score+=5; R.push(`✅ Regime TRENDING (ADX ${adx.adx})`);}
 
-    // 2. ADX forza trend (peso 20)
-    if (s.d_adx.adx > 35) { score += 20; reasons.push(`✅ ADX ${s.d_adx.adx} — trend molto forte`); }
-    else if (s.d_adx.adx > 25) { score += 14; reasons.push(`✅ ADX ${s.d_adx.adx} — trend forte`); }
-    else if (s.d_adx.adx > 18) { score += 7; reasons.push(`⚡ ADX ${s.d_adx.adx} — trend moderato`); }
-    else { penalties.push(`❌ ADX ${s.d_adx.adx} — laterale`); }
+    // Pesi adattivi: in trending pieno, struttura e ADX contano di più
+    const w = regime==="TRENDING"
+      ? {struct:28,adx:20,pullback:20,st:14,ema200:10,cross:6,macro:5,sess:5}
+      : {struct:22,adx:14,pullback:18,st:12,ema200:10,cross:6,macro:8,sess:5};
 
-    // 3. Pullback entry (peso 20) — il fattore più importante per entry qualità
-    if (s.pullbackToEma20) { score += 20; reasons.push("✅ Pullback su EMA20 — entry ottimale"); }
-    else if (s.pullbackToEma50) { score += 14; reasons.push("✅ Pullback su EMA50 — buona entry"); }
-    else { score += 3; penalties.push("⚠️ Nessun pullback — entry non ottimale"); }
+    // 1. Struttura Daily+4H+1H NELLA DIR (peso w.struct)
+    const d1t=toBias2(s.dailyBias), h4t=toBias2(s.h4Bias), h1t=toBias2(tfTrend(cc1h));
+    const alN=[d1t,h4t,h1t].filter(t=>t===dir).length;
+    const agN=[d1t,h4t,h1t].filter(t=>t!=="WAIT"&&t!==dir).length;
+    if (alN===3)         {score+=w.struct;    R.push(`✅ Daily+4H+1H tutti ${dir} — struttura ${dir} solida`);}
+    else if (alN===2)    {score+=w.struct*.65;R.push(`⚡ 2/3 struttura ${dir}`);}
+    else if (alN===1)    {score+=w.struct*.2; P.push(`⚠️ Solo 1 TF ${dir} — struttura fragile`);}
+    else                 {P.push(`❌ Struttura NON ${dir}`);}
+    if (agN>=2)          {score-=14;P.push(`❌ ${agN} TF contro ${dir} — trend opposto`);}
 
-    // 4. Supertrend (peso 15)
+    // 2. ADX + DI direzionale con margine (peso w.adx)
+    const diDir=dir==="BUY"?adx.pdi:adx.mdi;
+    const diOpp=dir==="BUY"?adx.mdi:adx.pdi;
+    const diSpread=diDir-diOpp;
+    if (adx.adx>35&&diSpread>10)      {score+=w.adx;    R.push(`✅ ADX ${adx.adx} FORTE · margin DI ${diSpread.toFixed(0)}`);}
+    else if (adx.adx>26&&diSpread>5)  {score+=w.adx*.75;R.push(`✅ ADX ${adx.adx} · DI${dir==="BUY"?"+":"-"} +${diSpread.toFixed(0)}`);}
+    else if (adx.adx>18&&diSpread>0)  {score+=w.adx*.4; R.push(`⚡ ADX ${adx.adx} moderato`);}
+    else if (diSpread<-5)             {score-=12;P.push(`❌ DI contrario prevalente di ${Math.abs(diSpread).toFixed(0)}`);}
+
+    // 3. PULLBACK QUALITÀ calcolato live (peso w.pullback)
+    const pb=calcPullbackQuality(cc1h, ema20_1h, ema50_1h, dir, cc1h.map(c=>c.rsi||50));
+    if (pb) {
+      if (pb.quality==="OTTIMA"&&pb.rsiOk&&pb.approachingEma)
+        {score+=w.pullback;    R.push(`✅ Pullback ottimo su ${pb.ema} (dist ${pb.distAtr.toFixed(2)}x ATR) · RSI ${pb.rsiNow} · prezzo in avvicinamento`);}
+      else if (pb.quality==="OTTIMA"&&pb.rsiOk)
+        {score+=w.pullback*.85;R.push(`✅ Pullback ottimo su ${pb.ema} · RSI ${pb.rsiNow} ok`);}
+      else if (pb.quality==="OTTIMA")
+        {score+=w.pullback*.7; R.push(`⚡ Pullback vicino ${pb.ema} (RSI ${pb.rsiNow} — verifica)`);}
+      else if (pb.quality==="BUONA"&&pb.rsiOk)
+        {score+=w.pullback*.65;R.push(`⚡ Pullback su ${pb.ema} di buona qualità · RSI ${pb.rsiNow}`);}
+      else if (pb.quality==="BUONA")
+        {score+=w.pullback*.45;R.push(`⚡ Pullback su ${pb.ema} (RSI ${pb.rsiNow} meno ideale)`);}
+      else if (pb.quality==="DISCRETA")
+        {score+=w.pullback*.2; P.push(`⚠️ Pullback discreta qualità — dist ${pb.distAtr.toFixed(1)}x ATR da ${pb.ema}`);}
+      else {
+        // Nessun pullback: penalità se prezzo già esteso
+        const distMin=Math.min(
+          ema20_1h.length?distAbs(last1h?.c,ema20_1h[ema20_1h.length-1]):999,
+          ema50_1h.length?distAbs(last1h?.c,ema50_1h[ema50_1h.length-1]):999
+        );
+        if (distMin>atr1h*3) {score-=8;P.push(`❌ Prezzo ESTESO dalle EMA (${(distMin/atr1h).toFixed(1)}x ATR) — attendi pullback`);}
+        else                  {score+=2;P.push(`⏳ Nessun pullback attivo — EMA a ${(distMin/atr1h).toFixed(1)}x ATR`);}
+      }
+
+      // Divergenza RSI 1H come filtro qualità pullback
+      const divH1=detectRsiDivergence(cc1h.slice(-20),dir,8);
+      if (divH1?.type==="BULLISH"&&dir==="BUY")   {score+=6;R.push(`✅ Divergenza bullish RSI 1H — conferma pullback BUY`);}
+      else if (divH1?.type==="BEARISH"&&dir==="SELL"){score+=6;R.push(`✅ Divergenza bearish RSI 1H — conferma pullback SELL`);}
+      else if (divH1?.type?.includes("WARN"))      {score-=6;P.push(`⚠️ Divergenza RSI contraria — pullback a rischio`);}
+    }
+
+    // 4. Supertrend dir-aware (peso w.st)
     if (s.h4_stLast) {
-      const stOk = (s.mainBias === "BUY" && s.h4_stLast.dir === -1) || (s.mainBias === "SELL" && s.h4_stLast.dir === 1);
-      if (stOk) { score += 15; reasons.push(`✅ Supertrend ${s.tf4hLabel} conforme`); }
-      else { score -= 5; penalties.push(`⚠️ Supertrend contrario`); }
+      const stBull=s.h4_stLast.dir===-1;
+      if (dir==="BUY"&&stBull)   {score+=w.st;   R.push(`✅ Supertrend ${s.tf4hLabel} bullish @ $${fmtP(s.h4_stLast.st)}`);}
+      else if (dir==="SELL"&&!stBull){score+=w.st;R.push(`✅ Supertrend ${s.tf4hLabel} bearish @ $${fmtP(s.h4_stLast.st)}`);}
+      else if (dir==="BUY")      {score-=12;P.push(`❌ Supertrend ${s.tf4hLabel} BEARISH — contro BUY`);}
+      else                       {score-=12;P.push(`❌ Supertrend ${s.tf4hLabel} BULLISH — contro SELL`);}
     }
 
-    // 5. EMA 200 (peso 10)
-    if (s.d_ema200n) {
-      const aboveEma200 = s.lastPrice > s.d_ema200n;
-      if ((s.mainBias === "BUY" && aboveEma200) || (s.mainBias === "SELL" && !aboveEma200)) {
-        score += 10; reasons.push("✅ Sopra/sotto EMA200");
-      } else { score -= 5; penalties.push("⚠️ Contro EMA200"); }
+    // 5. EMA200 Daily (peso w.ema200)
+    if (s.d_ema200n&&last1h) {
+      const abv=last1h.c>s.d_ema200n;
+      const dist200=distAbs(last1h.c,s.d_ema200n);
+      if (dir==="BUY"&&abv)      {score+=w.ema200;   R.push(`✅ Sopra EMA200 Daily $${fmtP(s.d_ema200n)} (+${dist200.toFixed(0)} pts)`);}
+      else if (dir==="SELL"&&!abv){score+=w.ema200;  R.push(`✅ Sotto EMA200 Daily $${fmtP(s.d_ema200n)} (-${dist200.toFixed(0)} pts)`);}
+      else if (dir==="BUY"&&dist200<atr1h*2){score-=5;P.push(`⚠️ BUY sotto EMA200 ma vicina — possibile rimbalzo`);}
+      else if (dir==="BUY")      {score-=w.ema200*.7;P.push(`❌ BUY sotto EMA200 Daily — macro bearish`);}
+      else if (dist200<atr1h*2)  {score-=5;P.push(`⚠️ SELL sopra EMA200 ma vicina`);}
+      else                       {score-=w.ema200*.7;P.push(`❌ SELL sopra EMA200 — macro bullish`);}
     }
 
-    // 6. Sessione (peso 5) — trend non dipende dalla sessione ma meglio Londra/NY
-    if (sess.sess !== "Asia") { score += 5; }
+    // 6. EMA20/50 Daily crossover (peso w.cross)
+    if (s.d_ema20n&&s.d_ema50n) {
+      const gc=s.d_ema20n>s.d_ema50n;
+      const crossSpread=Math.abs(s.d_ema20n-s.d_ema50n);
+      if (dir==="BUY"&&gc&&crossSpread>3)    {score+=w.cross;  R.push(`✅ Golden cross Daily · spread ${crossSpread.toFixed(0)} pts`);}
+      else if (dir==="SELL"&&!gc&&crossSpread>3){score+=w.cross;R.push(`✅ Death cross Daily · spread ${crossSpread.toFixed(0)} pts`);}
+      else if (dir==="BUY"&&!gc)             {score-=w.cross*.7;P.push(`⚠️ Death cross Daily — contra BUY`);}
+      else if (dir==="SELL"&&gc)             {score-=w.cross*.7;P.push(`⚠️ Golden cross Daily — contra SELL`);}
+      else                                   {score+=2;}
+    }
 
-    score = Math.max(0, Math.min(100, score));
-    const setup = s.mainBias !== "WAIT" && s.entry ? {
-      direction: s.mainBias, entry: s.entry, sl: s.sl, tp1: s.tp1, tp2: s.tp2
-    } : null;
+    // 7. Lead macro (peso w.macro)
+    if (macroStr>=2&&macroDir===dir)                           {score+=w.macro;    R.push(`✅ Lead macro ${macroDir} concorda`);}
+    else if (macroStr>=2&&macroDir!=="FLAT"&&macroDir!==dir)  {score-=w.macro*.8; P.push(`⚠️ Lead macro ${macroDir} contro trend ${dir}`);}
+    else if (macroStr>=1&&macroDir===dir)                      {score+=w.macro*.5;}
 
-    return { score, dir: s.mainBias || "WAIT", reasons:[...reasons,...penalties], setup };
+    // 8. Sessione (peso w.sess)
+    if (sess.sess!=="Asia"){score+=w.sess;R.push(`✅ Sessione ${sess.sess}`);}
+    else {P.push("⚠️ Asia — entry trend meno affidabili");}
+
+    score=Math.max(0,Math.min(100,Math.round(score)));
+    const setup=dir!=="WAIT"&&s.entry?{direction:dir,entry:s.entry,sl:s.sl,tp1:s.tp1,tp2:s.tp2}:null;
+    // ── Coherence check trend ────────────────────────────
+    const trendChecks = [
+      // Struttura multi-TF
+      { signal: toBias2(s.dailyBias), weight:3, label:"Struttura Daily" },
+      { signal: toBias2(s.h4Bias),    weight:3, label:`Struttura ${s.tf4hLabel}` },
+      { signal: toBias2(tfTrend(cc1h)), weight:2, label:"Struttura 1H" },
+      // ADX DI
+      { signal: adx.pdi>adx.mdi?"BUY":adx.mdi>adx.pdi?"SELL":"NEUTRAL", weight:3, label:"ADX DI direzionale" },
+      // Supertrend
+      { signal: s.h4_stLast ? (s.h4_stLast.dir===-1?"BUY":"SELL") : "NEUTRAL", weight:3, label:`Supertrend ${s.tf4hLabel}` },
+      // EMA200
+      { signal: (s.d_ema200n&&last1h) ? (last1h.c>s.d_ema200n?"BUY":"SELL") : "NEUTRAL", weight:2, label:"EMA200 Daily" },
+      // EMA cross
+      { signal: (s.d_ema20n&&s.d_ema50n) ? (s.d_ema20n>s.d_ema50n?"BUY":"SELL") : "NEUTRAL", weight:2, label:"EMA20/50 cross" },
+      // Lead macro
+      { signal: macroDir==="FLAT"?"NEUTRAL":macroDir, weight:1, label:"Lead macro" },
+      // RSI 1H posizione
+      { signal: last1h ? (last1h.rsi<45?"BUY":last1h.rsi>55?"SELL":"NEUTRAL") : "NEUTRAL", weight:1, label:"RSI 1H" },
+    ].filter(ch => ch.signal && ch.signal !== "NEUTRAL");
+
+    const trendCoh = coherenceMultiplier(dir, trendChecks);
+    if (trendCoh && trendCoh.mult < 1.0) {
+      if (trendCoh.conflicts.length > 0)
+        P.push(`⚠️ Coerenza ${Math.round(trendCoh.cohRatio*100)}% — contro: ${trendCoh.conflicts.slice(0,3).join(", ")}`);
+      if (trendCoh.cohRatio < 0.5)
+        P.push(`❌ Meno del 50% dei segnali concorda con ${dir} — bias inaffidabile`);
+    } else if (trendCoh && trendCoh.mult >= 1.1) {
+      R.push(`✅ Coerenza ALTA ${Math.round(trendCoh.cohRatio*100)}% — tutti gli indicatori puntano ${dir}`);
+    }
+    const finalScoreTrend = trendCoh ? Math.max(0, Math.min(100, Math.round(score * trendCoh.mult))) : score;
+
+    return {score:finalScoreTrend, rawScore:score, cohRatio:trendCoh?.cohRatio, dir,R,P,reasons:[...R,...P],setup,regime};
   }
 
-  // ── Calcola entry scores ──────────────────────────────────
-  const swingDir = swing?.mainDir === "UP" ? "BUY" : swing?.mainDir === "DOWN" ? "SELL" : "WAIT";
-  const swingES = scoreSwingEntry(swing ? {...swing, signal: swingDir} : null);
-  const scalpES = scoreScalpEntry(scalp);
-  const trendES = scoreTrendEntry(trend);
+  // ── Calcola i tre scorer ──────────────────────────────────
+  const swingDir=toBias2(swing?.mainDir);
+  const swingES =scoreSwingEntry(swing?{...swing,signal:swingDir}:null);
+  const scalpES =scoreScalpEntry(scalp);
+  const trendES =scoreTrendEntry(trend);
 
-  // ── Soglie per paper trading auto ────────────────────────
-  // Swing: ≥60, Scalp: ≥65, Trend: ≥60
-  const THRESHOLDS = { swing: 60, scalp: 65, trend: 60 };
-  const eligible = [
-    { id:"swing", label:"📊 Swing",       es:swingES, color:"#f0b429", tf:"1H/4H",       threshold:THRESHOLDS.swing },
-    { id:"scalp", label:"⚡ Scalp",        es:scalpES, color:"#f97316", tf:"1M/5M",       threshold:THRESHOLDS.scalp },
-    { id:"trend", label:"📈 Trend Follow", es:trendES, color:"#22c55e", tf:"Daily/4H/1H", threshold:THRESHOLDS.trend },
-  ].filter(s => s.es.score >= s.threshold && s.es.dir !== "WAIT");
-
-  // ── Migliore scenario per paper trade ────────────────────
-  const best = eligible.sort((a,b) => b.es.score - a.es.score)[0] || null;
-
-  // ── Consenso direzionale ─────────────────────────────────
-  const allDirs = [swingES.dir, scalpES.dir, trendES.dir].filter(d => d !== "WAIT");
-  const upN = allDirs.filter(d=>d==="BUY").length;
-  const dnN = allDirs.filter(d=>d==="SELL").length;
-  const consensus = upN===3?"BUY FORTE":dnN===3?"SELL FORTE":upN===2?"BUY MODERATO":dnN===2?"SELL MODERATO":"MISTO";
-  const consensusColor = consensus.includes("BUY")?"#22c55e":consensus.includes("SELL")?"#ef4444":"#94a3b8";
-
-  const scores = [
-    { id:"swing", label:"📊 Swing",       es:swingES, color:"#f0b429", tf:"1H/4H",       threshold:THRESHOLDS.swing },
-    { id:"scalp", label:"⚡ Scalp",        es:scalpES, color:"#f97316", tf:"1M/5M",       threshold:THRESHOLDS.scalp },
-    { id:"trend", label:"📈 Trend Follow", es:trendES, color:"#22c55e", tf:"Daily/4H/1H", threshold:THRESHOLDS.trend },
+  const THRESHOLDS={swing:60,scalp:65,trend:60};
+  const scores=[
+    {id:"swing",label:"📊 Swing",      es:swingES,color:"#f0b429",tf:"1H/4H",      threshold:THRESHOLDS.swing},
+    {id:"scalp",label:"⚡ Scalp",       es:scalpES,color:"#f97316",tf:"1M/5M",      threshold:THRESHOLDS.scalp},
+    {id:"trend",label:"📈 Trend",       es:trendES,color:"#22c55e",tf:"Daily/4H/1H",threshold:THRESHOLDS.trend},
   ];
 
-  return { scores, best, consensus, consensusColor, sess };
+  const eligible=scores.filter(s=>s.es.score>=s.threshold&&s.es.dir!=="WAIT");
+  const best=eligible.sort((a,b)=>b.es.score-a.es.score)[0]||null;
+  const allDirs=scores.map(s=>s.es.dir).filter(d=>d!=="WAIT");
+  const upN=allDirs.filter(d=>d==="BUY").length;
+  const dnN=allDirs.filter(d=>d==="SELL").length;
+  const consensus=upN===3?"BUY FORTE":dnN===3?"SELL FORTE":upN===2?"BUY MODERATO":dnN===2?"SELL MODERATO":"MISTO";
+  const consensusColor=consensus.includes("BUY")?"#22c55e":consensus.includes("SELL")?"#ef4444":"#94a3b8";
+
+  return {scores,best,consensus,consensusColor,sess,regime,adx};
 }
 
 
@@ -4002,16 +4436,26 @@ function renderRecapScreen() {
         </div>
       </div>
 
-      <!-- Score bar -->
+      <!-- Score bar con coerenza -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <span style="color:#94a3b8;font-size:11px">Entry Opportunity Score</span>
-        <span style="color:${barCol};font-weight:900;font-size:18px">${es.score}<span style="font-size:11px;color:#64748b">/100</span></span>
+        <div style="text-align:right">
+          <span style="color:${barCol};font-weight:900;font-size:18px">${es.score}<span style="font-size:11px;color:#64748b">/100</span></span>
+          ${es.rawScore&&es.rawScore!==es.score?`<div style="color:#64748b;font-size:9px">Raw: ${es.rawScore} × coh ${es.cohRatio!=null?Math.round(es.cohRatio*100)+'%':'–'}</div>`:''}
+        </div>
       </div>
-      <div style="background:#1e2535;border-radius:99px;height:8px;overflow:hidden;margin-bottom:6px;position:relative">
+      <div style="background:#1e2535;border-radius:99px;height:8px;overflow:hidden;margin-bottom:4px;position:relative">
         <div style="width:${es.score}%;height:100%;background:${barCol};border-radius:99px;transition:width .6s"></div>
-        <!-- Soglia marker -->
         <div style="position:absolute;left:${s.threshold}%;top:-2px;width:2px;height:12px;background:#fff;opacity:.5;border-radius:1px"></div>
       </div>
+      <!-- Barra coerenza -->
+      ${es.cohRatio!=null?`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="color:#64748b;font-size:9px;width:48px">Coerenza</span>
+        <div style="flex:1;background:#1e2535;border-radius:99px;height:4px;overflow:hidden">
+          <div style="width:${Math.round(es.cohRatio*100)}%;height:100%;background:${es.cohRatio>=0.75?'#22c55e':es.cohRatio>=0.5?'#f0b429':'#ef4444'};border-radius:99px"></div>
+        </div>
+        <span style="color:${es.cohRatio>=0.75?'#22c55e':es.cohRatio>=0.5?'#f0b429':'#ef4444'};font-size:9px;font-weight:700">${Math.round(es.cohRatio*100)}%</span>
+      </div>`:''}
       <div style="color:#64748b;font-size:9px;margin-bottom:8px">Soglia entry: ${s.threshold}/100</div>
 
       <!-- Setup levels se eligible -->
