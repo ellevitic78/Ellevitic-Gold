@@ -1018,6 +1018,8 @@ async function doFetch(){
     const now=new Date();
     document.getElementById('hdr-sub').textContent=`Twelve Data · ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})} · key …${state.tdKey.slice(-4)}`;
     updateUI();
+    // Ridisegna Score se è la vista corrente
+    if (state.mode === 'recap') renderRecapScreen();
     // Paper trading: valuta exit con prezzo 1H aggiornato
     const cur1hPrice = state.candles['1h']?.slice(-1)[0]?.c;
     if(cur1hPrice) {
@@ -1026,6 +1028,7 @@ async function doFetch(){
     }
   }catch(e){
     setStatus('error',e.message||String(e));
+    if (state.mode === 'recap') renderRecapScreen();
   }
   document.getElementById('refresh-btn').textContent='↻';
 }
@@ -3315,8 +3318,9 @@ async function doScalpFetch() {
     if (!state.paper.openTrade) evaluateAutoEntry();
   }
 
-  // Aggiorna widget paper se visibile
-  setTimeout(() => renderPaperWidget(), 50);
+  // Aggiorna Score se visibile
+  if (state.mode === 'recap') renderRecapScreen();
+  else setTimeout(() => renderPaperWidget(), 50);
 
   if(btn) btn.textContent='↻';
 }
@@ -3718,7 +3722,8 @@ async function doTrendFetch() {
   const btn = document.getElementById('refresh-btn');
   if(btn) btn.textContent = '⟳';
   await fetchTrendCandles();
-  renderTrendScreen();
+  if (state.mode === 'recap') renderRecapScreen();
+  else renderTrendScreen();
   if(btn) btn.textContent = '↻';
 }
 
