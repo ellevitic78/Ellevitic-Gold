@@ -2297,13 +2297,11 @@ function exportPaperLog() {
     ].map(v => {
       // Escape per CSV
       const s = String(v === null || v === undefined ? '' : v);
-      return s.includes(',') || s.includes('
-') ? `"${s.replace(/"/g, "'")}"` : s;
+      return s.includes(',') || s.includes('\n') ? `"${s.replace(/"/g, "'")}"` : s;
     });
   });
 
-  const csvContent = [headers, ...rows].map(r => r.join(',')).join('
-');
+  const csvContent = [headers, ...rows].map(r => r.join(',')).join('\n');
   downloadFile(csvContent, `xauusd_paper_log_${new Date().toISOString().slice(0,10)}.csv`, 'text/csv');
 }
 
