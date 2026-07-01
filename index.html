@@ -997,21 +997,28 @@ function setStatus(s,msg=''){
 async function updateLivePrice() {
   if (!state.tdKey) return;
   try {
-    const res = await fetch(`${TD}/price?symbol=XAU%2FUSD&apikey=${state.tdKey}`);
-    if (!res.ok) return;
+    const res = await fetch(`${TD}/price?symbol=XAU%2FUSD&apikey=${state.tdKey}`, { cache: 'no-store' });
+    if (!res.ok) return; // 429, 5xx ecc — silenzioso
     const data = await res.json();
+    if (data.status === 'error') return; // key invalida o rate limit
     const price = parseFloat(data.price);
-    if (!price || isNaN(price)) return;
+    if (!price || isNaN(price) || price < 100 || price > 99999) return; // sanity check
+
     // Aggiorna header
     const el = document.getElementById('hdr-price');
     if (el) el.textContent = '$' + fmtP(price);
-    // Aggiorna sub-header con orario
     const now = new Date();
     const sub = document.getElementById('hdr-sub');
     if (sub) sub.textContent = `Twelve Data · ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})} · key …${state.tdKey.slice(-4)}`;
-    // Paper trading: valuta exit con prezzo aggiornato
-    evaluateAutoExit(price);
-  } catch(e) { /* silenzioso */ }
+
+    // Paper trading: valuta exit SOLO se il prezzo è valido e c'è un trade aperto
+    if (state.paper?.openTrade && price > 0) {
+      try { evaluateAutoExit(price); } catch(e) { console.warn('[price] evaluateAutoExit:', e.message); }
+    }
+  } catch(e) {
+    // Silenzioso: rate limit o rete — non mostrare errori all'utente
+    console.warn('[price] fetch failed silently:', e.message);
+  }
 }
 
 async function doFetch(){
@@ -1048,8 +1055,15 @@ async function doFetch(){
       if (!state.paper.openTrade && state.mode === 'recap') evaluateAutoEntry();
     }
   }catch(e){
-    setStatus('error',e.message||String(e));
-    if (state.mode === 'recap') renderRecapScreen();
+    const msg = e.message||String(e);
+    // Non mostrare errori di rete transitori come rate limit
+    const isTransient = msg.includes('429') || msg.includes('rate') || msg.includes('fetch') || msg.includes('network');
+    if (!isTransient) {
+      setStatus('error', msg);
+      if (state.mode === 'recap') renderRecapScreen();
+    } else {
+      console.warn('[fetch] transient error:', msg);
+    }
   }
   document.getElementById('refresh-btn').textContent='↻';
 }
@@ -4360,7 +4374,18 @@ function computeAllScenarios() {
 function renderRecapScreen() {
   const content = document.getElementById("recap-content");
   if (!content) return;
-  const recap = computeAllScenarios();
+  let recap;
+  try {
+    recap = computeAllScenarios();
+  } catch(e) {
+    console.error('[recap] computeAllScenarios error:', e.message);
+    content.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#94a3b8">
+      <div style="font-size:32px;margin-bottom:10px">⟳</div>
+      <div style="color:#f0b429;font-size:14px;font-weight:700;margin-bottom:6px">Aggiornamento in corso...</div>
+      <div style="font-size:12px;color:#64748b">I dati si aggiorneranno al prossimo refresh</div>
+    </div>`;
+    return;
+  }
   if (!recap) { content.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8">Errore calcolo scenari.</div>'; return; }
 
   const { scores, best, consensus, consensusColor, sess, regime, adx } = recap;
