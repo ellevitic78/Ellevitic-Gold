@@ -4361,311 +4361,204 @@ function renderRecapScreen() {
   const content = document.getElementById("recap-content");
   if (!content) return;
   const recap = computeAllScenarios();
-  if (!recap) {
-    content.innerHTML = `<div style="text-align:center;padding:40px 0;color:#94a3b8">
-      <div style="font-size:32px;margin-bottom:8px">🎯</div>
-      <div>Caricamento dati in corso...</div>
-      <div style="color:#64748b;font-size:11px;margin-top:8px">Attendi il completamento del fetch</div>
-    </div>`;
-    return;
-  }
+  if (!recap) { content.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8">Errore calcolo scenari.</div>'; return; }
 
-  const { scores, best, consensus, consensusColor, sess } = recap;
+  const { scores, best, consensus, consensusColor, sess, regime, adx } = recap;
   let html = "";
 
-  // Mostra spinner se ancora in caricamento
   if (consensus === "CARICAMENTO") {
     content.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#94a3b8"><div style="font-size:40px;margin-bottom:12px">⟳</div><div style="font-size:16px;font-weight:700;color:#f0b429;margin-bottom:8px">Caricamento dati...</div><div style="font-size:12px">Attendere il fetch iniziale</div></div>';
     return;
   }
 
-  // ── 1. Header consenso ────────────────────────────────────
-  const lastXau = (state.candles["1h"]||[]).slice(-1)[0];
   const p = state.paper;
-  const pnlTot = +(p.capital - p.initialCapital).toFixed(2);
+  const pnlTot = +(p.capital - (p.initialCapital||10000)).toFixed(2);
+  const lastXau = (state.candles["1h"]||[]).slice(-1)[0];
 
-  html += `<div class="card" style="border:2px solid ${consensusColor}55;padding:16px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+  // ── 1. Header consenso ────────────────────────────────────
+  html += `<div class="card" style="border:2px solid ${consensusColor}55;padding:14px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
       <div>
         <div style="color:#94a3b8;font-size:10px;font-weight:700;letter-spacing:.05em">CONSENSO SCENARI</div>
-        <div style="color:${consensusColor};font-size:26px;font-weight:900;line-height:1.1">${consensus}</div>
-        <div style="color:#94a3b8;font-size:11px;margin-top:3px">
-          ${sess.sessInfo.emoji} ${sess.sess} · Vol ${sess.sessInfo.vol} · ${sess.timeStr}
-        </div>
+        <div style="color:${consensusColor};font-size:24px;font-weight:900;line-height:1.1">${consensus}</div>
+        <div style="color:#94a3b8;font-size:10px;margin-top:2px">${sess.sessInfo.emoji} ${sess.sess} · Vol ${sess.sessInfo.vol} · ADX ${adx.adx} ${regime==="TRENDING"?"📈":regime==="RANGING"?"↔️":"〰️"}</div>
       </div>
       <div style="text-align:right">
         <div style="color:#e2e8f0;font-size:22px;font-weight:800">$${fmtP(lastXau?.c)}</div>
-        <div style="color:${pnlTot>=0?"#22c55e":"#ef4444"};font-size:12px;font-weight:700">
-          🤖 ${pnlTot>=0?"+":""}€${pnlTot.toFixed(0)}
-        </div>
-        <div style="color:${p.enabled?"#22c55e":"#64748b"};font-size:10px">
-          ${p.enabled?"● Auto ON":"○ Auto OFF"}
-          ${p.openTrade?` · Trade ${p.openTrade.direction} aperto`:""}
-        </div>
+        <div style="color:${pnlTot>=0?"#22c55e":"#ef4444"};font-size:12px;font-weight:700">🤖 ${pnlTot>=0?"+":""}€${pnlTot.toFixed(0)}</div>
+        <div style="color:${p.enabled?"#22c55e":"#64748b"};font-size:10px">${p.enabled?"● Auto ON":"○ Auto OFF"}${p.openTrade?" · Trade "+p.openTrade.direction:""}</div>
       </div>
     </div>
-    <!-- Prossimo evento -->
-    ${sess.nextEvent ? `<div style="background:#1e2740;border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+    ${sess.nextEvent?`<div style="background:#1e2740;border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between">
       <span style="color:#94a3b8;font-size:11px">${sess.nextEvent.label}</span>
-      <span style="color:#f0b429;font-weight:700;font-size:12px">${sess.minToNext<60?sess.minToNext+"m":Math.floor(sess.minToNext/60)+"h"+sess.minToNext%60+"m"}</span>
-    </div>` : ""}
+      <span style="color:#f0b429;font-weight:700;font-size:11px">${sess.minToNext<60?sess.minToNext+"m":Math.floor(sess.minToNext/60)+"h"+sess.minToNext%60+"m"}</span>
+    </div>`:""}
   </div>`;
 
-  // ── 2. Card scenari con entry score ──────────────────────
-  html += `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">`;
-
+  // ── 2. Card scenari con BUY score e SELL score ────────────
   scores.forEach(s => {
-    const es = s.es;
     const isBest = best && s.id === best.id;
-    const eligible = es.score >= s.threshold;
-    const dirCol = es.dir==="BUY"?"#22c55e":es.dir==="SELL"?"#ef4444":"#94a3b8";
-    const barCol = es.score>=70?"#22c55e":es.score>=50?"#f0b429":"#ef4444";
+    const buyScore  = s.buy?.score  || 0;
+    const sellScore = s.sell?.score || 0;
+    const buyElig   = buyScore  >= s.threshold;
+    const sellElig  = sellScore >= s.threshold;
+    const anyElig   = buyElig || sellElig;
 
-    // Semaforo entry
-    const entrySem = eligible
-      ? (es.score>=75?"🟢":es.score>=60?"🟡":"🟠")
-      : "🔴";
-    const entryLabel = eligible
-      ? (es.score>=75?"ENTRY FORTE":es.score>=60?"ENTRY BUONA":"ENTRY DEBOLE")
-      : `SOTTO SOGLIA (${s.threshold})`;
-
-    html += `<div class="card" style="border:${isBest?`2px solid ${s.color}`:`1px solid ${eligible?"#2a3550":"#1e2535"}`};padding:14px;opacity:${eligible?1:0.7}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+    html += `<div class="card" style="border:${isBest?`2px solid ${s.color}`:`1px solid ${anyElig?"#2a3550":"#1e2535"}`};padding:13px;opacity:${anyElig?1:0.75}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-            ${isBest?`<span style="background:${s.color}20;color:${s.color};border:1px solid ${s.color}44;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700">🥇 MIGLIORE</span>`:""}
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+            ${isBest?`<span style="background:${s.color}20;color:${s.color};border:1px solid ${s.color}44;border-radius:5px;padding:1px 6px;font-size:10px;font-weight:700">🥇 MIGLIORE</span>`:""}
             <span style="color:#e2e8f0;font-size:15px;font-weight:800">${s.label}</span>
           </div>
-          <div style="color:#64748b;font-size:10px">${s.tf}</div>
+          <div style="color:#64748b;font-size:10px">${s.tf} · soglia ${s.threshold}</div>
         </div>
         <div style="text-align:right">
-          <div style="color:${dirCol};font-size:20px;font-weight:900">${es.dir==="BUY"?"▲":es.dir==="SELL"?"▼":"●"} ${es.dir}</div>
-          <div style="font-size:10px;margin-top:2px">${entrySem} ${entryLabel}</div>
+          <div style="color:${s.bestDir==="BUY"?"#22c55e":s.bestDir==="SELL"?"#ef4444":"#64748b"};font-size:18px;font-weight:900">
+            ${s.bestDir==="BUY"?"▲ BUY":s.bestDir==="SELL"?"▼ SELL":"● WAIT"}
+          </div>
+          ${s.bestDir!=="WAIT"?`<div style="color:#f0b429;font-size:11px;font-weight:700">${s.bestScore}/100</div>`:""}
         </div>
       </div>
 
-      <!-- BUY score + SELL score affiancati -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-        <!-- BUY score -->
-        <div style="background:#22c55e12;border:1px solid #22c55e44;border-radius:9px;padding:8px 10px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <!-- BUY + SELL score affiancati -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px">
+        <div style="background:${buyElig?"#22c55e12":"#1a2030"};border:1px solid ${buyElig?"#22c55e44":"#1e2535"};border-radius:8px;padding:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
             <span style="color:#22c55e;font-size:10px;font-weight:700">▲ BUY</span>
-            <span style="color:${s.buy.score>=(s.threshold)?'#22c55e':'#64748b'};font-size:16px;font-weight:900">${s.buy.score}</span>
+            <span style="color:${buyElig?"#22c55e":"#64748b"};font-size:16px;font-weight:900">${buyScore}</span>
           </div>
-          <div style="background:#1e2535;border-radius:99px;height:5px;overflow:hidden;position:relative;margin-bottom:3px">
-            <div style="width:${s.buy.score}%;height:100%;background:${s.buy.score>=70?'#22c55e':s.buy.score>=s.threshold?'#f0b429':'#334155'};border-radius:99px"></div>
-            <div style="position:absolute;left:${s.threshold}%;top:0;width:1px;height:100%;background:#fff;opacity:.4"></div>
+          <div style="background:#0d1117;border-radius:99px;height:4px;overflow:hidden;position:relative;margin-bottom:4px">
+            <div style="width:${buyScore}%;height:100%;background:${buyScore>=75?"#22c55e":buyScore>=s.threshold?"#f0b429":"#334155"};border-radius:99px"></div>
+            <div style="position:absolute;left:${s.threshold}%;top:0;width:1px;height:100%;background:#fff;opacity:.3"></div>
           </div>
-          <div style="color:#64748b;font-size:8px;margin-bottom:3px">Soglia: ${s.threshold}</div>
-          ${s.buy.score>=s.threshold?`<div style="color:#22c55e;font-size:9px;font-weight:700">✅ Eligible</div>`:'<div style="color:#334155;font-size:9px">sotto soglia</div>'}
-          ${s.buy.R.slice(0,2).map(r=>`<div style="color:#22c55e;font-size:9px;line-height:1.3">${r}</div>`).join('')}
-          ${s.buy.P.slice(0,1).map(r=>`<div style="color:#ef4444;font-size:9px;line-height:1.3">${r}</div>`).join('')}
+          ${buyElig?`<div style="color:#22c55e;font-size:8px;font-weight:700;margin-bottom:2px">✅ ELIGIBLE</div>`:""}
+          ${(s.buy?.R||[]).slice(0,2).map(r=>`<div style="color:#22c55e;font-size:8px;line-height:1.4;margin-bottom:1px">${r.slice(0,40)}</div>`).join("")}
+          ${(s.buy?.P||[]).slice(0,1).map(r=>`<div style="color:#ef4444;font-size:8px;line-height:1.4">${r.slice(0,40)}</div>`).join("")}
         </div>
-        <!-- SELL score -->
-        <div style="background:#ef444412;border:1px solid #ef444444;border-radius:9px;padding:8px 10px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="background:${sellElig?"#ef444412":"#1a2030"};border:1px solid ${sellElig?"#ef444444":"#1e2535"};border-radius:8px;padding:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
             <span style="color:#ef4444;font-size:10px;font-weight:700">▼ SELL</span>
-            <span style="color:${s.sell.score>=(s.threshold)?'#ef4444':'#64748b'};font-size:16px;font-weight:900">${s.sell.score}</span>
+            <span style="color:${sellElig?"#ef4444":"#64748b"};font-size:16px;font-weight:900">${sellScore}</span>
           </div>
-          <div style="background:#1e2535;border-radius:99px;height:5px;overflow:hidden;position:relative;margin-bottom:3px">
-            <div style="width:${s.sell.score}%;height:100%;background:${s.sell.score>=70?'#ef4444':s.sell.score>=s.threshold?'#f0b429':'#334155'};border-radius:99px"></div>
-            <div style="position:absolute;left:${s.threshold}%;top:0;width:1px;height:100%;background:#fff;opacity:.4"></div>
+          <div style="background:#0d1117;border-radius:99px;height:4px;overflow:hidden;position:relative;margin-bottom:4px">
+            <div style="width:${sellScore}%;height:100%;background:${sellScore>=75?"#ef4444":sellScore>=s.threshold?"#f0b429":"#334155"};border-radius:99px"></div>
+            <div style="position:absolute;left:${s.threshold}%;top:0;width:1px;height:100%;background:#fff;opacity:.3"></div>
           </div>
-          <div style="color:#64748b;font-size:8px;margin-bottom:3px">Soglia: ${s.threshold}</div>
-          ${s.sell.score>=s.threshold?`<div style="color:#ef4444;font-size:9px;font-weight:700">✅ Eligible</div>`:'<div style="color:#334155;font-size:9px">sotto soglia</div>'}
-          ${s.sell.R.slice(0,2).map(r=>`<div style="color:#ef4444;font-size:9px;line-height:1.3">${r}</div>`).join('')}
-          ${s.sell.P.slice(0,1).map(r=>`<div style="color:#22c55e;font-size:9px;line-height:1.3">${r}</div>`).join('')}
+          ${sellElig?`<div style="color:#ef4444;font-size:8px;font-weight:700;margin-bottom:2px">✅ ELIGIBLE</div>`:""}
+          ${(s.sell?.R||[]).slice(0,2).map(r=>`<div style="color:#ef4444;font-size:8px;line-height:1.4;margin-bottom:1px">${r.slice(0,40)}</div>`).join("")}
+          ${(s.sell?.P||[]).slice(0,1).map(r=>`<div style="color:#22c55e;font-size:8px;line-height:1.4">${r.slice(0,40)}</div>`).join("")}
         </div>
       </div>
 
-      <!-- Setup levels se eligible -->
-      ${eligible && es.setup ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-bottom:8px">
-        ${[["Entry",es.setup.entry,"#f0b429"],["SL",es.setup.sl,"#ef4444"],["TP1",es.setup.tp1,"#22c55e"],["TP2",es.setup.tp2,"#14b8a6"]].map(([l,v,cv])=>`
-        <div style="background:#1e2740;border-radius:6px;padding:5px;text-align:center">
-          <div style="color:#64748b;font-size:8px">${l}</div>
-          <div style="color:${cv};font-size:11px;font-weight:700">$${fmtP(v)}</div>
-        </div>`).join("")}
-      </div>` : ""}
-
-      <!-- Motivazioni top 3 -->
-      <div style="display:flex;flex-direction:column;gap:3px">
-        ${es.reasons.slice(0,3).map(r=>`<div style="color:${r.startsWith("✅")?"#22c55e":r.startsWith("⚡")?"#f0b429":"#ef4444"};font-size:10px;line-height:1.4">${r}</div>`).join("")}
+      <!-- Setup e bottone entry -->
+      ${anyElig && s.setup ? `
+      <div style="background:#080b10;border-radius:8px;padding:8px;margin-bottom:7px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px">
+          ${[["Entry",s.setup.entry,"#f0b429"],["SL",s.setup.sl,"#ef4444"],["TP1",s.setup.tp1,"#22c55e"],["TP2",s.setup.tp2,"#14b8a6"]].map(([l,v,cv])=>
+            `<div style="background:#141920;border-radius:5px;padding:4px;text-align:center"><div style="color:#64748b;font-size:8px">${l}</div><div style="color:${cv};font-size:10px;font-weight:700">$${fmtP(v)}</div></div>`
+          ).join("")}
+        </div>
       </div>
-
-      <!-- Bottone entry manuale -->
-      ${eligible && es.setup && !p.openTrade ? `<button onclick="launchPaperFromRecap(${JSON.stringify({
-        direction:es.setup.direction, entry:es.setup.entry, sl:es.setup.sl,
-        tp1:es.setup.tp1, tp2:es.setup.tp2, confidence:es.score,
-        scenario:s.id, label:s.label
-      }).replace(/"/g,"&quot;")})"
-        style="width:100%;margin-top:8px;background:${dirCol};color:#000;border-radius:8px;padding:9px 0;font-size:12px;font-weight:700;border:none">
-        ▶ Apri Paper Trade
-      </button>` : ""}
-      ${p.openTrade && isBest ? `<div style="margin-top:8px;background:#f0b42915;border:1px solid #f0b42933;border-radius:7px;padding:7px 10px;font-size:11px;color:#f0b429;text-align:center">
-        Trade aperto — gestione automatica attiva
-      </div>` : ""}
+      ${!p.openTrade?`<button onclick="launchPaperFromRecap(${JSON.stringify({direction:s.bestDir,entry:s.setup.entry,sl:s.setup.sl,tp1:s.setup.tp1,tp2:s.setup.tp2,confidence:s.bestScore,scenario:s.id,label:s.label}).replace(/"/g,"&quot;")})" style="width:100%;background:${s.bestDir==="BUY"?"#22c55e":"#ef4444"};color:#000;border-radius:8px;padding:9px 0;font-size:12px;font-weight:800;border:none">
+        ${s.bestDir==="BUY"?"▲":"▼"} Apri Paper Trade ${s.bestDir}
+      </button>`:p.openTrade&&isBest?`<div style="background:#f0b42912;border:1px solid #f0b42933;border-radius:7px;padding:7px;font-size:11px;color:#f0b429;text-align:center">Trade aperto — gestione auto attiva</div>`:""}
+      ` : ""}
     </div>`;
   });
 
-  html += `</div>`;
-
-  // ── 3. Panel paper trading auto centralizzato ─────────────
+  // ── 3. Paper trading panel ────────────────────────────────
   const wins  = p.trades.filter(t=>t.isWin).length;
   const wr    = p.trades.length ? Math.round(wins/p.trades.length*100) : 0;
-  const dd    = +((p.initialCapital-p.capital)/p.initialCapital*100).toFixed(1);
+  const dd    = +((( p.initialCapital||10000)-p.capital)/(p.initialCapital||10000)*100).toFixed(1);
   const ddReached = dd >= MAX_DD*100;
 
   html += `<div class="card" style="border:2px solid ${p.enabled?"#22c55e44":"#f0b42944"}">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div>
         <div style="color:#f0b429;font-weight:800;font-size:14px">🤖 Paper Trading Automatico</div>
-        <div style="color:#64748b;font-size:10px;margin-top:2px">
-          Leva 1:100 · Spread $${SPREAD} · Rischio 1% · Max 5%
-        </div>
+        <div style="color:#64748b;font-size:10px">Leva 1:100 · $${SPREAD} spread · 1% rischio · max 5%</div>
       </div>
-      <button onclick="togglePaperTrading()" style="background:${p.enabled?"#ef4444":"#22c55e"};color:#000;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;border:none">
-        ${p.enabled?"⏹ Stop":"▶ Avvia"}
-      </button>
+      <button onclick="togglePaperTrading()" style="background:${p.enabled?"#ef4444":"#22c55e"};color:#000;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;border:none">${p.enabled?"⏹ Stop":"▶ Avvia"}</button>
     </div>
-
-    <!-- KPI riga -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:10px">
-      <div style="background:#1e2740;border-radius:8px;padding:8px;text-align:center">
-        <div style="color:#64748b;font-size:9px">Capitale</div>
-        <div style="color:#e2e8f0;font-size:14px;font-weight:800">€${p.capital.toFixed(0)}</div>
-      </div>
-      <div style="background:#1e2740;border-radius:8px;padding:8px;text-align:center">
-        <div style="color:#64748b;font-size:9px">P&L</div>
-        <div style="color:${pnlTot>=0?"#22c55e":"#ef4444"};font-size:14px;font-weight:800">${pnlTot>=0?"+":""}€${pnlTot.toFixed(0)}</div>
-      </div>
-      <div style="background:#1e2740;border-radius:8px;padding:8px;text-align:center">
-        <div style="color:#64748b;font-size:9px">Win Rate</div>
-        <div style="color:${wr>=50?"#22c55e":"#ef4444"};font-size:14px;font-weight:800">${wr}%</div>
-      </div>
-      <div style="background:#1e2740;border-radius:8px;padding:8px;text-align:center">
-        <div style="color:#64748b;font-size:9px">DD</div>
-        <div style="color:${dd>7?"#ef4444":dd>3?"#f97316":"#22c55e"};font-size:14px;font-weight:800">${dd>0?"-":""}${Math.abs(dd)}%</div>
-      </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:8px">
+      <div style="background:#1e2740;border-radius:7px;padding:7px;text-align:center"><div style="color:#64748b;font-size:9px">Capitale</div><div style="color:#e2e8f0;font-size:13px;font-weight:800">€${p.capital?.toFixed(0)||10000}</div></div>
+      <div style="background:#1e2740;border-radius:7px;padding:7px;text-align:center"><div style="color:#64748b;font-size:9px">P&L</div><div style="color:${pnlTot>=0?"#22c55e":"#ef4444"};font-size:13px;font-weight:800">${pnlTot>=0?"+":""}€${pnlTot.toFixed(0)}</div></div>
+      <div style="background:#1e2740;border-radius:7px;padding:7px;text-align:center"><div style="color:#64748b;font-size:9px">WR</div><div style="color:${wr>=50?"#22c55e":"#ef4444"};font-size:13px;font-weight:800">${wr}%</div></div>
+      <div style="background:#1e2740;border-radius:7px;padding:7px;text-align:center"><div style="color:#64748b;font-size:9px">DD</div><div style="color:${dd>7?"#ef4444":dd>3?"#f97316":"#22c55e"};font-size:13px;font-weight:800">${dd>0?"-":""}${Math.abs(dd)}%</div></div>
     </div>
-
-    ${ddReached ? `<div style="background:#ef444415;border:1px solid #ef444433;border-radius:8px;padding:8px 10px;margin-bottom:8px;color:#ef4444;font-size:11px">
-      ⛔ Drawdown max raggiunto. <button onclick="resetPaperTrading()" style="background:#ef4444;color:#fff;border-radius:5px;padding:2px 8px;font-size:10px;border:none;margin-left:6px">Reset</button>
-    </div>` : ""}
-
-    <!-- Trade aperto -->
-    ${p.openTrade ? `<div style="background:#f0b42912;border:1px solid #f0b42933;border-radius:9px;padding:10px 12px;margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="color:#f0b429;font-weight:700;font-size:12px">📈 Trade Aperto</span>
-        <span style="background:${p.openTrade.direction==="BUY"?"#22c55e":"#ef4444"}20;color:${p.openTrade.direction==="BUY"?"#22c55e":"#ef4444"};border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700">${p.openTrade.direction}</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-bottom:5px">
-        ${[["Entry","$"+fmtP(p.openTrade.entry),"#f0b429"],["SL","$"+fmtP(p.openTrade.sl),"#ef4444"],["TP1","$"+fmtP(p.openTrade.tp1),"#22c55e"],["Lot",p.openTrade.lots,"#94a3b8"]].map(([l,v,cv])=>`
-        <div style="background:#080b10;border-radius:5px;padding:4px;text-align:center">
-          <div style="color:#64748b;font-size:8px">${l}</div>
-          <div style="color:${cv};font-size:11px;font-weight:700">${v}</div>
-        </div>`).join("")}
-      </div>
-      <div style="color:#64748b;font-size:10px;margin-bottom:4px">
-        Scenario: ${p.openTrade.pattern||"–"} · Conf: ${p.openTrade.confidence}/100 · 
-        ${new Date(p.openTrade.openedAt).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}
-      </div>
-      <!-- P&L corrente -->
-      ${(() => {
-        const t = p.openTrade;
-        const cur = (state.candles["1h"]||[]).slice(-1)[0]?.c || t.entry;
-        const pnlPts = t.direction === "BUY" ? cur - t.entry : t.entry - cur;
-        const pnlEur = +(pnlPts * t.lots * 100).toFixed(2);
-        const col = pnlEur >= 0 ? "#22c55e" : "#ef4444";
-        const slDist = Math.abs(t.entry - t.sl);
-        const profRR = slDist > 0 ? (pnlPts / slDist).toFixed(2) : "–";
-        return `<div style="display:flex;justify-content:space-between;align-items:center;background:#080b10;border-radius:7px;padding:7px 10px;margin-bottom:4px">
-          <span style="color:#94a3b8;font-size:11px">P&L corrente</span>
-          <span style="color:${col};font-weight:800;font-size:14px">${pnlEur>=0?"+":""}€${pnlEur.toFixed(2)} <span style="font-size:10px">(${profRR}R)</span></span>
+    ${ddReached?`<div style="background:#ef444415;border:1px solid #ef444433;border-radius:7px;padding:7px;margin-bottom:7px;color:#ef4444;font-size:11px">⛔ Drawdown max. <button onclick="resetPaperTrading()" style="background:#ef4444;color:#fff;border-radius:4px;padding:1px 7px;font-size:10px;border:none;margin-left:5px">Reset</button></div>`:""}
+    ${p.openTrade ? (() => {
+      const t=p.openTrade, col=t.direction==="BUY"?"#22c55e":"#ef4444";
+      const cur=lastXau?.c||t.entry;
+      const pnlPts=t.direction==="BUY"?cur-t.entry:t.entry-cur;
+      const pnlEur=+(pnlPts*t.lots*100).toFixed(2);
+      const profRR=Math.abs(t.entry-t.sl)>0?(pnlPts/Math.abs(t.entry-t.sl)).toFixed(2):"–";
+      return `<div style="background:#f0b42912;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-bottom:7px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="color:#f0b429;font-weight:700;font-size:12px">📈 Trade Aperto</span>
+          <span style="background:${col}20;color:${col};border-radius:4px;padding:1px 7px;font-size:11px;font-weight:700">${t.direction}</span>
         </div>
-        <div style="display:flex;gap:8px;font-size:10px;color:#94a3b8">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-bottom:5px">
+          ${[["Entry","$"+fmtP(t.entry),"#f0b429"],["SL","$"+fmtP(t.sl),"#ef4444"],["TP1","$"+fmtP(t.tp1),"#22c55e"],["Lot",t.lots,"#94a3b8"]].map(([l,v,cv])=>
+            `<div style="background:#080b10;border-radius:5px;padding:4px;text-align:center"><div style="color:#64748b;font-size:8px">${l}</div><div style="color:${cv};font-size:10px;font-weight:700">${v}</div></div>`
+          ).join("")}
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#080b10;border-radius:6px;padding:5px 8px;margin-bottom:4px">
+          <span style="color:#94a3b8;font-size:10px">P&L corrente</span>
+          <span style="color:${pnlEur>=0?"#22c55e":"#ef4444"};font-weight:800;font-size:13px">${pnlEur>=0?"+":""}€${pnlEur.toFixed(2)} (${profRR}R)</span>
+        </div>
+        <div style="display:flex;gap:6px;font-size:9px;color:#64748b">
           ${t.breakEvenSet?"<span style='color:#22c55e'>✅ Breakeven</span>":""}
-          ${t.trailingActive?"<span style='color:#f0b429'>📍 Trail attivo</span>":""}
-        </div>`;
-      })()}
-      <!-- Management log ultime 3 azioni -->
-      ${p.openTrade.managementLog?.length ? `<div style="margin-top:6px;border-top:1px solid #1e2535;padding-top:6px">
-        <div style="color:#64748b;font-size:9px;font-weight:700;margin-bottom:3px">GESTIONE AUTOMATICA</div>
-        ${p.openTrade.managementLog.slice(-3).reverse().map(l=>`
-          <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:10px">
-            <span style="color:#94a3b8">${l.action}</span>
-            <span style="color:#64748b">${new Date(l.ts).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span>
-          </div>`).join("")}
-      </div>` : ""}
-    </div>` : p.enabled ? `<div style="background:#22c55e12;border:1px solid #22c55e22;border-radius:8px;padding:8px 10px;color:#22c55e;font-size:11px;text-align:center">
-      ✅ In ascolto — entra automaticamente quando score ≥ soglia
-      <div id="paper-last-eval" style="color:#64748b;font-size:10px;margin-top:3px">Ultimo check: mai</div>
-    </div>` : ""}
-
-    <!-- Ultimi 3 trade -->
-    ${p.trades.length > 0 ? `<div style="margin-top:8px">
-      <div style="color:#64748b;font-size:10px;font-weight:700;margin-bottom:5px">ULTIMI TRADE</div>
-      ${p.trades.slice(0,3).map(t=>{
-        const tc = t.isWin?"#22c55e":t.pnlEur===0?"#64748b":"#ef4444";
-        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #1e2535">
-          <div style="display:flex;gap:5px;align-items:center">
-            <span style="color:${t.direction==="BUY"?"#22c55e":"#ef4444"};font-size:11px;font-weight:700">${t.direction}</span>
-            <span style="color:#94a3b8;font-size:10px">${t.exitReason||"–"}</span>
-            <span style="color:#64748b;font-size:9px">${new Date(t.openedAt).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span>
-          </div>
-          <span style="color:${tc};font-weight:700;font-size:12px">${t.pnlEur>=0?"+":""}€${t.pnlEur?.toFixed(2)||"0"}</span>
-        </div>`;
-      }).join("")}
-    </div>` : ""}
-
-    <div style="display:flex;gap:6px;margin-top:10px">
-      <button onclick="showDiary();setDiaryTabDirect('paper')" style="flex:2;background:#1e2740;border:1px solid #2a3550;color:#b0bdd0;border-radius:8px;padding:8px 0;font-size:11px">📋 Storico completo</button>
-      <button onclick="resetPaperTrading()" style="flex:1;background:transparent;border:1px solid #334155;color:#475569;border-radius:8px;padding:8px 0;font-size:10px">🗑 Reset</button>
+          ${t.trailingActive?"<span style='color:#f0b429'>📍 Trail</span>":""}
+          <span>${t.scenario||"–"} · Conf ${t.confidence}/100</span>
+        </div>
+        ${t.managementLog?.length?`<div style="margin-top:5px;border-top:1px solid #1e2535;padding-top:4px">${t.managementLog.slice(-2).reverse().map(l=>`<div style="display:flex;justify-content:space-between;font-size:9px;color:#64748b"><span>${l.action}</span><span>${new Date(l.ts).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span></div>`).join("")}</div>`:""}
+      </div>`;
+    })() : p.enabled?`<div style="background:#22c55e12;border:1px solid #22c55e22;border-radius:7px;padding:8px;color:#22c55e;font-size:11px;text-align:center">✅ In ascolto — entra quando score ≥ soglia<div id="paper-last-eval" style="color:#64748b;font-size:10px;margin-top:2px">Ultimo check: mai</div></div>`:""}
+    ${p.trades.length?`<div style="margin-top:7px"><div style="color:#64748b;font-size:10px;font-weight:700;margin-bottom:4px">ULTIMI TRADE</div>${p.trades.slice(0,3).map(t=>{
+      const tc=t.isWin?"#22c55e":t.pnlEur===0?"#64748b":"#ef4444";
+      return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2535">
+        <div><span style="color:${t.direction==="BUY"?"#22c55e":"#ef4444"};font-size:11px;font-weight:700">${t.direction}</span><span style="color:#64748b;font-size:10px;margin-left:5px">${t.exitReason||"–"}</span><span style="color:#475569;font-size:9px;margin-left:5px">${new Date(t.openedAt).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span></div>
+        <span style="color:${tc};font-weight:700;font-size:12px">${t.pnlEur>=0?"+":""}€${t.pnlEur?.toFixed(2)||"0"}</span>
+      </div>`;}).join("")}</div>`:""}
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button onclick="showDiary();setDiaryTabDirect('paper')" style="flex:2;background:#1e2740;border:1px solid #2a3550;color:#b0bdd0;border-radius:7px;padding:8px 0;font-size:11px">📋 Storico Diario</button>
+      <button onclick="resetPaperTrading()" style="flex:1;background:transparent;border:1px solid #334155;color:#475569;border-radius:7px;padding:8px 0;font-size:10px">🗑 Reset</button>
     </div>
   </div>`;
 
-  // ── 4. Bottone notifiche ──────────────────────────────────
+  // ── 4. Notifiche ──────────────────────────────────────────
   html += `<div class="card" style="border:1px solid ${bgActive?"#22c55e44":"#2a3550"}">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div>
         <div style="color:#f0b429;font-weight:700;font-size:13px">🔔 Notifiche Background</div>
-        <div id="bg-status" style="color:#64748b;font-size:10px;margin-top:2px">${bgActive?"✅ Attivo":"Non attivo"}</div>
+        <div id="bg-status" style="color:#64748b;font-size:10px;margin-top:2px">${bgActive?"✅ Attivo — check ogni 5 min":"Non attivo"}</div>
       </div>
-      <button id="bg-toggle" onclick="toggleBackground()" style="background:${bgActive?"#ef4444":"#f0b429"};color:#000;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;border:none">
-        ${bgActive?"Disattiva":"Attiva"}
-      </button>
+      <button id="bg-toggle" onclick="toggleBackground()" style="background:${bgActive?"#ef4444":"#f0b429"};color:#000;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;border:none">${bgActive?"Disattiva":"Attiva"}</button>
     </div>
-    <div id="bg-last-check" style="color:#64748b;font-size:10px;margin-top:6px;display:none"></div>
-    <div id="notif-debug" style="color:#475569;font-size:9px;margin-top:4px;padding:3px;background:#080b10;border-radius:5px"></div>
-
-    <!-- Config alert (compatta) -->
+    <div id="bg-last-check" style="color:#64748b;font-size:10px;margin-top:5px;display:none"></div>
+    <div id="notif-debug" style="color:#475569;font-size:9px;margin-top:3px;padding:3px;background:#080b10;border-radius:4px"></div>
     <div id="alert-config" style="display:${bgActive?"block":"none"};margin-top:10px">
-      <div style="color:#94a3b8;font-size:10px;font-weight:700;margin-bottom:6px">Alert attivi:</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
-        ${[["cfg-pivot","📍 Pivot/R1/S1"],["cfg-rsi-ob","⚠️ RSI OB/OS"],["cfg-spike","⚡ Spike ATR"],["cfg-lead","📡 Lead DXY"]].map(([id,label])=>`
-        <label style="display:flex;align-items:center;gap:6px;background:#1e2740;border-radius:7px;padding:7px 9px;cursor:pointer">
-          <input type="checkbox" id="${id}" checked style="width:16px;height:16px;accent-color:#f0b429"/>
-          <span style="color:#b0bdd0;font-size:11px">${label}</span>
-        </label>`).join("")}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
+        ${[["cfg-pivot","📍 Pivot/R1/S1"],["cfg-rsi-ob","⚠️ RSI OB/OS"],["cfg-spike","⚡ Spike ATR"],["cfg-lead","📡 Lead macro"]].map(([id,label])=>
+          `<label style="display:flex;align-items:center;gap:5px;background:#1e2740;border-radius:7px;padding:7px;cursor:pointer"><input type="checkbox" id="${id}" checked style="width:15px;height:15px;accent-color:#f0b429"/><span style="color:#b0bdd0;font-size:11px">${label}</span></label>`
+        ).join("")}
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px">
-        <div><div style="color:#64748b;font-size:9px;margin-bottom:2px">Alert sopra $</div>
-          <input type="number" id="cfg-price-above" placeholder="es. 4400" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:6px;padding:6px 8px;color:#e2e8f0;font-size:12px"/></div>
-        <div><div style="color:#64748b;font-size:9px;margin-bottom:2px">Alert sotto $</div>
-          <input type="number" id="cfg-price-below" placeholder="es. 4100" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:6px;padding:6px 8px;color:#e2e8f0;font-size:12px"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
+        <div><div style="color:#64748b;font-size:9px;margin-bottom:2px">Alert sopra $</div><input type="number" id="cfg-price-above" placeholder="es. 4400" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#e2e8f0;font-size:12px"/></div>
+        <div><div style="color:#64748b;font-size:9px;margin-bottom:2px">Alert sotto $</div><input type="number" id="cfg-price-below" placeholder="es. 4100" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#e2e8f0;font-size:12px"/></div>
       </div>
-      <button onclick="saveAlertConfig()" style="width:100%;margin-top:6px;background:#f0b429;color:#000;border-radius:7px;padding:7px 0;font-size:12px;font-weight:700;border:none">Salva config</button>
+      <button onclick="saveAlertConfig()" style="width:100%;background:#f0b429;color:#000;border-radius:7px;padding:7px 0;font-size:12px;font-weight:700;border:none">Salva config notifiche</button>
     </div>
   </div>`;
 
-  html += `<div style="text-align:center;color:#64748b;font-size:9px;line-height:1.5;padding:4px 8px;border-top:1px solid #1e2535;margin-top:4px">
-    ⚠️ Solo scopo didattico · Non costituisce consulenza finanziaria · Paper trading simulato
-  </div>`;
+  html += `<div style="text-align:center;color:#64748b;font-size:9px;padding:4px;border-top:1px solid #1e2535;margin-top:4px">⚠️ Solo scopo didattico · Paper trading simulato · Non consulenza finanziaria</div>`;
 
   content.innerHTML = html;
 }
 
 
-// ── Avvia paper trade dal recap ───────────────────────────────
 function launchPaperFromRecap(tradeData) {
   const p = state.paper;
   if (p.openTrade) { alert('Chiudi prima il trade aperto nel diario 🤖 Auto.'); return; }
