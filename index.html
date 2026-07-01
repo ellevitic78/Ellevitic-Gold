@@ -2115,6 +2115,20 @@ function evaluateAutoEntry() {
   if (state.mode === 'recap') renderRecapScreen();
   console.log('[PAPER] Trade aperto via scoring:', trade);
 
+  // Invia trade al SW per monitoraggio in background
+  sendToSW({
+    type: 'PAPER_TRADE_OPEN',
+    trade: {
+      id: trade.id, direction: trade.direction,
+      entry: trade.entry, sl: trade.sl, tp1: trade.tp1, tp2: trade.tp2,
+      lots: trade.lots, scenario: trade.scenario,
+      atrAtEntry: trade.atrAtEntry, breakEvenSet: false,
+      trailMult: getTrailMult(trade.scenario||'swing'),
+      warnThresh: getWarnThreshold(trade.scenario||'swing'),
+    },
+    tdKey: state.tdKey,
+  }).catch(()=>{});
+
   if ('serviceWorker' in navigator && Notification.permission === 'granted') {
     navigator.serviceWorker.ready.then(reg => {
       reg.showNotification(`🤖 Paper Trade — ${trade.direction} [${best.label}]`, {
@@ -2412,7 +2426,9 @@ function evaluateAutoExit(currentPrice) {
 
   savePaperState();
   if (state.mode === 'recap') renderRecapScreen();
-  else renderPaperWidget?.();
+  else if (typeof renderPaperWidget === 'function') renderPaperWidget();
+  // Notifica SW che il trade è chiuso
+  sendToSW({ type: 'PAPER_TRADE_CLOSED' }).catch(()=>{});
 
   const evalEl = document.getElementById('paper-last-eval');
   if (evalEl) evalEl.textContent = `Chiusura: ${new Date().toLocaleTimeString('it-IT')} · ${exitReason} · ${pnlEur > 0 ? '+' : ''}€${pnlEur}`;
@@ -4790,8 +4806,33 @@ function handleSwMessage(e) {
       lastEl.style.display = 'block';
       lastEl.textContent = `Check: ${new Date(d.ts).toLocaleTimeString('it-IT')} · XAU $${d.price?.toFixed(2)||'–'} · RSI ${d.rsi||'–'}`;
     }
-    // Valuta exit paper trading con prezzo aggiornato
-    if (d.price) evaluateAutoExit(d.price);
+    // Valuta exit con prezzo dal SW (funziona anche in background)
+    if (d.price && state.paper?.openTrade) {
+      try { evaluateAutoExit(d.price); } catch(e) { console.warn('[SW→exit]', e.message); }
+    }
+  }
+
+  // SW ha rilevato exit condition in background
+  if (d.type === 'BG_EXIT_SIGNAL') {
+    if (state.paper?.openTrade && d.price) {
+      try { evaluateAutoExit(d.price); } catch(e) {}
+    }
+  }
+
+  // SW aggiorna SL (trailing/BE) calcolato in background
+  if (d.type === 'BG_UPDATE_SL' && state.paper?.openTrade) {
+    const t = state.paper.openTrade;
+    const dir = t.direction;
+    if ((dir==='BUY' && d.newSL > t.sl) || (dir==='SELL' && d.newSL < t.sl)) {
+      t.sl = d.newSL;
+      t.breakEvenSet = d.breakEvenSet || t.breakEvenSet;
+      t.trailingActive = d.trailingActive || t.trailingActive;
+      if (!t.managementLog) t.managementLog = [];
+      t.managementLog.push({ ts: d.ts, action: d.action, price: d.price, scenario: t.scenario, profRR: 0 });
+      state.paper.openTrade = t;
+      savePaperState();
+      if (state.mode === 'recap') renderRecapScreen();
+    }
   }
 
   if (d.type === 'BG_STARTED') {
