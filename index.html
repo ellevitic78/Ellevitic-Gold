@@ -3813,6 +3813,7 @@ function calcPullbackQuality(cc, ema20arr, ema50arr, dir, rsiArr) {
 }
 
 function pivotContext(price, dir, atr) {
+  const pv = state.pivots || {};
   if (!pv.pivot||!price) return null;
   const near = atr * 0.4;
   const levels = [
