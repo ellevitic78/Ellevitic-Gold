@@ -2127,6 +2127,33 @@ function evaluateAutoEntry() {
 }
 
 // ── Analisi forza prezzo per gestione trade ──────────────────
+// Usa il TF corretto per lo scenario: scalp→1M, swing→5M/1H, trend→1H
+function getScenarioCandles(scenario) {
+  if (scenario === "scalp") {
+    return (state.candles["1m"]||[]).length >= 5
+      ? state.candles["1m"]
+      : (state.candles["5m"]||[]);
+  } else if (scenario === "trend") {
+    return (state.candles["1h"]||[]).length >= 10
+      ? state.candles["1h"]
+      : (state.candles["5m"]||[]);
+  } else { // swing
+    return (state.candles["5m"]||[]).length >= 10
+      ? state.candles["5m"]
+      : (state.candles["1h"]||[]);
+  }
+}
+
+// Soglia warnScore per scenario (trend tollera più rumore)
+function getWarnThreshold(scenario) {
+  return scenario === "scalp" ? 3 : scenario === "swing" ? 6 : 8;
+}
+
+// Moltiplicatore ATR per trailing stop per scenario
+function getTrailMult(scenario) {
+  return scenario === "scalp" ? 0.8 : scenario === "swing" ? 1.5 : 2.0;
+}
+
 function analyzePriceAction(candles, direction) {
   if (!candles || candles.length < 5) return null;
   const last  = candles[candles.length - 1];
@@ -2135,7 +2162,7 @@ function analyzePriceAction(candles, direction) {
   if (!last || !prev) return null;
 
   const body      = Math.abs(last.c - last.o);
-  const range     = last.h - last.l || 0.001;
+  const range     = (last.h - last.l) || 0.001;
   const upperWick = last.h - Math.max(last.c, last.o);
   const lowerWick = Math.min(last.c, last.o) - last.l;
   const isBull    = last.c > last.o;
@@ -2143,78 +2170,74 @@ function analyzePriceAction(candles, direction) {
   const macd      = last.macd || 0;
   const prevMacd  = prev.macd || 0;
 
-  // Momentum micro: slope ultime 3 candele
-  const closes = candles.slice(-5).map(c => c.c);
-  const slope3 = closes[closes.length-1] - closes[closes.length-3];
-  const slope5 = closes[closes.length-1] - closes[0];
+  const closes  = candles.slice(-5).map(c => c.c);
+  const slope3  = closes.length >= 3 ? closes[closes.length-1] - closes[closes.length-3] : 0;
+  const bodyRatio    = body / range;
+  const wickRatioUp  = upperWick / range;
+  const wickRatioDown= lowerWick / range;
 
-  // Forza candela corrente
-  const bodyRatio     = body / range;       // >0.6 = candela forte
-  const wickRatioUp   = upperWick / range;
-  const wickRatioDown = lowerWick / range;
-
-  // Segnali di DEBOLEZZA del movimento (warning per chiudere/trailing)
-  const warnings = [];
-  const strengths = [];
+  const warnings = [], strengths = [];
 
   if (direction === 'BUY') {
-    // Debolezza rialzo
-    if (wickRatioUp > 0.4 && bodyRatio < 0.3)
-      warnings.push({ code: 'SHOOT_STAR', msg: 'Shooting star — rifiuto in alto', weight: 3 });
-    if (rsi > 72)
-      warnings.push({ code: 'RSI_OB', msg: `RSI ${rsi} overbought`, weight: 2 });
+    if (wickRatioUp > 0.45 && bodyRatio < 0.3)
+      warnings.push({ code:'SHOOT_STAR', msg:'Shooting star — rifiuto in alto', weight:3 });
+    if (rsi > 74)
+      warnings.push({ code:'RSI_OB', msg:`RSI ${rsi} overbought`, weight:2 });
     if (macd < prevMacd && macd > 0)
-      warnings.push({ code: 'MACD_DIV', msg: 'MACD divergenza bearish', weight: 2 });
-    if (!isBull && body > range * 0.5)
-      warnings.push({ code: 'BEAR_CANDLE', msg: 'Candela bear forte — pressione venditori', weight: 3 });
-    if (slope3 < 0 && slope5 > 0)
-      warnings.push({ code: 'MICRO_BEARISH', msg: 'Micro-trend ribassista', weight: 1 });
-    if (last.vol && prev.vol && last.vol < prev.vol * 0.5)
-      warnings.push({ code: 'VOL_DROP', msg: 'Volume in calo — momentum esaurito', weight: 2 });
+      warnings.push({ code:'MACD_DIV', msg:'MACD divergenza bearish', weight:2 });
+    if (!isBull && bodyRatio > 0.55)
+      warnings.push({ code:'BEAR_CANDLE', msg:'Candela bear forte', weight:3 });
+    if (slope3 < 0 && Math.abs(slope3) > (last.atr||15) * 0.3)
+      warnings.push({ code:'MICRO_BEAR', msg:'Micro-trend ribassista', weight:1 });
 
-    // Forza rialzo
     if (isBull && bodyRatio > 0.65 && lowerWick < body * 0.2)
-      strengths.push({ code: 'BULL_MARUBOZU', msg: 'Marubozu bull — momentum forte', weight: 3 });
+      strengths.push({ code:'BULL_MAR', msg:'Marubozu bull', weight:3 });
     if (rsi > 50 && rsi < 68)
-      strengths.push({ code: 'RSI_BULL', msg: `RSI ${rsi} zona rialzista sana`, weight: 2 });
+      strengths.push({ code:'RSI_BULL', msg:`RSI ${rsi} zona sana`, weight:2 });
     if (macd > prevMacd)
-      strengths.push({ code: 'MACD_UP', msg: 'MACD in salita', weight: 2 });
+      strengths.push({ code:'MACD_UP', msg:'MACD in salita', weight:2 });
     if (slope3 > 0)
-      strengths.push({ code: 'MICRO_BULL', msg: 'Micro-trend rialzista', weight: 1 });
-
-  } else { // SELL
-    // Debolezza ribasso
-    if (wickRatioDown > 0.4 && bodyRatio < 0.3)
-      warnings.push({ code: 'HAMMER', msg: 'Hammer — rifiuto in basso', weight: 3 });
-    if (rsi < 28)
-      warnings.push({ code: 'RSI_OS', msg: `RSI ${rsi} oversold`, weight: 2 });
+      strengths.push({ code:'MICRO_BULL', msg:'Micro-trend rialzista', weight:1 });
+  } else {
+    if (wickRatioDown > 0.45 && bodyRatio < 0.3)
+      warnings.push({ code:'HAMMER', msg:'Hammer — rifiuto in basso', weight:3 });
+    if (rsi < 26)
+      warnings.push({ code:'RSI_OS', msg:`RSI ${rsi} oversold`, weight:2 });
     if (macd > prevMacd && macd < 0)
-      warnings.push({ code: 'MACD_DIV', msg: 'MACD divergenza bullish', weight: 2 });
-    if (isBull && body > range * 0.5)
-      warnings.push({ code: 'BULL_CANDLE', msg: 'Candela bull forte — pressione compratori', weight: 3 });
-    if (slope3 > 0 && slope5 < 0)
-      warnings.push({ code: 'MICRO_BULLISH', msg: 'Micro-trend rialzista contro posizione', weight: 1 });
+      warnings.push({ code:'MACD_DIV', msg:'MACD divergenza bullish', weight:2 });
+    if (isBull && bodyRatio > 0.55)
+      warnings.push({ code:'BULL_CANDLE', msg:'Candela bull forte', weight:3 });
+    if (slope3 > 0 && Math.abs(slope3) > (last.atr||15) * 0.3)
+      warnings.push({ code:'MICRO_BULL', msg:'Micro-trend rialzista contro', weight:1 });
 
-    // Forza ribasso
     if (!isBull && bodyRatio > 0.65 && upperWick < body * 0.2)
-      strengths.push({ code: 'BEAR_MARUBOZU', msg: 'Marubozu bear — momentum ribassista', weight: 3 });
+      strengths.push({ code:'BEAR_MAR', msg:'Marubozu bear', weight:3 });
     if (rsi < 50 && rsi > 32)
-      strengths.push({ code: 'RSI_BEAR', msg: `RSI ${rsi} zona ribassista sana`, weight: 2 });
+      strengths.push({ code:'RSI_BEAR', msg:`RSI ${rsi} zona sana`, weight:2 });
     if (macd < prevMacd)
-      strengths.push({ code: 'MACD_DOWN', msg: 'MACD in discesa', weight: 2 });
+      strengths.push({ code:'MACD_DOWN', msg:'MACD in discesa', weight:2 });
     if (slope3 < 0)
-      strengths.push({ code: 'MICRO_BEAR', msg: 'Micro-trend ribassista', weight: 1 });
+      strengths.push({ code:'MICRO_BEAR', msg:'Micro-trend ribassista', weight:1 });
   }
 
   const warnScore = warnings.reduce((s, w) => s + w.weight, 0);
   const strScore  = strengths.reduce((s, w) => s + w.weight, 0);
-  const netScore  = strScore - warnScore; // positivo = posizione forte
+  return { warnings, strengths, warnScore, strScore, netScore: strScore - warnScore, rsi, macd, slope3, isBull, bodyRatio, last };
+}
 
-  return {
-    warnings, strengths, warnScore, strScore, netScore,
-    rsi, macd, slope3, slope5, isBull, bodyRatio,
-    wickRatioUp, wickRatioDown, last, range,
-  };
+// ── Controllo inversione consenso scenari ────────────────────
+function checkConsensusReversal(tradeDir) {
+  try {
+    const recap = computeAllScenarios();
+    if (!recap || !recap.scores) return false;
+    // Conta quanti scenari hanno score opposto > 70
+    const opp = tradeDir === 'BUY' ? 'SELL' : 'BUY';
+    const strongOpp = recap.scores.filter(s => {
+      const oppScore = opp === 'BUY' ? s.buy?.score : s.sell?.score;
+      return (oppScore || 0) >= 70;
+    }).length;
+    return strongOpp >= 2; // almeno 2 scenari con forte segnale opposto
+  } catch(e) { return false; }
 }
 
 // ── Gestione intelligente trade aperto ────────────────────────
@@ -2222,135 +2245,140 @@ function evaluateAutoExit(currentPrice) {
   const p = state.paper;
   if (!p.enabled || !p.openTrade) return;
 
-  const t   = p.openTrade;
-  const dir = t.direction;
+  const t        = p.openTrade;
+  const dir      = t.direction;
+  const scenario = t.scenario || 'swing';
 
-  // Inizializza campi gestione se non presenti
-  if (!t.managementLog) t.managementLog = [];
+  // Inizializza campi
+  if (!t.managementLog)  t.managementLog  = [];
   if (!t.trailingActive) t.trailingActive = false;
-  if (!t.partialClosed)  t.partialClosed  = false;
   if (!t.breakEvenSet)   t.breakEvenSet   = false;
-  if (!t.maxFavorable)   t.maxFavorable   = dir === 'BUY' ? currentPrice : currentPrice;
-  if (!t.minAdverse)     t.minAdverse     = dir === 'BUY' ? currentPrice : currentPrice;
+  if (!t.maxFavorable)   t.maxFavorable   = currentPrice;
 
-  // Aggiorna max favorevole (MFE)
+  // Aggiorna MFE
   if (dir === 'BUY')  t.maxFavorable = Math.max(t.maxFavorable, currentPrice);
   if (dir === 'SELL') t.maxFavorable = Math.min(t.maxFavorable, currentPrice);
 
-  const slDist = Math.abs(t.entry - t.sl);
-  const atr    = t.atrAtEntry || slDist * 0.6 || 15;
+  const slDist  = Math.abs(t.entry - t.sl);
+  const atr     = t.atrAtEntry || slDist * 0.6 || 15;
+  const profPts = dir === 'BUY' ? currentPrice - t.entry : t.entry - currentPrice;
+  const profRR  = slDist > 0 ? profPts / slDist : 0;
 
-  // Profitto corrente in punti
-  const profitPts = dir === 'BUY' ? currentPrice - t.entry : t.entry - currentPrice;
-  const profitRR  = slDist > 0 ? profitPts / slDist : 0;
+  // PA analysis con TF corretto per scenario
+  const scenarioCandles = getScenarioCandles(scenario);
+  const pa = scenarioCandles.length >= 5
+    ? analyzePriceAction(scenarioCandles, dir)
+    : null;
 
-  // ── Analisi price action su 1M poi 5M ─────────────────────
-  const useCandles = (state.candles['1m']?.length >= 5)
-    ? state.candles['1m']
-    : (state.candles['5m']?.length >= 5 ? state.candles['5m'] : state.candles['1h'] || []);
-  const pa = analyzePriceAction(useCandles, dir);
+  const warnThresh = getWarnThreshold(scenario);
+  const trailMult  = getTrailMult(scenario);
 
-  let closed      = false;
-  let exitPrice   = 0;
-  let exitReason  = '';
-  let action      = ''; // per log
+  let closed     = false;
+  let exitPrice  = 0;
+  let exitReason = '';
 
-  // ── 1. CHIUSURA FORZATA: SL colpito ───────────────────────
+  const logAction = (action) => {
+    t.managementLog.push({ ts: Date.now(), action, price: +currentPrice.toFixed(2), scenario, profRR: +profRR.toFixed(2) });
+  };
+
+  // ── 1. SL colpito ────────────────────────────────────────
   if (dir === 'BUY'  && currentPrice <= t.sl) { exitReason = 'SL'; exitPrice = t.sl; closed = true; }
   if (dir === 'SELL' && currentPrice >= t.sl) { exitReason = 'SL'; exitPrice = t.sl; closed = true; }
 
-  // ── 2. CHIUSURA FORZATA: TP2 colpito ──────────────────────
+  // ── 2. TP2 colpito ───────────────────────────────────────
   if (!closed) {
     if (dir === 'BUY'  && currentPrice >= t.tp2) { exitReason = 'TP2'; exitPrice = t.tp2; closed = true; }
     if (dir === 'SELL' && currentPrice <= t.tp2) { exitReason = 'TP2'; exitPrice = t.tp2; closed = true; }
   }
 
-  // ── 3. GESTIONE INTELLIGENTE (solo se non già chiuso) ─────
-  if (!closed && pa) {
-
-    // 3a. BREAKEVEN: sposta SL a entry quando profitto > 0.7x SL dist
-    if (!t.breakEvenSet && profitRR >= 0.7) {
+  if (!closed) {
+    // ── 3. BREAKEVEN: entry + 0.5x ATR (non solo spread) ──
+    if (!t.breakEvenSet && profRR >= 0.7) {
+      const bePad = atr * 0.5; // margine di sicurezza
       const newSL = dir === 'BUY'
-        ? +(t.entry + SPREAD).toFixed(2)   // leggermente sopra entry per coprire spread
-        : +(t.entry - SPREAD).toFixed(2);
+        ? +(t.entry + bePad).toFixed(2)
+        : +(t.entry - bePad).toFixed(2);
       if ((dir === 'BUY' && newSL > t.sl) || (dir === 'SELL' && newSL < t.sl)) {
+        const old = t.sl;
         t.sl = newSL;
         t.breakEvenSet = true;
-        action = `BE: SL → $${fmtP(newSL)}`;
-        t.managementLog.push({ ts: Date.now(), action, price: currentPrice });
+        logAction(`BE: SL $${old.toFixed(2)} → $${newSL.toFixed(2)} (+0.5 ATR)`);
       }
     }
 
-    // 3b. TRAILING STOP: attiva quando profitto > 1x SL dist
-    if (profitRR >= 1.0) {
+    // ── 4. TRAILING STOP con moltiplicatore per scenario ──
+    if (profRR >= 1.0) {
       t.trailingActive = true;
-      // Trail: mantieni SL a 1.2x ATR dal massimo favorevole
-      const trailDist = atr * 1.2;
+      const trailDist = atr * trailMult;
       const trailSL   = dir === 'BUY'
         ? +(t.maxFavorable - trailDist).toFixed(2)
         : +(t.maxFavorable + trailDist).toFixed(2);
-
       if ((dir === 'BUY' && trailSL > t.sl) || (dir === 'SELL' && trailSL < t.sl)) {
-        action = `TRAIL: SL $${fmtP(t.sl)} → $${fmtP(trailSL)}`;
+        const old = t.sl;
         t.sl = trailSL;
-        t.managementLog.push({ ts: Date.now(), action, price: currentPrice });
+        logAction(`TRAIL [${scenario}] x${trailMult}: SL $${old.toFixed(2)} → $${trailSL.toFixed(2)}`);
       }
     }
 
-    // 3c. CHIUSURA ANTICIPATA per price action debole
-    // Se profitto > 0.5x SL E price action fortemente negativa → chiudi
-    if (!closed && profitRR >= 0.5 && pa.warnScore >= 5) {
-      exitReason = `PA_EXIT (${pa.warnings.map(w=>w.code).join(',')})`;
+    // ── 5. PA debole con soglia dinamica per scenario ────
+    if (pa && profRR >= 0.5 && pa.warnScore >= warnThresh) {
+      exitReason = `PA_EXIT [${scenario}] warn=${pa.warnScore}`;
       exitPrice  = currentPrice;
       closed     = true;
-      action     = `Chiusura PA: ${pa.warnings[0]?.msg}`;
-      t.managementLog.push({ ts: Date.now(), action, price: currentPrice });
+      logAction(`PA exit [${scenario}] warnScore=${pa.warnScore}/${warnThresh}: ${pa.warnings[0]?.msg}`);
     }
 
-    // 3d. CHIUSURA A TP1 anticipata se price action mostra esaurimento
-    // profitto vicino a TP1 (>80%) E warning moderati
+    // ── 6. TP1 anticipato per esaurimento PA ────────────
     if (!closed) {
-      const tp1Pct = Math.abs(currentPrice - t.entry) / Math.abs(t.tp1 - t.entry);
-      if (tp1Pct >= 0.8 && pa.warnScore >= 3 && pa.netScore < 0) {
+      const tp1Pct = Math.abs(currentPrice - t.entry) / (Math.abs(t.tp1 - t.entry) || 1);
+      if (tp1Pct >= 0.8 && pa && pa.warnScore >= Math.round(warnThresh * 0.6) && pa.netScore < 0) {
         exitReason = 'TP1_PA';
         exitPrice  = currentPrice;
         closed     = true;
-        action     = `TP1 anticipato (PA debole): ${pa.warnings[0]?.msg}`;
-        t.managementLog.push({ ts: Date.now(), action, price: currentPrice });
+        logAction(`TP1 anticipato: ${pa.warnings[0]?.msg}`);
       }
     }
 
-    // 3e. CHIUSURA A TP1 se TP1 colpito
+    // ── 7. TP1 colpito ───────────────────────────────────
     if (!closed) {
       if (dir === 'BUY'  && currentPrice >= t.tp1) { exitReason = 'TP1'; exitPrice = t.tp1; closed = true; }
       if (dir === 'SELL' && currentPrice <= t.tp1) { exitReason = 'TP1'; exitPrice = t.tp1; closed = true; }
     }
 
-    // 3f. ESTENDI TARGET se price action molto forte oltre TP1
-    if (!closed && profitRR >= 1.0 && pa.strScore >= 5 && pa.warnScore === 0) {
-      // Alza TP2 del 20% se momentum fortissimo
+    // ── 8. Estensione TP2 su momentum forte ─────────────
+    if (!closed && profRR >= 1.0 && pa && pa.strScore >= 5 && pa.warnScore === 0) {
       const extraPts = atr * 1.5;
       const newTP2   = dir === 'BUY'
         ? +(t.tp2 + extraPts).toFixed(2)
         : +(t.tp2 - extraPts).toFixed(2);
       if (newTP2 !== t.tp2) {
-        action = `TP2 esteso: $${fmtP(t.tp2)} → $${fmtP(newTP2)} (PA forte: ${pa.strengths[0]?.msg})`;
-        t.tp2  = newTP2;
-        t.managementLog.push({ ts: Date.now(), action, price: currentPrice });
+        const old = t.tp2;
+        t.tp2 = newTP2;
+        logAction(`TP2 esteso: $${old.toFixed(2)} → $${newTP2.toFixed(2)} (PA forte str=${pa.strScore})`);
+      }
+    }
+
+    // ── 9. INVERSIONE CONSENSO: chiudi se in profitto ───
+    if (!closed && profRR >= 0.3) {
+      const reversed = checkConsensusReversal(dir);
+      if (reversed) {
+        exitReason = 'CONSENSUS_REV';
+        exitPrice  = currentPrice;
+        closed     = true;
+        logAction(`Consenso invertito — 2+ scenari forti ${dir==='BUY'?'SELL':'BUY'}`);
       }
     }
   }
 
-  // ── 4. AGGIORNA UI senza chiudere ─────────────────────────
+  // ── Aggiorna senza chiudere ───────────────────────────────
   if (!closed) {
     p.openTrade = t;
     savePaperState();
-    // Aggiorna Score screen se visibile
     if (state.mode === 'recap') renderRecapScreen();
     return;
   }
 
-  // ── 5. CHIUDI IL TRADE ────────────────────────────────────
+  // ── Chiudi il trade ───────────────────────────────────────
   const exitWithSpread = dir === 'BUY'
     ? +(exitPrice - SPREAD / 2).toFixed(2)
     : +(exitPrice + SPREAD / 2).toFixed(2);
@@ -2365,14 +2393,17 @@ function evaluateAutoExit(currentPrice) {
 
   const closed_trade = {
     ...t,
-    exitPrice:    exitWithSpread,
+    exitPrice:     exitWithSpread,
     exitReason,
     pnlEur,
     isWin,
-    closedAt:     new Date().toISOString(),
-    capitalAfter: p.capital,
-    rr:           +(pnlPts / Math.abs(t.entry - (t.breakEvenSet ? t.entry : t.sl))).toFixed(2),
-    paAtClose:    pa ? { warnScore: pa.warnScore, strScore: pa.strScore, topWarning: pa.warnings[0]?.msg } : null,
+    closedAt:      new Date().toISOString(),
+    capitalAfter:  p.capital,
+    rr:            +(pnlPts / Math.abs(t.entry - t.sl || 1)).toFixed(2),
+    paAtClose:     pa ? { warnScore: pa.warnScore, strScore: pa.strScore, topWarning: pa.warnings[0]?.msg } : null,
+    managementLog: t.managementLog,
+    trailMult,
+    warnThresh,
   };
 
   p.trades.unshift(closed_trade);
@@ -2381,21 +2412,17 @@ function evaluateAutoExit(currentPrice) {
 
   savePaperState();
   if (state.mode === 'recap') renderRecapScreen();
-  else renderPaperWidget();
+  else renderPaperWidget?.();
 
-  console.log('[PAPER] Trade chiuso:', exitReason, pnlEur);
-
-  // Aggiorna last check
   const evalEl = document.getElementById('paper-last-eval');
-  if (evalEl) evalEl.textContent = `Chiusura: ${new Date().toLocaleTimeString('it-IT')} · ${exitReason} · €${pnlEur > 0 ? '+' : ''}${pnlEur}`;
+  if (evalEl) evalEl.textContent = `Chiusura: ${new Date().toLocaleTimeString('it-IT')} · ${exitReason} · ${pnlEur > 0 ? '+' : ''}€${pnlEur}`;
 
-  // Notifica push
   if ('serviceWorker' in navigator && Notification.permission === 'granted') {
     const emoji = isWin ? '✅' : exitReason.startsWith('SL') ? '❌' : '➖';
     const paNote = closed_trade.paAtClose?.topWarning ? ` · ${closed_trade.paAtClose.topWarning}` : '';
     navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification(`${emoji} Paper Trade Chiuso — ${exitReason}`, {
-        body: `${dir} XAU · P&L: €${pnlEur > 0 ? '+' : ''}${pnlEur.toFixed(2)} · Cap: €${p.capital.toFixed(0)}${paNote}`,
+      reg.showNotification(`${emoji} Paper Trade — ${exitReason}`, {
+        body: `${dir} XAU · ${pnlEur > 0 ? '+' : ''}€${pnlEur.toFixed(2)} · Cap: €${p.capital.toFixed(0)}${paNote}`,
         icon: '/icon-192.png', tag: 'paper-close', vibrate: [300, 100, 300],
       });
     }).catch(() => {});
