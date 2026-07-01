@@ -2692,7 +2692,16 @@ function togglePaperTrading() {
   }
   p.enabled = !p.enabled;
   savePaperState();
-  renderPaperWidget();
+  // Sincronizza col SW
+  sendToSW({
+    type: 'PAPER_STATE_SYNC',
+    paperEnabled:  p.enabled,
+    paperCapital:  p.capital,
+    paperTrades:   p.trades,
+    openTrade:     p.openTrade,
+  }).catch(()=>{});
+  if (state.mode === 'recap') renderRecapScreen();
+  else if (typeof renderPaperWidget === 'function') renderPaperWidget();
 }
 
 function setDiaryTabDirect(tab) {
@@ -4849,6 +4858,37 @@ function handleSwMessage(e) {
     const lastEl = document.getElementById('bg-last-check');
     if (lastEl) { lastEl.style.display='block'; lastEl.textContent=`🔔 Alert: ${d.title} · ${new Date(d.ts).toLocaleTimeString('it-IT')}`; }
   }
+
+  // Trade aperto dal SW in background
+  if (d.type === 'BG_TRADE_OPENED' && d.trade) {
+    state.paper.openTrade    = d.trade;
+    state.paper.lastSignalTs = d.ts || Date.now();
+    if (!state.paper.enabled) state.paper.enabled = true;
+    savePaperState();
+    if (state.mode === 'recap') renderRecapScreen();
+    console.log('[APP] Trade BG ricevuto:', d.trade.direction, '@', d.trade.entry);
+  }
+
+  // Trade aggiornato (trailing/BE) dal SW
+  if (d.type === 'BG_TRADE_UPDATE' && d.trade) {
+    state.paper.openTrade = d.trade;
+    savePaperState();
+    if (state.mode === 'recap') renderRecapScreen();
+  }
+
+  // Trade chiuso dal SW in background
+  if (d.type === 'BG_TRADE_CLOSED' && d.trade) {
+    state.paper.openTrade = null;
+    if (d.capital !== undefined) state.paper.capital = d.capital;
+    if (d.trades)  {
+      state.paper.trades = d.trades;
+      state.paper.equity.push(d.capital || state.paper.capital);
+      if (state.paper.equity.length > 200) state.paper.equity.shift();
+    }
+    savePaperState();
+    if (state.mode === 'recap') renderRecapScreen();
+    console.log('[APP] Trade BG chiuso:', d.trade.exitReason, d.trade.pnlEur);
+  }
 }
 
 // ── Aggiorna UI badge e bottoni ───────────────────────────────
@@ -4984,10 +5024,18 @@ async function toggleBackground() {
   // 3. Aspetta SW attivo
   await navigator.serviceWorker.ready;
 
-  // 4. Invia START al SW
+  // 4. Invia START al SW con stato paper completo
   const cfg = getAlertConfig();
   LS.set('alert_config', cfg);
-  const ok = await sendToSW({ type: 'START_BG', tdKey: state.tdKey, config: cfg });
+  const ok = await sendToSW({
+    type: 'START_BG',
+    tdKey:         state.tdKey,
+    config:        cfg,
+    paperEnabled:  state.paper.enabled,
+    paperCapital:  state.paper.capital,
+    paperTrades:   state.paper.trades,
+    openTrade:     state.paper.openTrade,
+  });
 
   if (!ok) {
     document.getElementById('bg-status').textContent = '❌ SW non pronto — ricarica la pagina';
@@ -5024,14 +5072,20 @@ async function restoreBgState() {
   if (savedCfg.priceBelow) { const el=document.getElementById('cfg-price-below'); if(el) el.value=savedCfg.priceBelow; }
 
   if (wasActive && state.tdKey && Notification.permission === 'granted') {
-    // Riattiva automaticamente senza chiedere permesso di nuovo
     console.log('[PWA] Auto-restoring background monitoring...');
     await navigator.serviceWorker.ready;
-    const cfg = savedCfg;
-    const ok = await sendToSW({ type: 'START_BG', tdKey: state.tdKey, config: cfg });
+    const ok = await sendToSW({
+      type:         'START_BG',
+      tdKey:        state.tdKey,
+      config:       savedCfg,
+      paperEnabled: state.paper.enabled,
+      paperCapital: state.paper.capital,
+      paperTrades:  state.paper.trades,
+      openTrade:    state.paper.openTrade,
+    });
     if (ok) {
       updateBgUI(true);
-      console.log('[PWA] Background monitoring restored');
+      console.log('[PWA] Background monitoring restored with paper state');
     } else {
       document.getElementById('bg-status').textContent = 'Era attivo — premi Attiva per riavviare';
     }
@@ -5064,9 +5118,20 @@ async function restoreBgState() {
     });
 
     state.fetchTimer = setInterval(doFetch, 5*60000);
-    // Aggiorna solo il prezzo ogni 30s (1 API call leggera)
     state.priceTimer = setInterval(updateLivePrice, 30000);
     restoreBgState();
+    // Wake Lock: impedisce al telefono di spegnere lo schermo (Android Chrome)
+    if ('wakeLock' in navigator) {
+      navigator.wakeLock.request('screen').then(lock => {
+        state.wakeLock = lock;
+        console.log('[WakeLock] Active');
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible' && !state.wakeLock?.released) {
+            navigator.wakeLock.request('screen').then(l => { state.wakeLock = l; }).catch(()=>{});
+          }
+        });
+      }).catch(e => console.warn('[WakeLock] Not available:', e.message));
+    }
   }
 })();
 </script>
