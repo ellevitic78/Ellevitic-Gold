@@ -399,6 +399,7 @@ let state = {
   mode: 'swing',
   scalpTimer: null,
   trendTimer: null,
+  priceTimer: null,
   candles4h: [],
   candles: {'5m':[],'1h':[],'1d':[],'1m':[]},
   scalpCorr: {
@@ -991,6 +992,26 @@ function setStatus(s,msg=''){
   if(s==='loading'){badge.textContent='⟳';badge.style.cssText='background:#f0b42922;color:#f0b429;border:1px solid #f0b42944;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700';errBanner.classList.add('hidden');}
   else if(s==='live'){badge.textContent='🟢 LIVE';badge.style.cssText='background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700';errBanner.classList.add('hidden');}
   else if(s==='error'){badge.textContent='⚠';badge.style.cssText='background:#ef444422;color:#ef4444;border:1px solid #ef444444;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700';errMsg.textContent=msg;errBanner.classList.remove('hidden');}
+}
+
+async function updateLivePrice() {
+  if (!state.tdKey) return;
+  try {
+    const res = await fetch(`${TD}/price?symbol=XAU%2FUSD&apikey=${state.tdKey}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const price = parseFloat(data.price);
+    if (!price || isNaN(price)) return;
+    // Aggiorna header
+    const el = document.getElementById('hdr-price');
+    if (el) el.textContent = '$' + fmtP(price);
+    // Aggiorna sub-header con orario
+    const now = new Date();
+    const sub = document.getElementById('hdr-sub');
+    if (sub) sub.textContent = `Twelve Data · ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})} · key …${state.tdKey.slice(-4)}`;
+    // Paper trading: valuta exit con prezzo aggiornato
+    evaluateAutoExit(price);
+  } catch(e) { /* silenzioso */ }
 }
 
 async function doFetch(){
@@ -2519,6 +2540,8 @@ async function handleSetup(){
 
     if(state.fetchTimer)clearInterval(state.fetchTimer);
     state.fetchTimer=setInterval(doFetch,5*60000);
+    if(state.priceTimer)clearInterval(state.priceTimer);
+    state.priceTimer=setInterval(updateLivePrice,30000);
     registerSW().then(()=>restoreBgState());
   }catch(e){
     err.textContent='Errore: '+(e.message||String(e));err.style.display='block';
@@ -2565,6 +2588,8 @@ async function saveSettings(){
       });
       if(state.fetchTimer)clearInterval(state.fetchTimer);
       state.fetchTimer=setInterval(doFetch,5*60000);
+    if(state.priceTimer)clearInterval(state.priceTimer);
+    state.priceTimer=setInterval(updateLivePrice,30000);
     }
   }catch(e){err.textContent=e.message||String(e);err.style.display='block';}
   btn.textContent='Salva';
@@ -3750,6 +3775,9 @@ function renderPaperWidgetIn(el) {
 
 
 // ── Helper functions per scoring (globali) ──────────────────
+function distAbs(price, level) { return Math.abs(price - (level||0)); }
+function distPct(price, level) { return level ? Math.abs(price-level)/level*100 : 999; }
+
 
 function slopePct(arr, n=3) {
   if (!arr||arr.length<n+1) return 0;
@@ -3904,8 +3932,6 @@ function computeAllScenarios() {
   const toBias  = d => d==="UP"||d==="BULL"?"BUY":d==="DOWN"||d==="BEAR"?"SELL":"WAIT";
 
   // ── Helper: distanza % di un prezzo da un livello ────────
-  const distPct  = (price, level) => level ? Math.abs(price-level)/level*100 : 999;
-  const distAbs  = (price, level) => Math.abs(price - (level||0));
 
   // ── Regime di mercato ─────────────────────────────────────
   const trend  = computeTrendSignal(cc1d, cc4h, cc1h);
@@ -5110,6 +5136,8 @@ async function restoreBgState() {
     });
 
     state.fetchTimer = setInterval(doFetch, 5*60000);
+    // Aggiorna solo il prezzo ogni 30s (1 API call leggera)
+    state.priceTimer = setInterval(updateLivePrice, 30000);
     restoreBgState();
   }
 })();
