@@ -12,7 +12,7 @@
 <title>XAU/USD Analyzer</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:#080b10;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;font-size:17px}
+body{background:#080b10;color:#fde68a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;font-size:17px}
 input,button{font-family:inherit;outline:none;border:none}
 button{cursor:pointer}
 .card{background:#141920;border-radius:14px;padding:18px;border:1px solid #2a3550;margin-bottom:12px}
@@ -22,31 +22,31 @@ button{cursor:pointer}
 .bear{color:#ef4444}
 .dim{color:#b0bdd0}
 .mid{color:#b0bdd0}
-.pill{border-radius:6px;padding:3px 11px;font-size:15px;font-weight:700;white-space:nowrap}
+.pill{border-radius:6px;padding:3px 11px;font-size:17px;font-weight:700;white-space:nowrap}
 .btn{border-radius:10px;padding:14px 16px;font-size:17px;font-weight:700;width:100%;display:block;text-align:center;margin-bottom:10px}
-.input{width:100%;background:#141920;border:1px solid #2a3550;border-radius:10px;padding:15px 16px;color:#e2e8f0;font-size:17px;font-family:monospace}
+.input{width:100%;background:#141920;border:1px solid #2a3550;border-radius:10px;padding:15px 16px;color:#fde68a;font-size:17px;font-family:monospace}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px}
 .kpi{background:#1e2740;border-radius:8px;padding:8px 10px;text-align:center;border:1px solid #2a3550}
 .kpi .val{font-weight:800;font-size:18px}
-.kpi .lbl{color:#b0bdd0;font-size:13px;margin-bottom:2px}
-.kpi .sub{color:#b0bdd0;font-size:12px;margin-top:1px}
+.kpi .lbl{color:#b0bdd0;font-size:15px;margin-bottom:2px}
+.kpi .sub{color:#b0bdd0;font-size:14px;margin-top:1px}
 .mini-card{background:#1e2740;border-radius:8px;padding:8px 10px;border:1px solid #2a3550}
 .bar-wrap{background:#1e2535;border-radius:99px;height:4px;overflow:hidden;margin-top:3px}
 .bar{height:4px;border-radius:99px;transition:width .5s}
 .tab-bar{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px}
-.tab{flex:none;padding:7px 14px;border-radius:8px;border:none;font-size:14px;cursor:pointer;font-weight:400}
+.tab{flex:none;padding:7px 14px;border-radius:8px;border:none;font-size:16px;cursor:pointer;font-weight:400}
 .tab.active{background:#f0b429;color:#000;font-weight:700}
 .tab.inactive{background:#141920;color:#b0bdd0}
 .loader{height:3px;background:#1e2535;border-radius:99px;overflow:hidden}
 .loader-inner{height:100%;width:40%;border-radius:99px;animation:slide 1.2s infinite linear}
 @keyframes slide{0%{margin-left:-40%}100%{margin-left:100%}}
 .sticky{position:sticky;top:0;z-index:10;background:#0f1318;padding:13px 14px 11px;border-bottom:1px solid #1e2535}
-.tf-btn{flex:1;padding:8px 0;border-radius:8px;font-size:15px;font-weight:400;border:none}
+.tf-btn{flex:1;padding:8px 0;border-radius:8px;font-size:17px;font-weight:400;border:none}
 .content{padding:11px 13px}
 .err-banner{background:#ef444415;border:1px solid #ef444433;border-radius:8px;padding:10px 12px;margin-top:8px}
-.warn-banner{background:#f0b42912;border:1px solid #f0b42933;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:12px;color:#b0bdd0}
+.warn-banner{background:#f0b42912;border:1px solid #f0b42933;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:14px;color:#b0bdd0}
 .hidden{display:none}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
 .modal{background:#0f1318;border-radius:14px;padding:20px;width:100%;max-width:400px;border:1px solid #2a3550}
@@ -69,20 +69,20 @@ button{cursor:pointer}
 <div id="setup-screen" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px">
   <div style="font-size:48px;margin-bottom:14px">🥇</div>
   <div style="color:#f0b429;font-weight:800;font-size:22px;margin-bottom:6px">XAU/USD Analyzer</div>
-  <div style="color:#b0bdd0;font-size:15px;text-align:center;margin-bottom:28px;line-height:1.6">App standalone con dati live.<br>Configura le API key per iniziare.</div>
+  <div style="color:#b0bdd0;font-size:17px;text-align:center;margin-bottom:28px;line-height:1.6">App standalone con dati live.<br>Configura le API key per iniziare.</div>
   <div style="width:100%;margin-bottom:10px">
-    <div style="color:#f0b429;font-size:13px;font-weight:700;margin-bottom:5px">TWELVE DATA API KEY <span style="color:#ef4444">*</span></div>
+    <div style="color:#f0b429;font-size:15px;font-weight:700;margin-bottom:5px">TWELVE DATA API KEY <span style="color:#ef4444">*</span></div>
     <input type="text" id="setup-td-key" class="input" placeholder="es. a1b2c3d4e5f6..."/>
-    <div style="color:#b0bdd0;font-size:12px;margin-top:4px">→ twelvedata.com → Account → API Keys</div>
+    <div style="color:#b0bdd0;font-size:14px;margin-top:4px">→ twelvedata.com → Account → API Keys</div>
   </div>
   <div style="width:100%;margin-bottom:20px">
-    <div style="color:#a855f7;font-size:13px;font-weight:700;margin-bottom:5px">ANTHROPIC API KEY <span style="color:#b0bdd0">(opzionale — analisi AI)</span></div>
+    <div style="color:#a855f7;font-size:15px;font-weight:700;margin-bottom:5px">ANTHROPIC API KEY <span style="color:#b0bdd0">(opzionale — analisi AI)</span></div>
     <input type="text" id="setup-cl-key" class="input" placeholder="sk-ant-..."/>
-    <div style="color:#b0bdd0;font-size:12px;margin-top:4px">→ console.anthropic.com → API Keys</div>
+    <div style="color:#b0bdd0;font-size:14px;margin-top:4px">→ console.anthropic.com → API Keys</div>
   </div>
-  <div id="setup-err" style="display:none;background:#ef444415;border:1px solid #ef444433;border-radius:8px;padding:10px 12px;color:#ef4444;font-size:14px;margin-bottom:12px;width:100%"></div>
+  <div id="setup-err" style="display:none;background:#ef444415;border:1px solid #ef444433;border-radius:8px;padding:10px 12px;color:#ef4444;font-size:16px;margin-bottom:12px;width:100%"></div>
   <button id="setup-btn" class="btn" style="background:#f0b429;color:#000" onclick="handleSetup()">Salva e avvia →</button>
-  <div style="color:#b0bdd0;font-size:12px;margin-top:14px;text-align:center;line-height:1.6">🔒 Le key sono salvate solo nel tuo browser.<br>Non vengono inviate a server esterni.</div>
+  <div style="color:#b0bdd0;font-size:14px;margin-top:14px;text-align:center;line-height:1.6">🔒 Le key sono salvate solo nel tuo browser.<br>Non vengono inviate a server esterni.</div>
 </div>
 
 <!-- ══ MAIN APP ══════════════════════════════════════════════ -->
@@ -95,37 +95,37 @@ button{cursor:pointer}
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
           <span style="font-size:18px">🥇</span>
           <span style="color:#f0b429;font-weight:800;font-size:20px">XAU/USD</span>
-          <span id="status-badge" style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:4px;padding:1px 5px;font-size:12px;font-weight:700">⟳</span>
-          <button onclick="showSettings()" style="background:#141920;border:1px solid #2a3550;color:#b0bdd0;border-radius:5px;padding:2px 7px;font-size:12px">⚙️</button>
+          <span id="status-badge" style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:4px;padding:1px 5px;font-size:14px;font-weight:700">⟳</span>
+          <button onclick="showSettings()" style="background:#141920;border:1px solid #2a3550;color:#b0bdd0;border-radius:5px;padding:2px 7px;font-size:14px">⚙️</button>
         </div>
         <div style="display:flex;align-items:baseline;gap:7px">
-          <span id="hdr-price" style="font-size:30px;font-weight:800;color:#e2e8f0">–</span>
+          <span id="hdr-price" style="font-size:30px;font-weight:800;color:#fde68a">–</span>
           <span id="hdr-chg" style="font-size:17px;font-weight:600"></span>
         </div>
-        <div id="hdr-sub" style="color:#b0bdd0;font-size:12px;margin-top:1px"></div>
+        <div id="hdr-sub" style="color:#b0bdd0;font-size:14px;margin-top:1px"></div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-        <span id="mtf-badge" style="background:#64748b20;color:#b0bdd0;border:1px solid #64748b44;border-radius:5px;padding:4px 12px;font-size:15px;font-weight:700">–</span>
-        <button onclick="showDiary()" style="background:#a855f715;border:1px solid #a855f744;color:#a855f7;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700" id="diary-btn">📓 Diario</button>
-            <button onclick="toggleAlertPanel()" style="background:#f0b42915;border:1px solid #f0b42944;color:#f0b429;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700" id="alert-btn">🔔</button>
-      <button onclick="showSwDiag()" style="background:#141920;border:1px solid #3b82f644;color:#3b82f6;border-radius:8px;padding:3px 9px;font-size:11px;font-weight:700" title="Diagnostica">🔧</button>
+        <span id="mtf-badge" style="background:#64748b20;color:#b0bdd0;border:1px solid #64748b44;border-radius:5px;padding:4px 12px;font-size:17px;font-weight:700">–</span>
+        <button onclick="showDiary()" style="background:#a855f715;border:1px solid #a855f744;color:#a855f7;border-radius:6px;padding:3px 9px;font-size:13px;font-weight:700" id="diary-btn">📓 Diario</button>
+            <button onclick="toggleAlertPanel()" style="background:#f0b42915;border:1px solid #f0b42944;color:#f0b429;border-radius:6px;padding:3px 9px;font-size:13px;font-weight:700" id="alert-btn">🔔</button>
+      <button onclick="showSwDiag()" style="background:#141920;border:1px solid #3b82f644;color:#3b82f6;border-radius:8px;padding:3px 9px;font-size:13px;font-weight:700" title="Diagnostica">🔧</button>
       </div>
     </div>
     <!-- Error banner -->
     <div id="err-banner" class="err-banner hidden">
-      <div style="color:#ef4444;font-size:13px;font-weight:700;margin-bottom:4px">Errore caricamento</div>
-      <div id="err-msg" style="color:#b0bdd0;font-size:13px;font-family:monospace;margin-bottom:8px"></div>
+      <div style="color:#ef4444;font-size:15px;font-weight:700;margin-bottom:4px">Errore caricamento</div>
+      <div id="err-msg" style="color:#b0bdd0;font-size:15px;font-family:monospace;margin-bottom:8px"></div>
       <div style="display:flex;gap:8px">
-        <button onclick="doFetch()" style="flex:1;background:#22c55e;color:#000;border-radius:7px;padding:7px 0;font-size:13px;font-weight:700">↻ Riprova</button>
-        <button onclick="showSettings()" style="flex:1;background:#f0b429;color:#000;border-radius:7px;padding:7px 0;font-size:13px;font-weight:700">🔑 Key</button>
+        <button onclick="doFetch()" style="flex:1;background:#22c55e;color:#000;border-radius:7px;padding:7px 0;font-size:15px;font-weight:700">↻ Riprova</button>
+        <button onclick="showSettings()" style="flex:1;background:#f0b429;color:#000;border-radius:7px;padding:7px 0;font-size:15px;font-weight:700">🔑 Key</button>
       </div>
     </div>
     <!-- Mode + TF tabs -->
     <div style="display:flex;gap:5px;margin-top:8px">
-      <button id="mode-recap" onclick="setMode('recap')" style="flex:1;padding:8px 0;border-radius:8px;font-size:13px;font-weight:700;background:#a855f7;color:#000;border:none">🎯 Score</button>
-      <button id="mode-swing" onclick="setMode('swing')" style="flex:1;padding:8px 0;border-radius:8px;font-size:13px;font-weight:700;background:#141920;color:#b0bdd0;border:none">📊 Swing</button>
-      <button id="mode-scalp" onclick="setMode('scalp')" style="flex:1;padding:8px 0;border-radius:8px;font-size:13px;font-weight:700;background:#141920;color:#b0bdd0;border:none">⚡ Scalp</button>
-      <button id="mode-trend" onclick="setMode('trend')" style="flex:1;padding:8px 0;border-radius:8px;font-size:13px;font-weight:700;background:#141920;color:#b0bdd0;border:none">📈 Trend</button>
+      <button id="mode-recap" onclick="setMode('recap')" style="flex:1;padding:8px 0;border-radius:8px;font-size:15px;font-weight:700;background:#a855f7;color:#000;border:none">🎯 Score</button>
+      <button id="mode-swing" onclick="setMode('swing')" style="flex:1;padding:8px 0;border-radius:8px;font-size:15px;font-weight:700;background:#141920;color:#b0bdd0;border:none">📊 Swing</button>
+      <button id="mode-scalp" onclick="setMode('scalp')" style="flex:1;padding:8px 0;border-radius:8px;font-size:15px;font-weight:700;background:#141920;color:#b0bdd0;border:none">⚡ Scalp</button>
+      <button id="mode-trend" onclick="setMode('trend')" style="flex:1;padding:8px 0;border-radius:8px;font-size:15px;font-weight:700;background:#141920;color:#b0bdd0;border:none">📈 Trend</button>
       <button onclick="doRefreshCurrent()" id="refresh-btn" style="padding:5px 11px;border-radius:8px;border:1px solid #2a3550;background:transparent;color:#b0bdd0;font-size:16px">↻</button>
     </div>
     <!-- TF tabs (solo swing mode) -->
@@ -142,24 +142,24 @@ button{cursor:pointer}
       <!-- Riga 1: bias direzionale grande -->
       <div id="dash-bias" style="text-align:center;margin-bottom:14px">
         <div id="dash-direction" style="font-size:32px;font-weight:900;letter-spacing:-1px">–</div>
-        <div id="dash-subtitle" style="color:#b0bdd0;font-size:14px;margin-top:2px"></div>
+        <div id="dash-subtitle" style="color:#b0bdd0;font-size:16px;margin-top:2px"></div>
       </div>
 
       <!-- Confidence meter -->
       <div style="margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="color:#b0bdd0;font-size:14px;font-weight:600">Confidenza Outlook</span>
+          <span style="color:#b0bdd0;font-size:16px;font-weight:600">Confidenza Outlook</span>
           <span id="conf-value" style="font-size:20px;font-weight:900;color:#f0b429">–</span>
         </div>
         <div class="conf-bar">
           <div id="conf-fill" class="conf-fill" style="width:0%"></div>
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:4px">
-          <span style="color:#b0bdd0;font-size:12px">0 — Incerto</span>
-          <span style="color:#b0bdd0;font-size:12px">50 — Moderato</span>
-          <span style="color:#b0bdd0;font-size:12px">100 — Forte</span>
+          <span style="color:#b0bdd0;font-size:14px">0 — Incerto</span>
+          <span style="color:#b0bdd0;font-size:14px">50 — Moderato</span>
+          <span style="color:#b0bdd0;font-size:14px">100 — Forte</span>
         </div>
-        <div id="conf-label" style="text-align:center;font-size:13px;color:#b0bdd0;margin-top:4px"></div>
+        <div id="conf-label" style="text-align:center;font-size:15px;color:#b0bdd0;margin-top:4px"></div>
       </div>
 
       <!-- Griglia semafori -->
@@ -169,26 +169,26 @@ button{cursor:pointer}
     <!-- Chart -->
     <div class="card" style="padding:10px 5px 6px">
       <div class="row" style="padding:0 7px 4px">
-        <span class="dim" style="font-size:12px" id="chart-label">Grafico 1h</span>
-        <div style="display:flex;gap:8px"><span class="bull" style="font-size:12px">— MA20</span><span style="color:#f87171;font-size:12px">— MA50</span></div>
+        <span class="dim" style="font-size:14px" id="chart-label">Grafico 1h</span>
+        <div style="display:flex;gap:8px"><span class="bull" style="font-size:14px">— MA20</span><span style="color:#f87171;font-size:14px">— MA50</span></div>
       </div>
       <svg id="main-chart" width="100%" viewBox="0 0 340 160" style="display:block"></svg>
     </div>
 
     <!-- Mini MTF -->
     <div class="card" style="padding:10px">
-      <div style="color:#f0b429;font-weight:700;font-size:13px;margin-bottom:7px">📊 Vista MTF — tocca per espandere</div>
+      <div style="color:#f0b429;font-weight:700;font-size:15px;margin-bottom:7px">📊 Vista MTF — tocca per espandere</div>
       <div style="display:flex;gap:5px">
         <div onclick="setTf('1d')" style="flex:1;background:#1e2740;border-radius:8px;border:1px solid #2a3550;padding:5px 3px 3px;cursor:pointer">
-          <div class="row" style="padding:0 4px 2px"><span class="dim" style="font-size:12px;font-weight:700">1D</span><span id="trend-1d" style="font-size:12px">—</span></div>
+          <div class="row" style="padding:0 4px 2px"><span class="dim" style="font-size:14px;font-weight:700">1D</span><span id="trend-1d" style="font-size:14px">—</span></div>
           <svg id="chart-1d" width="100%" viewBox="0 0 340 70" style="display:block"></svg>
         </div>
         <div onclick="setTf('1h')" style="flex:1;background:#1e2740;border-radius:8px;border:1px solid #2a3550;padding:5px 3px 3px;cursor:pointer">
-          <div class="row" style="padding:0 4px 2px"><span class="dim" style="font-size:12px;font-weight:700">1H</span><span id="trend-1h" style="font-size:12px">—</span></div>
+          <div class="row" style="padding:0 4px 2px"><span class="dim" style="font-size:14px;font-weight:700">1H</span><span id="trend-1h" style="font-size:14px">—</span></div>
           <svg id="chart-1h" width="100%" viewBox="0 0 340 70" style="display:block"></svg>
         </div>
         <div onclick="setTf('5m')" style="flex:1;background:#1e2740;border-radius:8px;border:1px solid #2a3550;padding:5px 3px 3px;cursor:pointer">
-          <div class="row" style="padding:0 4px 2px"><span class="dim" style="font-size:12px;font-weight:700">5M</span><span id="trend-5m" style="font-size:12px">—</span></div>
+          <div class="row" style="padding:0 4px 2px"><span class="dim" style="font-size:14px;font-weight:700">5M</span><span id="trend-5m" style="font-size:14px">—</span></div>
           <svg id="chart-5m" width="100%" viewBox="0 0 340 70" style="display:block"></svg>
         </div>
       </div>
@@ -196,7 +196,7 @@ button{cursor:pointer}
 
     <!-- MTF Alignment -->
     <div class="card">
-      <div style="color:#f0b429;font-weight:700;font-size:14px;margin-bottom:8px">🔭 Allineamento MTF</div>
+      <div style="color:#f0b429;font-weight:700;font-size:16px;margin-bottom:8px">🔭 Allineamento MTF</div>
       <div style="display:flex;gap:6px" id="mtf-cards"></div>
     </div>
 
@@ -210,10 +210,10 @@ button{cursor:pointer}
     <div class="card" id="lead-panel" style="border:2px solid #f9731633;display:none">
       <div class="row" style="margin-bottom:10px">
         <div>
-          <div style="color:#f97316;font-weight:800;font-size:15px">📡 Anticipatori di Swing</div>
-          <div class="dim" style="font-size:11px;margin-top:1px" id="lead-subtitle">DXY · US10Y → lead XAU/USD</div>
+          <div style="color:#f97316;font-weight:800;font-size:17px">📡 Anticipatori di Swing</div>
+          <div class="dim" style="font-size:13px;margin-top:1px" id="lead-subtitle">DXY · US10Y → lead XAU/USD</div>
         </div>
-        <span id="lead-signal-badge" style="border-radius:6px;padding:3px 10px;font-size:13px;font-weight:800"></span>
+        <span id="lead-signal-badge" style="border-radius:6px;padding:3px 10px;font-size:15px;font-weight:800"></span>
       </div>
       <div id="lead-sparklines" style="display:flex;gap:6px;margin-bottom:10px"></div>
       <div id="lead-details"></div>
@@ -222,30 +222,30 @@ button{cursor:pointer}
     <!-- AI Outlook -->
     <div class="card" style="border:1px solid #14b8a644">
       <div class="row" style="margin-bottom:10px">
-        <div><div style="color:#14b8a6;font-weight:700;font-size:14px">🌐 Outlook AI Integrato</div><div class="dim" style="font-size:11px">XAU + DXY + US10Y → macro-tecnico</div></div>
-        <button onclick="runAI('outlook')" style="background:#14b8a6;color:#000;border-radius:7px;padding:6px 12px;font-size:13px;font-weight:700">Genera</button>
+        <div><div style="color:#14b8a6;font-weight:700;font-size:16px">🌐 Outlook AI Integrato</div><div class="dim" style="font-size:13px">XAU + DXY + US10Y → macro-tecnico</div></div>
+        <button onclick="runAI('outlook')" style="background:#14b8a6;color:#000;border-radius:7px;padding:6px 12px;font-size:15px;font-weight:700">Genera</button>
       </div>
       <div id="ai-loader" class="loader hidden"><div class="loader-inner" style="background:#14b8a6"></div></div>
-      <div id="ai-output" style="background:#080b10;border-radius:8px;padding:13px;color:#e2e8f0;font-size:16px;line-height:1.75;border-left:3px solid #14b8a6;white-space:pre-wrap;display:none"></div>
-      <div id="ai-err" style="color:#ef4444;font-size:13px;display:none"></div>
-      <div class="dim" style="font-size:13px;text-align:center;padding:8px 0" id="ai-placeholder">Analisi integrata oro + dollaro + tassi</div>
+      <div id="ai-output" style="background:#080b10;border-radius:8px;padding:13px;color:#fde68a;font-size:16px;line-height:1.75;border-left:3px solid #14b8a6;white-space:pre-wrap;display:none"></div>
+      <div id="ai-err" style="color:#ef4444;font-size:15px;display:none"></div>
+      <div class="dim" style="font-size:15px;text-align:center;padding:8px 0" id="ai-placeholder">Analisi integrata oro + dollaro + tassi</div>
     </div>
 
     <!-- Trade Generator -->
     <div class="card" style="border:1px solid #a855f744">
       <div class="row" style="margin-bottom:10px">
-        <div><div style="color:#a855f7;font-weight:700;font-size:14px">🎓 Setup Didattico AI</div><div class="dim" style="font-size:11px">Auto-accettato · salvato nel diario</div></div>
-        <button onclick="runAI('setup')" style="background:#a855f7;color:#e2e8f0;border-radius:7px;padding:6px 12px;font-size:13px;font-weight:700">Genera Setup</button>
+        <div><div style="color:#a855f7;font-weight:700;font-size:16px">🎓 Setup Didattico AI</div><div class="dim" style="font-size:13px">Auto-accettato · salvato nel diario</div></div>
+        <button onclick="runAI('setup')" style="background:#a855f7;color:#fde68a;border-radius:7px;padding:6px 12px;font-size:15px;font-weight:700">Genera Setup</button>
       </div>
       <div id="setup-loader" class="loader hidden"><div class="loader-inner" style="background:#a855f7"></div></div>
       <div id="setup-output" style="display:none"></div>
-      <div id="setup-err" style="color:#ef4444;font-size:13px;display:none"></div>
-      <div class="dim" style="font-size:13px;text-align:center;padding:8px 0" id="setup-placeholder">Setup con confluenza MTF + macro integrata</div>
+      <div id="setup-err" style="color:#ef4444;font-size:15px;display:none"></div>
+      <div class="dim" style="font-size:15px;text-align:center;padding:8px 0" id="setup-placeholder">Setup con confluenza MTF + macro integrata</div>
     </div>
 
     <!-- Diary CTA -->
     <div id="diary-cta" style="display:none">
-      <button onclick="showDiary()" style="background:#a855f715;border:1px solid #a855f744;color:#a855f7;border-radius:10px;padding:10px 13px;font-size:13px;font-weight:700;width:100%;display:flex;justify-content:space-between;align-items:center" id="diary-cta-btn">
+      <button onclick="showDiary()" style="background:#a855f715;border:1px solid #a855f744;color:#a855f7;border-radius:10px;padding:10px 13px;font-size:15px;font-weight:700;width:100%;display:flex;justify-content:space-between;align-items:center" id="diary-cta-btn">
         <span id="diary-cta-text">📓 Diario</span><span style="font-size:16px">→</span>
       </button>
     </div>
@@ -255,60 +255,60 @@ button{cursor:pointer}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div>
           <div style="color:#f0b429;font-weight:800;font-size:16px">🔔 Alert in Background</div>
-          <div id="bg-status" style="color:#b0bdd0;font-size:12px;margin-top:2px">Non attivo</div>
+          <div id="bg-status" style="color:#b0bdd0;font-size:14px;margin-top:2px">Non attivo</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
-          <span id="notif-badge" style="display:none;background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:20px;padding:2px 10px;font-size:13px;font-weight:700">🔔 ATTIVO</span>
-          <button id="bg-toggle" onclick="toggleBackground()" style="background:#f0b429;color:#000;border-radius:8px;padding:8px 16px;font-size:14px;font-weight:700;border:none">Attiva</button>
+          <span id="notif-badge" style="display:none;background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:20px;padding:2px 10px;font-size:15px;font-weight:700">🔔 ATTIVO</span>
+          <button id="bg-toggle" onclick="toggleBackground()" style="background:#f0b429;color:#000;border-radius:8px;padding:8px 16px;font-size:16px;font-weight:700;border:none">Attiva</button>
         </div>
       </div>
 
       <!-- Configurazione alert -->
       <div id="alert-config" style="display:none">
-        <div style="color:#b0bdd0;font-size:13px;font-weight:600;margin-bottom:8px">Ricevi notifica quando:</div>
+        <div style="color:#b0bdd0;font-size:15px;font-weight:600;margin-bottom:8px">Ricevi notifica quando:</div>
         
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
           <label style="display:flex;align-items:center;justify-content:space-between;background:#1e2740;border-radius:8px;padding:10px 12px">
-            <span style="color:#e2e8f0;font-size:14px">📍 Prezzo vicino a Pivot/R1/S1</span>
+            <span style="color:#fde68a;font-size:16px">📍 Prezzo vicino a Pivot/R1/S1</span>
             <input type="checkbox" id="cfg-pivot" checked style="width:18px;height:18px;accent-color:#f0b429"/>
           </label>
           <label style="display:flex;align-items:center;justify-content:space-between;background:#1e2740;border-radius:8px;padding:10px 12px">
-            <span style="color:#e2e8f0;font-size:14px">⚠️ RSI Overbought (&gt;70)</span>
+            <span style="color:#fde68a;font-size:16px">⚠️ RSI Overbought (&gt;70)</span>
             <input type="checkbox" id="cfg-rsi-ob" checked style="width:18px;height:18px;accent-color:#f0b429"/>
           </label>
           <label style="display:flex;align-items:center;justify-content:space-between;background:#1e2740;border-radius:8px;padding:10px 12px">
-            <span style="color:#e2e8f0;font-size:14px">⚡ RSI Oversold (&lt;30)</span>
+            <span style="color:#fde68a;font-size:16px">⚡ RSI Oversold (&lt;30)</span>
             <input type="checkbox" id="cfg-rsi-os" checked style="width:18px;height:18px;accent-color:#f0b429"/>
           </label>
           <label style="display:flex;align-items:center;justify-content:space-between;background:#1e2740;border-radius:8px;padding:10px 12px">
-            <span style="color:#e2e8f0;font-size:14px">⚡ Spike di volatilità (&gt;1.8x ATR)</span>
+            <span style="color:#fde68a;font-size:16px">⚡ Spike di volatilità (&gt;1.8x ATR)</span>
             <input type="checkbox" id="cfg-spike" checked style="width:18px;height:18px;accent-color:#f0b429"/>
           </label>
           <label style="display:flex;align-items:center;justify-content:space-between;background:#1e2740;border-radius:8px;padding:10px 12px">
-            <span style="color:#e2e8f0;font-size:14px">📡 Segnale anticipatore DXY</span>
+            <span style="color:#fde68a;font-size:16px">📡 Segnale anticipatore DXY</span>
             <input type="checkbox" id="cfg-lead" checked style="width:18px;height:18px;accent-color:#f0b429"/>
           </label>
         </div>
 
         <!-- Alert prezzo personalizzato -->
-        <div style="color:#b0bdd0;font-size:13px;font-weight:600;margin-bottom:6px">Alert prezzo personalizzato:</div>
+        <div style="color:#b0bdd0;font-size:15px;font-weight:600;margin-bottom:6px">Alert prezzo personalizzato:</div>
         <div style="display:flex;gap:8px;margin-bottom:6px">
           <div style="flex:1">
-            <div style="color:#b0bdd0;font-size:12px;margin-bottom:3px">Sopra $</div>
-            <input type="number" id="cfg-price-above" placeholder="es. 4350" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:7px;padding:8px 10px;color:#e2e8f0;font-size:15px"/>
+            <div style="color:#b0bdd0;font-size:14px;margin-bottom:3px">Sopra $</div>
+            <input type="number" id="cfg-price-above" placeholder="es. 4350" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:7px;padding:8px 10px;color:#fde68a;font-size:17px"/>
           </div>
           <div style="flex:1">
-            <div style="color:#b0bdd0;font-size:12px;margin-bottom:3px">Sotto $</div>
-            <input type="number" id="cfg-price-below" placeholder="es. 4150" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:7px;padding:8px 10px;color:#e2e8f0;font-size:15px"/>
+            <div style="color:#b0bdd0;font-size:14px;margin-bottom:3px">Sotto $</div>
+            <input type="number" id="cfg-price-below" placeholder="es. 4150" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:7px;padding:8px 10px;color:#fde68a;font-size:17px"/>
           </div>
         </div>
-        <button onclick="saveAlertConfig()" style="width:100%;background:#f0b429;color:#000;border-radius:8px;padding:9px 0;font-size:15px;font-weight:700;border:none;margin-top:4px">Salva configurazione</button>
+        <button onclick="saveAlertConfig()" style="width:100%;background:#f0b429;color:#000;border-radius:8px;padding:9px 0;font-size:17px;font-weight:700;border:none;margin-top:4px">Salva configurazione</button>
       </div>
 
-      <div id="bg-last-check" style="color:#b0bdd0;font-size:12px;margin-top:8px;text-align:center;display:none"></div>
+      <div id="bg-last-check" style="color:#b0bdd0;font-size:14px;margin-top:8px;text-align:center;display:none"></div>
     </div>
 
-    <div style="text-align:center;color:#b0bdd0;font-size:11px;line-height:1.5;padding:4px 8px;border-top:1px solid #1e2535;margin-top:4px">
+    <div style="text-align:center;color:#b0bdd0;font-size:13px;line-height:1.5;padding:4px 8px;border-top:1px solid #1e2535;margin-top:4px">
       ⚠️ Solo scopo didattico. Non costituisce consulenza finanziaria.<br>
       Dati live: Twelve Data · Analisi AI: Anthropic Claude
     </div>
@@ -349,21 +349,21 @@ button{cursor:pointer}
 <div id="sw-diag-panel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#080b10;z-index:999;overflow-y:auto;padding:16px;max-width:480px;margin:0 auto">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
     <div style="color:#3b82f6;font-size:18px;font-weight:800">🔧 Diagnostica SW</div>
-    <button onclick="hideSwDiag()" style="background:#1e2740;border:1px solid #2a3550;color:#b0bdd0;border-radius:8px;padding:8px 14px;font-size:13px;border:none">✕ Chiudi</button>
+    <button onclick="hideSwDiag()" style="background:#1e2740;border:1px solid #2a3550;color:#b0bdd0;border-radius:8px;padding:8px 14px;font-size:15px;border:none">✕ Chiudi</button>
   </div>
   <div id="sw-diag-content">
-    <div style="color:#64748b;text-align:center;padding:20px">Caricamento diagnostica...</div>
+    <div style="color:#cbd5e1;text-align:center;padding:20px">Caricamento diagnostica...</div>
   </div>
-  <button onclick="refreshSwDiag()" style="width:100%;background:#3b82f6;color:#fff;border-radius:8px;padding:10px;font-size:13px;font-weight:700;border:none;margin-top:10px">🔄 Aggiorna</button>
-  <div id="sw-diag-log" style="margin-top:12px;background:#0d1117;border-radius:8px;padding:10px;font-family:monospace;font-size:11px;color:#22c55e;min-height:80px;max-height:200px;overflow-y:auto"></div>
+  <button onclick="refreshSwDiag()" style="width:100%;background:#3b82f6;color:#fde68a;border-radius:8px;padding:10px;font-size:15px;font-weight:700;border:none;margin-top:10px">🔄 Aggiorna</button>
+  <div id="sw-diag-log" style="margin-top:12px;background:#0d1117;border-radius:8px;padding:10px;font-family:monospace;font-size:13px;color:#22c55e;min-height:80px;max-height:200px;overflow-y:auto"></div>
 </div>
 
 <!-- ══ DIARY SCREEN ══════════════════════════════════════════ -->
 <div id="diary-screen" style="display:none;max-width:480px;margin:0 auto;padding-bottom:40px">
   <div class="sticky">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <button onclick="hideDiary()" style="background:#141920;border:1px solid #2a3550;color:#e2e8f0;border-radius:8px;padding:4px 10px;font-size:16px">←</button>
-      <div><div style="color:#f0b429;font-weight:800;font-size:16px">📓 Diario & Autoapprendimento</div><div class="dim" style="font-size:11px" id="diary-sub">0 trade</div></div>
+      <button onclick="hideDiary()" style="background:#141920;border:1px solid #2a3550;color:#fde68a;border-radius:8px;padding:4px 10px;font-size:16px">←</button>
+      <div><div style="color:#f0b429;font-weight:800;font-size:16px">📓 Diario & Autoapprendimento</div><div class="dim" style="font-size:13px" id="diary-sub">0 trade</div></div>
     </div>
     <div class="tab-bar">
       <button class="tab active" onclick="setDiaryTab('overview')">📊 Overview</button>
@@ -384,17 +384,17 @@ button{cursor:pointer}
   <div class="modal">
     <div style="color:#f0b429;font-weight:800;font-size:17px;margin-bottom:16px">⚙️ Impostazioni API</div>
     <div style="margin-bottom:12px">
-      <div style="color:#f0b429;font-size:13px;font-weight:700;margin-bottom:5px">TWELVE DATA KEY</div>
+      <div style="color:#f0b429;font-size:15px;font-weight:700;margin-bottom:5px">TWELVE DATA KEY</div>
       <input type="text" id="settings-td" class="input" placeholder="Twelve Data API key"/>
     </div>
     <div style="margin-bottom:16px">
-      <div style="color:#a855f7;font-size:13px;font-weight:700;margin-bottom:5px">ANTHROPIC KEY (analisi AI)</div>
+      <div style="color:#a855f7;font-size:15px;font-weight:700;margin-bottom:5px">ANTHROPIC KEY (analisi AI)</div>
       <input type="text" id="settings-cl" class="input" placeholder="sk-ant-..."/>
     </div>
-    <div id="settings-err" style="display:none;background:#ef444415;border:1px solid #ef444433;border-radius:7px;padding:8px 10px;color:#ef4444;font-size:13px;margin-bottom:10px"></div>
+    <div id="settings-err" style="display:none;background:#ef444415;border:1px solid #ef444433;border-radius:7px;padding:8px 10px;color:#ef4444;font-size:15px;margin-bottom:10px"></div>
     <div style="display:flex;gap:8px">
-      <button onclick="saveSettings()" style="flex:2;background:#f0b429;color:#000;border-radius:8px;padding:11px 0;font-size:15px;font-weight:700" id="settings-save-btn">Salva</button>
-      <button onclick="hideSettings()" style="flex:1;background:#141920;color:#b0bdd0;border:1px solid #2a3550;border-radius:8px;padding:11px 0;font-size:14px">Annulla</button>
+      <button onclick="saveSettings()" style="flex:2;background:#f0b429;color:#000;border-radius:8px;padding:11px 0;font-size:17px;font-weight:700" id="settings-save-btn">Salva</button>
+      <button onclick="hideSettings()" style="flex:1;background:#141920;color:#b0bdd0;border:1px solid #2a3550;border-radius:8px;padding:11px 0;font-size:16px">Annulla</button>
     </div>
   </div>
 </div>
@@ -766,8 +766,8 @@ function renderDashboard(){
     html+=`<div style="background:#1e2740;border-radius:10px;padding:10px 12px;border:1px solid ${col}33;display:flex;align-items:center;gap:10px">
       <div style="width:18px;height:18px;border-radius:50%;background:${col};box-shadow:${shadow};flex-shrink:0"></div>
       <div>
-        <div style="color:#e2e8f0;font-size:14px;font-weight:700">${label}</div>
-        <div style="color:#b0bdd0;font-size:12px;margin-top:1px">${detail}</div>
+        <div style="color:#fde68a;font-size:16px;font-weight:700">${label}</div>
+        <div style="color:#b0bdd0;font-size:14px;margin-top:1px">${detail}</div>
       </div>
     </div>`;
   });
@@ -810,7 +810,7 @@ function updateUI(){
   const mtf=getMtf();
   const mtfC=mtf.signal==='BUY'?'#22c55e':mtf.signal==='SELL'?'#ef4444':'#64748b';
   document.getElementById('mtf-badge').textContent=`${mtf.signal} ${mtf.strength}`;
-  document.getElementById('mtf-badge').style.cssText=`background:${mtfC}20;color:${mtfC};border:1px solid ${mtfC}44;border-radius:5px;padding:2px 9px;font-size:13px;font-weight:700`;
+  document.getElementById('mtf-badge').style.cssText=`background:${mtfC}20;color:${mtfC};border:1px solid ${mtfC}44;border-radius:5px;padding:2px 9px;font-size:15px;font-weight:700`;
   const mtfLabels={'1d':'Daily','1h':'1H','5m':'5M'};
   let mtfHtml='';
   ['1d','1h','5m'].forEach(tf=>{
@@ -818,10 +818,10 @@ function updateUI(){
     const l=cc[tf]?cc[tf][cc[tf].length-1]:null;
     const col=t==='BULL'?'#22c55e':t==='BEAR'?'#ef4444':'#64748b';
     mtfHtml+=`<div style="flex:1;background:#1e2740;border-radius:8px;padding:8px 6px;border:1px solid ${col}33;text-align:center">
-      <div style="color:#b0bdd0;font-size:11px;font-weight:700;margin-bottom:2px">${mtfLabels[tf]}</div>
+      <div style="color:#b0bdd0;font-size:13px;font-weight:700;margin-bottom:2px">${mtfLabels[tf]}</div>
       <div style="color:${col};font-size:22px">${t==='BULL'?'▲':t==='BEAR'?'▼':'—'}</div>
-      <div style="color:${col};font-size:13px;font-weight:700;margin-top:2px">${t}</div>
-      <div style="color:#b0bdd0;font-size:12px;margin-top:3px">$${fmtP(l?.c)}</div>
+      <div style="color:${col};font-size:15px;font-weight:700;margin-top:2px">${t}</div>
+      <div style="color:#b0bdd0;font-size:14px;margin-top:3px">$${fmtP(l?.c)}</div>
     </div>`;
   });
   document.getElementById('mtf-cards').innerHTML=mtfHtml;
@@ -833,8 +833,8 @@ function updateUI(){
   pvItems.forEach(([l,v,c])=>{
     const near=last&&Math.abs(last.c-v)<18;
     pvHtml+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-radius:6px;margin-bottom:2px;background:${near?c+'14':'transparent'};border:1px solid ${near?c+'44':'transparent'}">
-      <span style="color:${c};font-weight:700;font-size:15px">${l}</span>
-      <span style="color:#e2e8f0;font-size:14px">$${fmtP(v)}${near?`<span style="color:${c};font-size:12px;margin-left:5px">◀ vicino</span>`:''}</span>
+      <span style="color:${c};font-weight:700;font-size:17px">${l}</span>
+      <span style="color:#fde68a;font-size:16px">$${fmtP(v)}${near?`<span style="color:${c};font-size:14px;margin-left:5px">◀ vicino</span>`:''}</span>
     </div>`;
   });
   document.getElementById('pivot-list').innerHTML=pvHtml;
@@ -861,7 +861,7 @@ function renderLeadPanel(){
 
   const badge=document.getElementById('lead-signal-badge');
   badge.textContent=sig.biasSignal;
-  badge.style.cssText=`background:${sig.biasColor}22;color:${sig.biasColor};border:1px solid ${sig.biasColor}44;border-radius:6px;padding:5px 14px;font-size:15px;font-weight:800`;
+  badge.style.cssText=`background:${sig.biasColor}22;color:${sig.biasColor};border:1px solid ${sig.biasColor}44;border-radius:6px;padding:5px 14px;font-size:17px;font-weight:800`;
   if(sig.avgLagH) badge.title=`Stima ~${sig.avgLagH} candele 1H`;
 
   // Sparklines
@@ -878,11 +878,11 @@ function renderLeadPanel(){
     const impactText=invert?(lastChg>0?'→ ↓ oro':'→ ↑ oro'):(lastChg>0?'→ ↑ oro':'→ ↓ oro');
     return`<div style="background:#080b10;border-radius:7px;padding:7px 9px;flex:1;min-width:0">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-        <span style="color:#b0bdd0;font-size:11px;font-weight:700">${label}</span>
-        <span style="color:${impactColor};font-size:11px;font-weight:700">${lastChg>=0?'▲':'▼'}${Math.abs(lastChg).toFixed(lastChg<1&&lastChg>-1?3:2)}</span>
+        <span style="color:#b0bdd0;font-size:13px;font-weight:700">${label}</span>
+        <span style="color:${impactColor};font-size:13px;font-weight:700">${lastChg>=0?'▲':'▼'}${Math.abs(lastChg).toFixed(lastChg<1&&lastChg>-1?3:2)}</span>
       </div>
       ${sparkLine(prices,color)}
-      <div style="color:${impactColor};font-size:12px;margin-top:2px;text-align:right">${impactText}</div>
+      <div style="color:${impactColor};font-size:14px;margin-top:2px;text-align:right">${impactText}</div>
     </div>`;
   };
 
@@ -890,9 +890,9 @@ function renderLeadPanel(){
   if(sig.hasDxy) sparks+=sparkItem(dxyLabel,dxyP,'#3b82f6',state.corrData.dxyInverted);
   if(sig.hasUs10) sparks+=sparkItem(us10Label,us10P,'#f97316',true);
   sparks+=`<div style="background:#080b10;border-radius:7px;padding:7px 9px;flex:1;min-width:0">
-    <div style="color:#b0bdd0;font-size:11px;font-weight:700;margin-bottom:3px">XAU/USD</div>
+    <div style="color:#b0bdd0;font-size:13px;font-weight:700;margin-bottom:3px">XAU/USD</div>
     ${sparkLine(xauP,'#f0b429')}
-    <div style="color:#f0b429;font-size:12px;margin-top:2px;text-align:right">$${fmtP(xauP[xauP.length-1])}</div>
+    <div style="color:#f0b429;font-size:14px;margin-top:2px;text-align:right">$${fmtP(xauP[xauP.length-1])}</div>
   </div>`;
   document.getElementById('lead-sparklines').innerHTML=sparks;
 
@@ -902,22 +902,22 @@ function renderLeadPanel(){
     const col=sig.dxyDir==='UP'?'#22c55e':'#ef4444';
     det+=`<div style="background:#080b10;border-radius:9px;padding:9px 11px;border:1px solid ${col}33;margin-bottom:7px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="color:#3b82f6;font-weight:700;font-size:13px">💵 ${dxyLabel}</span>
-        <span style="color:${col};font-weight:800;font-size:14px">${sig.dxyDir==='UP'?'▲ RIALZO ORO':'▼ RIBASSO ORO'}</span>
+        <span style="color:#3b82f6;font-weight:700;font-size:15px">💵 ${dxyLabel}</span>
+        <span style="color:${col};font-weight:800;font-size:16px">${sig.dxyDir==='UP'?'▲ RIALZO ORO':'▼ RIBASSO ORO'}</span>
       </div>
-      <div style="color:#b0bdd0;font-size:12px;line-height:1.5">
+      <div style="color:#b0bdd0;font-size:14px;line-height:1.5">
         ${state.corrData.dxyInverted
           ?(sig.dxySl>0?'EUR/USD in salita → dollaro debole → supporto rialzo oro':'EUR/USD in discesa → dollaro forte → pressione ribasso oro')
           :(sig.dxySl>0?'DXY in salita → pressione ribasso oro':'DXY in discesa → supporto rialzo oro')}
       </div>
-      ${sig.dxyLag?.avgLag?`<div style="display:flex;gap:12px;margin-top:5px;font-size:11px">
+      ${sig.dxyLag?.avgLag?`<div style="display:flex;gap:12px;margin-top:5px;font-size:13px">
         <span style="color:#b0bdd0">Lag storico: <span style="color:#3b82f6;font-weight:700">${sig.dxyLag.avgLag} candele 1H</span></span>
         <span style="color:#b0bdd0">Affidabilità: <span style="color:${sig.dxyLag.confidence>60?'#22c55e':'#f97316'};font-weight:700">${sig.dxyLag.confidence}%</span></span>
       </div>`:''}
-      ${sig.dxySwing?`<div style="margin-top:5px;background:#3b82f615;border-radius:6px;padding:4px 8px;font-size:11px;color:#3b82f6">
+      ${sig.dxySwing?`<div style="margin-top:5px;background:#3b82f615;border-radius:6px;padding:4px 8px;font-size:13px;color:#3b82f6">
         🔔 Swing ${sig.dxySwing.type} rilevato${sig.dxyLag?.avgLag?` → atteso impatto entro ~${Math.round(sig.dxyLag.avgLag)} candele`:''}
       </div>`:''}
-      ${sig.dxyDivergence?`<div style="margin-top:5px;background:#f9731615;border-radius:6px;padding:4px 8px;font-size:11px;color:#f97316">
+      ${sig.dxyDivergence?`<div style="margin-top:5px;background:#f9731615;border-radius:6px;padding:4px 8px;font-size:13px;color:#f97316">
         ⚡ DIVERGENZA: ${dxyLabel} e oro si muovono nella stessa direzione — possibile inversione imminente
       </div>`:''}
     </div>`;
@@ -926,28 +926,28 @@ function renderLeadPanel(){
     const col=sig.us10Dir==='UP'?'#22c55e':'#ef4444';
     det+=`<div style="background:#080b10;border-radius:9px;padding:9px 11px;border:1px solid ${col}33;margin-bottom:7px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="color:#f97316;font-weight:700;font-size:13px">🏦 ${us10Label} Yield</span>
-        <span style="color:${col};font-weight:800;font-size:14px">${sig.us10Dir==='UP'?'▲ RIALZO ORO':'▼ RIBASSO ORO'}</span>
+        <span style="color:#f97316;font-weight:700;font-size:15px">🏦 ${us10Label} Yield</span>
+        <span style="color:${col};font-weight:800;font-size:16px">${sig.us10Dir==='UP'?'▲ RIALZO ORO':'▼ RIBASSO ORO'}</span>
       </div>
-      <div style="color:#b0bdd0;font-size:12px;line-height:1.5">
+      <div style="color:#b0bdd0;font-size:14px;line-height:1.5">
         ${sig.us10Sl>0?'Yield in salita → costo opportunità aumenta → pressione ribasso oro':'Yield in discesa → oro più attrattivo → supporto rialzo oro'}
       </div>
-      ${sig.us10Lag?.avgLag?`<div style="display:flex;gap:12px;margin-top:5px;font-size:11px">
+      ${sig.us10Lag?.avgLag?`<div style="display:flex;gap:12px;margin-top:5px;font-size:13px">
         <span style="color:#b0bdd0">Lag storico: <span style="color:#f97316;font-weight:700">${sig.us10Lag.avgLag} candele 1H</span></span>
         <span style="color:#b0bdd0">Affidabilità: <span style="color:${sig.us10Lag.confidence>60?'#22c55e':'#f97316'};font-weight:700">${sig.us10Lag.confidence}%</span></span>
       </div>`:''}
-      ${sig.us10Swing?`<div style="margin-top:5px;background:#f9731615;border-radius:6px;padding:4px 8px;font-size:11px;color:#f97316">
+      ${sig.us10Swing?`<div style="margin-top:5px;background:#f9731615;border-radius:6px;padding:4px 8px;font-size:13px;color:#f97316">
         🔔 Swing ${sig.us10Swing.type} rilevato${sig.us10Lag?.avgLag?` → atteso impatto entro ~${Math.round(sig.us10Lag.avgLag)} candele`:''}
       </div>`:''}
-      ${sig.us10Divergence?`<div style="margin-top:5px;background:#f9731615;border-radius:6px;padding:4px 8px;font-size:11px;color:#f97316">
+      ${sig.us10Divergence?`<div style="margin-top:5px;background:#f9731615;border-radius:6px;padding:4px 8px;font-size:13px;color:#f97316">
         ⚡ DIVERGENZA yield/oro — possibile correzione imminente
       </div>`:''}
     </div>`;
   }
   if(sig.biasStrength===2){
     det+=`<div style="background:${sig.biasColor}15;border:1px solid ${sig.biasColor}44;border-radius:9px;padding:10px 12px">
-      <div style="color:${sig.biasColor};font-weight:800;font-size:14px;margin-bottom:4px">🎯 CONFLUENZA — ${sig.biasSignal}</div>
-      <div style="color:#e2e8f0;font-size:13px;line-height:1.6">
+      <div style="color:${sig.biasColor};font-weight:800;font-size:16px;margin-bottom:4px">🎯 CONFLUENZA — ${sig.biasSignal}</div>
+      <div style="color:#fde68a;font-size:15px;line-height:1.6">
         ${dxyLabel} e ${us10Label} ${sig.biasSignal.includes('RIALZO')?'puntano entrambi verso un rialzo':'puntano entrambi verso un ribasso'} dell'oro.
         ${sig.avgLagH?` Finestra attesa: ~${sig.avgLagH} candele 1H.`:''}
         Monitora la conferma tecnica su XAU prima di operare.
@@ -955,8 +955,8 @@ function renderLeadPanel(){
     </div>`;
   } else if(sig.biasStrength===1){
     det+=`<div style="background:#f9731612;border:1px solid #f9731633;border-radius:9px;padding:9px 11px">
-      <div style="color:#f97316;font-weight:700;font-size:13px">⚡ Segnali divergenti — attendi conferma tecnica</div>
-      <div style="color:#b0bdd0;font-size:12px;margin-top:3px">Privilegia l'analisi tecnica diretta su XAU/USD.</div>
+      <div style="color:#f97316;font-weight:700;font-size:15px">⚡ Segnali divergenti — attendi conferma tecnica</div>
+      <div style="color:#b0bdd0;font-size:14px;margin-top:3px">Privilegia l'analisi tecnica diretta su XAU/USD.</div>
     </div>`;
   }
   document.getElementById('lead-details').innerHTML=det;
@@ -1003,9 +1003,9 @@ function setStatus(s,msg=''){
   const badge=document.getElementById('status-badge');
   const errBanner=document.getElementById('err-banner');
   const errMsg=document.getElementById('err-msg');
-  if(s==='loading'){badge.textContent='⟳';badge.style.cssText='background:#f0b42922;color:#f0b429;border:1px solid #f0b42944;border-radius:4px;padding:1px 5px;font-size:12px;font-weight:700';errBanner.classList.add('hidden');}
-  else if(s==='live'){badge.textContent='🟢 LIVE';badge.style.cssText='background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:4px;padding:1px 5px;font-size:12px;font-weight:700';errBanner.classList.add('hidden');}
-  else if(s==='error'){badge.textContent='⚠';badge.style.cssText='background:#ef444422;color:#ef4444;border:1px solid #ef444444;border-radius:4px;padding:1px 5px;font-size:12px;font-weight:700';errMsg.textContent=msg;errBanner.classList.remove('hidden');}
+  if(s==='loading'){badge.textContent='⟳';badge.style.cssText='background:#f0b42922;color:#f0b429;border:1px solid #f0b42944;border-radius:4px;padding:1px 5px;font-size:14px;font-weight:700';errBanner.classList.add('hidden');}
+  else if(s==='live'){badge.textContent='🟢 LIVE';badge.style.cssText='background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:4px;padding:1px 5px;font-size:14px;font-weight:700';errBanner.classList.add('hidden');}
+  else if(s==='error'){badge.textContent='⚠';badge.style.cssText='background:#ef444422;color:#ef4444;border:1px solid #ef444444;border-radius:4px;padding:1px 5px;font-size:14px;font-weight:700';errMsg.textContent=msg;errBanner.classList.remove('hidden');}
 }
 
 async function updateLivePrice() {
@@ -1182,18 +1182,18 @@ Pivot: R2=${pv.r2} R1=${pv.r1} P=${pv.pivot} S1=${pv.s1} S2=${pv.s2}
       out.innerHTML=`<div style="background:#080b10;border-radius:9px;padding:10px;border-left:3px solid ${col}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
           <div style="display:flex;gap:5px;align-items:center">
-            <span style="background:${col}20;color:${col};border:1px solid ${col}44;border-radius:5px;padding:2px 9px;font-size:13px;font-weight:700">${trade.direction}</span>
-            <span style="color:#e2e8f0;font-size:13px;font-weight:700">${trade.setup_name}</span>
+            <span style="background:${col}20;color:${col};border:1px solid ${col}44;border-radius:5px;padding:2px 9px;font-size:15px;font-weight:700">${trade.direction}</span>
+            <span style="color:#fde68a;font-size:15px;font-weight:700">${trade.setup_name}</span>
           </div>
-          <span style="color:#f0b429;font-size:12px">⭐${trade.confidence}/10</span>
+          <span style="color:#f0b429;font-size:14px">⭐${trade.confidence}/10</span>
         </div>
         <div class="grid4" style="margin-bottom:7px">
-          ${[['Entry',trade.entry,'#f0b429'],['SL',trade.sl,'#ef4444'],['TP1',trade.tp1,'#22c55e'],['TP2',trade.tp2,'#14b8a6']].map(([l,v,c])=>`<div style="background:#0f1318;border-radius:6px;padding:5px 4px;text-align:center"><div style="color:#b0bdd0;font-size:12px">${l}</div><div style="color:${c};font-size:13px;font-weight:700">$${fmtP(v)}</div></div>`).join('')}
+          ${[['Entry',trade.entry,'#f0b429'],['SL',trade.sl,'#ef4444'],['TP1',trade.tp1,'#22c55e'],['TP2',trade.tp2,'#14b8a6']].map(([l,v,c])=>`<div style="background:#0f1318;border-radius:6px;padding:5px 4px;text-align:center"><div style="color:#b0bdd0;font-size:14px">${l}</div><div style="color:${c};font-size:15px;font-weight:700">$${fmtP(v)}</div></div>`).join('')}
         </div>
-        <div style="font-size:12px;color:#b0bdd0;margin-bottom:7px">R/R <span style="color:#f97316;font-weight:700">1:${trade.rr_ratio}</span> · MTF <span style="color:#3b82f6;font-weight:700">${trade.mtf_align}/3</span> · ${trade.session} · ${trade.market_condition}</div>
-        <div style="background:#141920;border-radius:7px;padding:7px 9px;margin-bottom:5px"><div style="color:#a855f7;font-size:11px;font-weight:700;margin-bottom:2px">📖 RATIONALE</div><div style="color:#e2e8f0;font-size:13px;line-height:1.55">${trade.rationale}</div></div>
-        <div style="background:#22c55e15;border-radius:7px;padding:7px 9px"><div style="color:#22c55e;font-size:11px;font-weight:700;margin-bottom:2px">🎓 LEZIONE</div><div style="color:#e2e8f0;font-size:13px;line-height:1.55">${trade.lesson}</div></div>
-        <div style="color:#14b8a6;font-size:12px;margin-top:6px;text-align:center">✅ Salvato nel Diario</div>
+        <div style="font-size:14px;color:#b0bdd0;margin-bottom:7px">R/R <span style="color:#f97316;font-weight:700">1:${trade.rr_ratio}</span> · MTF <span style="color:#3b82f6;font-weight:700">${trade.mtf_align}/3</span> · ${trade.session} · ${trade.market_condition}</div>
+        <div style="background:#141920;border-radius:7px;padding:7px 9px;margin-bottom:5px"><div style="color:#a855f7;font-size:13px;font-weight:700;margin-bottom:2px">📖 RATIONALE</div><div style="color:#fde68a;font-size:15px;line-height:1.55">${trade.rationale}</div></div>
+        <div style="background:#22c55e15;border-radius:7px;padding:7px 9px"><div style="color:#22c55e;font-size:13px;font-weight:700;margin-bottom:2px">🎓 LEZIONE</div><div style="color:#fde68a;font-size:15px;line-height:1.55">${trade.lesson}</div></div>
+        <div style="color:#14b8a6;font-size:14px;margin-top:6px;text-align:center">✅ Salvato nel Diario</div>
       </div>`;
       out.style.display='block';
       updateDiaryCta();
@@ -1305,15 +1305,15 @@ function renderDiary(){
         html+=`<div style="background:#080b10;border-radius:8px;padding:10px;margin-bottom:6px;border:1px solid ${col}33">
           <div class="row" style="margin-bottom:5px">
             <div style="display:flex;gap:5px;align-items:center">
-              <span style="background:${col}20;color:${col};border:1px solid ${col}44;border-radius:5px;padding:1px 5px;font-size:11px;font-weight:700">${tr.direction}</span>
-              <span style="color:#e2e8f0;font-size:13px;font-weight:600">${tr.setup_name}</span>
+              <span style="background:${col}20;color:${col};border:1px solid ${col}44;border-radius:5px;padding:1px 5px;font-size:13px;font-weight:700">${tr.direction}</span>
+              <span style="color:#fde68a;font-size:15px;font-weight:600">${tr.setup_name}</span>
             </div>
-            <span style="color:#b0bdd0;font-size:11px">${fmtDt(tr.openedAt)}</span>
+            <span style="color:#b0bdd0;font-size:13px">${fmtDt(tr.openedAt)}</span>
           </div>
           <div class="grid4" style="margin-bottom:7px">
-            ${[['Entry',tr.entry,'#f0b429'],['SL',tr.sl,'#ef4444'],['TP1',tr.tp1,'#22c55e'],['TP2',tr.tp2,'#14b8a6']].map(([l,v,c])=>`<div style="background:#141920;border-radius:5px;padding:3px 4px;text-align:center"><div style="color:#b0bdd0;font-size:12px">${l}</div><div style="color:${c};font-size:12px;font-weight:700">$${fmtP(v)}</div></div>`).join('')}
+            ${[['Entry',tr.entry,'#f0b429'],['SL',tr.sl,'#ef4444'],['TP1',tr.tp1,'#22c55e'],['TP2',tr.tp2,'#14b8a6']].map(([l,v,c])=>`<div style="background:#141920;border-radius:5px;padding:3px 4px;text-align:center"><div style="color:#b0bdd0;font-size:14px">${l}</div><div style="color:${c};font-size:14px;font-weight:700">$${fmtP(v)}</div></div>`).join('')}
           </div>
-          <button onclick="closeTradeById(${tr.id})" style="width:100%;background:#f9731620;border:1px solid #f9731644;color:#f97316;border-radius:6px;padding:5px 0;font-size:13px;font-weight:700">Simula chiusura →</button>
+          <button onclick="closeTradeById(${tr.id})" style="width:100%;background:#f9731620;border:1px solid #f9731644;color:#f97316;border-radius:6px;padding:5px 0;font-size:15px;font-weight:700">Simula chiusura →</button>
         </div>`;
       });
       html+='</div>';
@@ -1330,27 +1330,27 @@ function renderDiary(){
         html+=`<div class="trade-card" style="border-color:${col}33">
           <div class="row" style="margin-bottom:6px">
             <div style="display:flex;gap:5px;align-items:center">
-              <span style="background:${tr.direction==='BUY'?'#22c55e':'#ef4444'}20;color:${tr.direction==='BUY'?'#22c55e':'#ef4444'};border:1px solid ${tr.direction==='BUY'?'#22c55e':'#ef4444'}44;border-radius:5px;padding:1px 5px;font-size:11px;font-weight:700">${tr.direction}</span>
-              <span style="color:#e2e8f0;font-size:13px;font-weight:700">${tr.setup_name}</span>
+              <span style="background:${tr.direction==='BUY'?'#22c55e':'#ef4444'}20;color:${tr.direction==='BUY'?'#22c55e':'#ef4444'};border:1px solid ${tr.direction==='BUY'?'#22c55e':'#ef4444'}44;border-radius:5px;padding:1px 5px;font-size:13px;font-weight:700">${tr.direction}</span>
+              <span style="color:#fde68a;font-size:15px;font-weight:700">${tr.setup_name}</span>
             </div>
             <div style="display:flex;gap:4px;align-items:center">
-              <span style="background:${outCol}20;color:${outCol};border:1px solid ${outCol}44;border-radius:5px;padding:1px 5px;font-size:11px;font-weight:700">${tr.outcome}</span>
-              <span style="color:${tr.pnl>=0?'#22c55e':'#ef4444'};font-weight:800;font-size:14px">${fmtPnl(tr.pnl||0)}</span>
+              <span style="background:${outCol}20;color:${outCol};border:1px solid ${outCol}44;border-radius:5px;padding:1px 5px;font-size:13px;font-weight:700">${tr.outcome}</span>
+              <span style="color:${tr.pnl>=0?'#22c55e':'#ef4444'};font-weight:800;font-size:16px">${fmtPnl(tr.pnl||0)}</span>
             </div>
           </div>
           <div style="display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap">
-            <span style="color:#b0bdd0;font-size:11px">${fmtDt(tr.openedAt)}</span>
-            ${tr.session?`<span style="background:#64748b20;color:#b0bdd0;border:1px solid #64748b44;border-radius:5px;padding:1px 5px;font-size:11px;font-weight:700">${tr.session}</span>`:''}
+            <span style="color:#b0bdd0;font-size:13px">${fmtDt(tr.openedAt)}</span>
+            ${tr.session?`<span style="background:#64748b20;color:#b0bdd0;border:1px solid #64748b44;border-radius:5px;padding:1px 5px;font-size:13px;font-weight:700">${tr.session}</span>`:''}
           </div>
           <div class="grid4" style="margin-bottom:5px">
-            ${[['Entry',`$${fmtP(tr.entry)}`,'#f0b429'],['Exit',`$${fmtP(tr.exitPrice)}`,tr.isWin?'#22c55e':'#ef4444'],['R/R',`1:${tr.rr_ratio}`,'#f97316'],['MTF',`${tr.mtf_align}/3`,'#3b82f6']].map(([l,v,c])=>`<div style="background:#1e2740;border-radius:5px;padding:4px 5px;text-align:center"><div style="color:#b0bdd0;font-size:12px">${l}</div><div style="color:${c};font-size:12px;font-weight:700">${v}</div></div>`).join('')}
+            ${[['Entry',`$${fmtP(tr.entry)}`,'#f0b429'],['Exit',`$${fmtP(tr.exitPrice)}`,tr.isWin?'#22c55e':'#ef4444'],['R/R',`1:${tr.rr_ratio}`,'#f97316'],['MTF',`${tr.mtf_align}/3`,'#3b82f6']].map(([l,v,c])=>`<div style="background:#1e2740;border-radius:5px;padding:4px 5px;text-align:center"><div style="color:#b0bdd0;font-size:14px">${l}</div><div style="color:${c};font-size:14px;font-weight:700">${v}</div></div>`).join('')}
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:3px;margin-bottom:7px">
-            ${[['R/R reale',tr.realizedRR,parseFloat(tr.realizedRR)>=0?'#22c55e':'#ef4444'],['Eff',`${tr.efficiencyPct}%`,+tr.efficiencyPct>=55?'#22c55e':'#f97316'],['MAE',`$${fmtP(tr.mae)}`,'#ef4444'],['MFE',`$${fmtP(tr.mfe)}`,'#14b8a6'],['Min',`${tr.durationMin}`,'#64748b']].map(([l,v,c])=>`<div style="background:#1e2740;border-radius:5px;padding:3px 4px;text-align:center"><div style="color:#b0bdd0;font-size:11px">${l}</div><div style="color:${c};font-size:11px;font-weight:700">${v}</div></div>`).join('')}
+            ${[['R/R reale',tr.realizedRR,parseFloat(tr.realizedRR)>=0?'#22c55e':'#ef4444'],['Eff',`${tr.efficiencyPct}%`,+tr.efficiencyPct>=55?'#22c55e':'#f97316'],['MAE',`$${fmtP(tr.mae)}`,'#ef4444'],['MFE',`$${fmtP(tr.mfe)}`,'#14b8a6'],['Min',`${tr.durationMin}`,'#64748b']].map(([l,v,c])=>`<div style="background:#1e2740;border-radius:5px;padding:3px 4px;text-align:center"><div style="color:#b0bdd0;font-size:13px">${l}</div><div style="color:${c};font-size:13px;font-weight:700">${v}</div></div>`).join('')}
           </div>
-          ${tr.rationale?`<div style="background:#080b10;border-radius:7px;padding:6px 8px;margin-bottom:5px"><div style="color:#a855f7;font-size:12px;font-weight:700;margin-bottom:2px">📖 RATIONALE</div><div style="color:#b0bdd0;font-size:12px;line-height:1.5">${tr.rationale}</div></div>`:''}
-          ${state.lessons[tr.id]?`<div style="background:#080b10;border-radius:7px;padding:6px 8px;border-left:3px solid #a855f7"><div style="color:#a855f7;font-size:12px;font-weight:700;margin-bottom:2px">🎓 ANALISI POST-TRADE</div><div style="color:#e2e8f0;font-size:13px;line-height:1.65;white-space:pre-wrap">${state.lessons[tr.id]}</div></div>`:
-          `<button onclick="getLesson(${tr.id})" style="width:100%;background:#a855f715;border:1px solid #a855f744;color:#a855f7;border-radius:7px;padding:5px 0;font-size:12px;font-weight:700" id="lesson-btn-${tr.id}">🤖 Analisi post-trade AI</button>`}
+          ${tr.rationale?`<div style="background:#080b10;border-radius:7px;padding:6px 8px;margin-bottom:5px"><div style="color:#a855f7;font-size:14px;font-weight:700;margin-bottom:2px">📖 RATIONALE</div><div style="color:#b0bdd0;font-size:14px;line-height:1.5">${tr.rationale}</div></div>`:''}
+          ${state.lessons[tr.id]?`<div style="background:#080b10;border-radius:7px;padding:6px 8px;border-left:3px solid #a855f7"><div style="color:#a855f7;font-size:14px;font-weight:700;margin-bottom:2px">🎓 ANALISI POST-TRADE</div><div style="color:#fde68a;font-size:15px;line-height:1.65;white-space:pre-wrap">${state.lessons[tr.id]}</div></div>`:
+          `<button onclick="getLesson(${tr.id})" style="width:100%;background:#a855f715;border:1px solid #a855f744;color:#a855f7;border-radius:7px;padding:5px 0;font-size:14px;font-weight:700" id="lesson-btn-${tr.id}">🤖 Analisi post-trade AI</button>`}
         </div>`;
       });
     }
@@ -1362,7 +1362,7 @@ function renderDiary(){
       html+=`<div class="card"><div class="section-title">Distribuzione Esiti</div>`;
       [['TP2',closed.filter(x=>x.outcome==='TP2').length,'#14b8a6'],['TP1',wins.length,'#22c55e'],['BE',bes.length,'#64748b'],['SL',losses.length,'#ef4444']].forEach(([l,n,c])=>{
         const pct=closed.length?Math.round(n/closed.length*100):0;
-        html+=`<div style="margin-bottom:7px"><div class="row" style="margin-bottom:2px"><span style="color:#b0bdd0;font-size:12px">${l} — ${n} trade</span><span style="color:${c};font-size:12px;font-weight:700">${pct}%</span></div><div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${c}"></div></div></div>`;
+        html+=`<div style="margin-bottom:7px"><div class="row" style="margin-bottom:2px"><span style="color:#b0bdd0;font-size:14px">${l} — ${n} trade</span><span style="color:${c};font-size:14px;font-weight:700">${pct}%</span></div><div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${c}"></div></div></div>`;
       });
       html+='</div>';
 
@@ -1373,7 +1373,7 @@ function renderDiary(){
       [3,2,1,0].forEach(a=>{
         const s=alignMap[a];if(!s.n)return;
         const wr=Math.round(s.w/s.n*100),col=wr>=50?'#22c55e':'#ef4444';
-        html+=`<div style="margin-bottom:7px"><div class="row" style="margin-bottom:2px"><span style="color:#b0bdd0;font-size:12px">MTF ${a}/3 (${s.n} trade)</span><span style="color:${col};font-size:12px;font-weight:700">${wr}%</span></div><div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div></div>`;
+        html+=`<div style="margin-bottom:7px"><div class="row" style="margin-bottom:2px"><span style="color:#b0bdd0;font-size:14px">MTF ${a}/3 (${s.n} trade)</span><span style="color:${col};font-size:14px;font-weight:700">${wr}%</span></div><div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div></div>`;
       });
       html+='</div>';
     }
@@ -1388,8 +1388,8 @@ function renderDiary(){
       Object.entries(setupMap).sort((a,b)=>b[1].pnl-a[1].pnl).forEach(([name,s])=>{
         const wr=Math.round(s.w/s.n*100),col=wr>=50?'#22c55e':'#ef4444';
         html+=`<div style="background:#1e2740;border-radius:7px;padding:8px 10px;margin-bottom:6px">
-          <div class="row" style="margin-bottom:4px"><span style="color:#e2e8f0;font-size:13px;font-weight:700">${name}</span><span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-weight:700;font-size:13px">${fmtPnl(s.pnl)}</span></div>
-          <div style="display:flex;gap:8px;font-size:11px;color:#b0bdd0;margin-bottom:4px"><span>${s.n} trade</span><span style="color:${col};font-weight:700">${wr}% WR</span></div>
+          <div class="row" style="margin-bottom:4px"><span style="color:#fde68a;font-size:15px;font-weight:700">${name}</span><span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-weight:700;font-size:15px">${fmtPnl(s.pnl)}</span></div>
+          <div style="display:flex;gap:8px;font-size:13px;color:#b0bdd0;margin-bottom:4px"><span>${s.n} trade</span><span style="color:${col};font-weight:700">${wr}% WR</span></div>
           <div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
         </div>`;
       });
@@ -1420,25 +1420,25 @@ function renderDiary(){
         const bg=wr===null?'#1a2130':wr>=60?`rgba(34,197,94,${0.2+intensity*0.6})`:wr>=40?`rgba(240,180,41,${0.2+intensity*0.4})`:`rgba(239,68,68,${0.2+(1-intensity)*0.6})`;
         const textCol=wr===null?'#334155':wr>=60?'#22c55e':wr>=40?'#f0b429':'#ef4444';
         html+=`<div style="background:${bg};border-radius:6px;padding:5px 3px;text-align:center;border:1px solid #2a3550">
-          <div style="color:#b0bdd0;font-size:12px">${String(h).padStart(2,'0')}h</div>
-          <div style="color:${textCol};font-size:12px;font-weight:700">${wr!==null?wr+'%':'–'}</div>
-          <div style="color:#b0bdd0;font-size:11px">${s.n}t</div>
+          <div style="color:#b0bdd0;font-size:14px">${String(h).padStart(2,'0')}h</div>
+          <div style="color:${textCol};font-size:14px;font-weight:700">${wr!==null?wr+'%':'–'}</div>
+          <div style="color:#b0bdd0;font-size:13px">${s.n}t</div>
         </div>`;
       }
       html+=`</div>`;
       // Legenda sessioni
       html+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
-        ${[['🌏 Asia','00-08','#3b82f6'],['🇬🇧 Londra','08-12','#f0b429'],['⚡ Overlap','12-17','#ef4444'],['🗽 NY','17-23','#f97316']].map(([l,r,c])=>`<span style="font-size:11px;color:${c}">● ${l} ${r}</span>`).join('')}
+        ${[['🌏 Asia','00-08','#3b82f6'],['🇬🇧 Londra','08-12','#f0b429'],['⚡ Overlap','12-17','#ef4444'],['🗽 NY','17-23','#f97316']].map(([l,r,c])=>`<span style="font-size:13px;color:${c}">● ${l} ${r}</span>`).join('')}
       </div>`;
       // Best/worst hours
       if(bt.bestHours.length){
         html+=`<div style="margin-top:8px">
-          <div style="color:#22c55e;font-size:13px;font-weight:700;margin-bottom:5px">✅ Ore migliori</div>
-          ${bt.bestHours.map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2535"><span style="color:#b0bdd0;font-size:13px">${String(h.h).padStart(2,'0')}:00 (${h.n} trade)</span><span style="color:#22c55e;font-weight:700;font-size:13px">${h.wr}% WR · ${fmtPnl(h.pnl)}</span></div>`).join('')}
+          <div style="color:#22c55e;font-size:15px;font-weight:700;margin-bottom:5px">✅ Ore migliori</div>
+          ${bt.bestHours.map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2535"><span style="color:#b0bdd0;font-size:15px">${String(h.h).padStart(2,'0')}:00 (${h.n} trade)</span><span style="color:#22c55e;font-weight:700;font-size:15px">${h.wr}% WR · ${fmtPnl(h.pnl)}</span></div>`).join('')}
         </div>
         <div style="margin-top:8px">
-          <div style="color:#ef4444;font-size:13px;font-weight:700;margin-bottom:5px">❌ Ore peggiori</div>
-          ${bt.worstHours.map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2535"><span style="color:#b0bdd0;font-size:13px">${String(h.h).padStart(2,'0')}:00 (${h.n} trade)</span><span style="color:#ef4444;font-weight:700;font-size:13px">${h.wr}% WR · ${fmtPnl(h.pnl)}</span></div>`).join('')}
+          <div style="color:#ef4444;font-size:15px;font-weight:700;margin-bottom:5px">❌ Ore peggiori</div>
+          ${bt.worstHours.map(h=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2535"><span style="color:#b0bdd0;font-size:15px">${String(h.h).padStart(2,'0')}:00 (${h.n} trade)</span><span style="color:#ef4444;font-weight:700;font-size:15px">${h.wr}% WR · ${fmtPnl(h.pnl)}</span></div>`).join('')}
         </div>`;
       }
       html+=`</div>`;
@@ -1450,10 +1450,10 @@ function renderDiary(){
         const wr=Math.round(s.w/s.n*100),col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
         html+=`<div style="margin-bottom:7px">
           <div class="row" style="margin-bottom:2px">
-            <span style="color:#b0bdd0;font-size:13px">${s.label} (${s.n} trade)</span>
+            <span style="color:#b0bdd0;font-size:15px">${s.label} (${s.n} trade)</span>
             <div style="display:flex;gap:8px;align-items:center">
-              <span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-size:12px">${fmtPnl(s.pnl)}</span>
-              <span style="color:${col};font-size:13px;font-weight:700">${wr}%</span>
+              <span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-size:14px">${fmtPnl(s.pnl)}</span>
+              <span style="color:${col};font-size:15px;font-weight:700">${wr}%</span>
             </div>
           </div>
           <div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
@@ -1469,13 +1469,13 @@ function renderDiary(){
         const sessColor={'Asia':'#3b82f6','Londra':'#f0b429','Overlap':'#ef4444','New York':'#f97316'}[sess]||'#64748b';
         html+=`<div style="background:#1e2740;border-radius:9px;padding:10px 12px;margin-bottom:7px;border-left:3px solid ${sessColor}">
           <div class="row" style="margin-bottom:5px">
-            <span style="color:#e2e8f0;font-size:14px;font-weight:700">${sess}</span>
+            <span style="color:#fde68a;font-size:16px;font-weight:700">${sess}</span>
             <div style="display:flex;gap:8px;align-items:center">
-              <span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-size:13px;font-weight:600">${fmtPnl(s.pnl)}</span>
-              <span style="color:${col};font-size:15px;font-weight:800">${wr}%</span>
+              <span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:600">${fmtPnl(s.pnl)}</span>
+              <span style="color:${col};font-size:17px;font-weight:800">${wr}%</span>
             </div>
           </div>
-          <div style="display:flex;gap:10px;font-size:12px;color:#b0bdd0">
+          <div style="display:flex;gap:10px;font-size:14px;color:#b0bdd0">
             <span>${s.n} trade</span><span>${s.w} vinti</span><span>${s.n-s.w} persi</span>
           </div>
           <div class="bar-wrap" style="margin-top:5px"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
@@ -1489,7 +1489,7 @@ function renderDiary(){
         if(!s.n)return;
         const wr=Math.round(s.w/s.n*100),col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
         html+=`<div style="margin-bottom:7px">
-          <div class="row" style="margin-bottom:2px"><span style="color:#b0bdd0;font-size:13px">${label} (${s.n} trade)</span><span style="color:${col};font-size:13px;font-weight:700">${wr}% · ${fmtPnl(s.pnl)}</span></div>
+          <div class="row" style="margin-bottom:2px"><span style="color:#b0bdd0;font-size:15px">${label} (${s.n} trade)</span><span style="color:${col};font-size:15px;font-weight:700">${wr}% · ${fmtPnl(s.pnl)}</span></div>
           <div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
         </div>`;
       });
@@ -1497,7 +1497,7 @@ function renderDiary(){
       const confHigh=bt.byConf['Alta (≥70)'],confLow=bt.byConf['Bassa (<45)'];
       if(confHigh?.n>=2&&confLow?.n>=2){
         const wrH=Math.round(confHigh.w/confHigh.n*100),wrL=Math.round(confLow.w/confLow.n*100);
-        if(wrH>wrL+15) html+=`<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:8px 10px;margin-top:6px;font-size:13px;color:#b0bdd0">💡 I trade con confidence alta (${wrH}% WR) battono quelli a bassa confidenza (${wrL}% WR). <strong style="color:#22c55e">Filtra sotto 45.</strong></div>`;
+        if(wrH>wrL+15) html+=`<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:8px 10px;margin-top:6px;font-size:15px;color:#b0bdd0">💡 I trade con confidence alta (${wrH}% WR) battono quelli a bassa confidenza (${wrL}% WR). <strong style="color:#22c55e">Filtra sotto 45.</strong></div>`;
       }
       html+=`</div>`;
 
@@ -1510,7 +1510,7 @@ function renderDiary(){
         html+=`<div style="background:#1e2740;border-radius:9px;padding:12px;border:1px solid ${dCol}33;text-align:center">
           <div style="color:${dCol};font-size:18px;font-weight:800;margin-bottom:4px">${dir==='BUY'?'▲':'▼'} ${dir}</div>
           <div style="color:${col};font-size:22px;font-weight:900">${wr}%</div>
-          <div style="color:#b0bdd0;font-size:12px;margin-top:3px">${s.n} trade · ${fmtPnl(s.pnl)}</div>
+          <div style="color:#b0bdd0;font-size:14px;margin-top:3px">${s.n} trade · ${fmtPnl(s.pnl)}</div>
         </div>`;
       });
       html+=`</div></div>`;
@@ -1521,7 +1521,7 @@ function renderDiary(){
         Object.entries(bt.byCond).sort((a,b)=>b[1].n-a[1].n).forEach(([cond,s])=>{
           const wr=Math.round(s.w/s.n*100),col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
           html+=`<div style="margin-bottom:7px">
-            <div class="row" style="margin-bottom:2px"><span style="color:#b0bdd0;font-size:13px">${cond} (${s.n})</span><span style="color:${col};font-size:13px;font-weight:700">${wr}% · ${fmtPnl(s.pnl)}</span></div>
+            <div class="row" style="margin-bottom:2px"><span style="color:#b0bdd0;font-size:15px">${cond} (${s.n})</span><span style="color:${col};font-size:15px;font-weight:700">${wr}% · ${fmtPnl(s.pnl)}</span></div>
             <div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div>
           </div>`;
         });
@@ -1540,15 +1540,15 @@ function renderDiary(){
       <div style="text-align:center;margin-bottom:14px">
         <div style="font-size:40px;margin-bottom:4px">${ss.sessInfo.emoji}</div>
         <div style="color:${ss.sessInfo.color};font-size:22px;font-weight:900">${ss.sess}</div>
-        <div style="color:#e2e8f0;font-size:32px;font-weight:800;font-variant-numeric:tabular-nums;margin:4px 0">${ss.timeStr}</div>
-        <div style="display:inline-block;background:${ss.sessInfo.color}20;border:1px solid ${ss.sessInfo.color}44;border-radius:8px;padding:3px 14px;font-size:14px;font-weight:700;color:${ss.sessInfo.color}">Volatilità ${ss.sessInfo.vol}</div>
+        <div style="color:#fde68a;font-size:32px;font-weight:800;font-variant-numeric:tabular-nums;margin:4px 0">${ss.timeStr}</div>
+        <div style="display:inline-block;background:${ss.sessInfo.color}20;border:1px solid ${ss.sessInfo.color}44;border-radius:8px;padding:3px 14px;font-size:16px;font-weight:700;color:${ss.sessInfo.color}">Volatilità ${ss.sessInfo.vol}</div>
       </div>
       <div style="background:#080b10;border-radius:9px;padding:10px 12px;margin-bottom:10px;border-left:3px solid ${ss.sessInfo.color}">
-        <div style="color:#b0bdd0;font-size:14px;line-height:1.6">${ss.sessInfo.desc}</div>
+        <div style="color:#b0bdd0;font-size:16px;line-height:1.6">${ss.sessInfo.desc}</div>
       </div>
       ${ss.nextEvent?`<div style="display:flex;justify-content:space-between;align-items:center;background:#1e2740;border-radius:8px;padding:10px 12px">
-        <div><div style="color:#b0bdd0;font-size:12px">Prossimo evento</div><div style="color:#e2e8f0;font-size:15px;font-weight:700;margin-top:2px">${ss.nextEvent.label}</div></div>
-        <div style="text-align:right"><div style="color:#f0b429;font-size:18px;font-weight:900">${ss.minToNext<60?ss.minToNext+'m':`${Math.floor(ss.minToNext/60)}h${ss.minToNext%60}m`}</div><div style="color:#b0bdd0;font-size:11px">Impatto: ${ss.nextEvent.imp}</div></div>
+        <div><div style="color:#b0bdd0;font-size:14px">Prossimo evento</div><div style="color:#fde68a;font-size:17px;font-weight:700;margin-top:2px">${ss.nextEvent.label}</div></div>
+        <div style="text-align:right"><div style="color:#f0b429;font-size:18px;font-weight:900">${ss.minToNext<60?ss.minToNext+'m':`${Math.floor(ss.minToNext/60)}h${ss.minToNext%60}m`}</div><div style="color:#b0bdd0;font-size:13px">Impatto: ${ss.nextEvent.imp}</div></div>
       </div>`:''}
     </div>`;
 
@@ -1565,7 +1565,7 @@ function renderDiary(){
     sessions.forEach(s=>{
       const left=(s.start/24*100).toFixed(1);
       const width=((s.end-s.start)/24*100).toFixed(1);
-      html+=`<div style="position:absolute;left:${left}%;width:${width}%;height:100%;background:${s.col}25;border-right:1px solid ${s.col}44;display:flex;align-items:center;justify-content:center"><span style="color:${s.col};font-size:11px;font-weight:700">${s.name.split(' ')[1]||s.name}</span></div>`;
+      html+=`<div style="position:absolute;left:${left}%;width:${width}%;height:100%;background:${s.col}25;border-right:1px solid ${s.col}44;display:flex;align-items:center;justify-content:center"><span style="color:${s.col};font-size:13px;font-weight:700">${s.name.split(' ')[1]||s.name}</span></div>`;
     });
     // Cursore ora corrente
     html+=`<div style="position:absolute;left:${(curH/24*100).toFixed(1)}%;top:0;width:2px;height:100%;background:#fff;opacity:0.8"></div>`;
@@ -1578,11 +1578,11 @@ function renderDiary(){
         <div class="row" style="margin-bottom:4px">
           <div style="display:flex;align-items:center;gap:6px">
             ${isNow?`<div style="width:8px;height:8px;border-radius:50%;background:${s.col};box-shadow:0 0 6px ${s.col}"></div>`:''}
-            <span style="color:${isNow?s.col:'#94a3b8'};font-size:15px;font-weight:${isNow?800:600}">${s.name} ${isNow?'← ORA':''}</span>
+            <span style="color:${isNow?s.col:'#94a3b8'};font-size:17px;font-weight:${isNow?800:600}">${s.name} ${isNow?'← ORA':''}</span>
           </div>
-          <span style="color:#b0bdd0;font-size:13px">${String(s.start).padStart(2,'0')}:00 – ${s.end===24?'24':String(s.end).padStart(2,'0')}:00</span>
+          <span style="color:#b0bdd0;font-size:15px">${String(s.start).padStart(2,'0')}:00 – ${s.end===24?'24':String(s.end).padStart(2,'0')}:00</span>
         </div>
-        <div style="display:flex;gap:10px;font-size:13px">
+        <div style="display:flex;gap:10px;font-size:15px">
           <span style="color:#b0bdd0">Volatilità: <span style="color:${s.col};font-weight:700">${s.vol}</span></span>
           ${wr!==null?`<span style="color:#b0bdd0">Il tuo WR: <span style="color:${wr>=50?'#22c55e':'#ef4444'};font-weight:700">${wr}% (${myStats.n}t)</span></span>`:''}
         </div>
@@ -1616,7 +1616,7 @@ function renderDiary(){
       insights.forEach(i=>{
         html+=`<div style="display:flex;gap:10px;background:#1e2740;border-radius:9px;padding:11px 12px;margin-bottom:7px;border-left:3px solid ${i.col}">
           <span style="font-size:18px;flex-shrink:0">${i.icon}</span>
-          <div style="color:#b0bdd0;font-size:14px;line-height:1.6">${i.text}</div>
+          <div style="color:#b0bdd0;font-size:16px;line-height:1.6">${i.text}</div>
         </div>`;
       });
       html+=`</div>`;
@@ -1651,29 +1651,29 @@ function renderDiary(){
       html+=`<div class="card" style="border:1px solid ${col}44;margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;margin-bottom:8px">
           <span style="color:#f0b429;font-weight:700">⏳ Trade Aperto</span>
-          <span style="background:${col}20;color:${col};border-radius:5px;padding:2px 8px;font-size:13px;font-weight:700">${t.direction}</span>
+          <span style="background:${col}20;color:${col};border-radius:5px;padding:2px 8px;font-size:15px;font-weight:700">${t.direction}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-bottom:6px">
           ${[['Entry','$'+fmtP(t.entry),'#f0b429'],['SL','$'+fmtP(t.sl),'#ef4444'],['TP1','$'+fmtP(t.tp1),'#22c55e'],['Lot',t.lots,'#94a3b8']].map(([l,v,cv])=>`
-          <div style="background:#1e2740;border-radius:5px;padding:4px;text-align:center"><div style="color:#64748b;font-size:10px">${l}</div><div style="color:${cv};font-size:13px;font-weight:700">${v}</div></div>`).join('')}
+          <div style="background:#1e2740;border-radius:5px;padding:4px;text-align:center"><div style="color:#cbd5e1;font-size:12px">${l}</div><div style="color:${cv};font-size:15px;font-weight:700">${v}</div></div>`).join('')}
         </div>
-        <div style="color:#64748b;font-size:12px">
+        <div style="color:#cbd5e1;font-size:14px">
           Scenario: ${t.scenario||'–'} · Conf: ${t.confidence}/100 · ${new Date(t.openedAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
           ${t.breakEvenSet?'<span style="color:#22c55e;margin-left:6px">✅ BE</span>':''}
           ${t.trailingActive?'<span style="color:#f0b429;margin-left:6px">📍 Trail</span>':''}
         </div>
         ${t.managementLog?.length?`<div style="margin-top:6px;border-top:1px solid #1e2535;padding-top:5px">
-          ${t.managementLog.slice(-2).reverse().map(l=>`<div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;padding:2px 0"><span>${l.action}</span><span>${new Date(l.ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')}
+          ${t.managementLog.slice(-2).reverse().map(l=>`<div style="display:flex;justify-content:space-between;font-size:13px;color:#cbd5e1;padding:2px 0"><span>${l.action}</span><span>${new Date(l.ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')}
         </div>`:''}
       </div>`;
     }
 
     // Storico trade
     if(pt.length===0){
-      html+=`<div style="text-align:center;padding:28px 0;color:#64748b">
+      html+=`<div style="text-align:center;padding:28px 0;color:#cbd5e1">
         <div style="font-size:28px;margin-bottom:8px">🤖</div>
         Nessun trade automatico ancora.<br>
-        <span style="font-size:13px">Avvia il paper trading dalla pagina 🎯 Score</span>
+        <span style="font-size:15px">Avvia il paper trading dalla pagina 🎯 Score</span>
       </div>`;
     } else {
       html+=`<div class="card"><div class="section-title">📋 Storico Trade Automatici</div>`;
@@ -1683,17 +1683,17 @@ function renderDiary(){
         html+=`<div style="background:#1e2740;border-radius:9px;padding:10px 12px;margin-bottom:6px;border-left:3px solid ${col}">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
             <div style="display:flex;gap:5px;align-items:center">
-              <span style="background:${t.direction==='BUY'?'#22c55e':'#ef4444'}20;color:${t.direction==='BUY'?'#22c55e':'#ef4444'};border-radius:4px;padding:1px 6px;font-size:12px;font-weight:700">${t.direction}</span>
-              <span style="background:${exitCol}20;color:${exitCol};border-radius:4px;padding:1px 6px;font-size:12px;font-weight:700">${t.exitReason||'–'}</span>
-              <span style="color:#64748b;font-size:11px">${t.scenario||'–'}</span>
+              <span style="background:${t.direction==='BUY'?'#22c55e':'#ef4444'}20;color:${t.direction==='BUY'?'#22c55e':'#ef4444'};border-radius:4px;padding:1px 6px;font-size:14px;font-weight:700">${t.direction}</span>
+              <span style="background:${exitCol}20;color:${exitCol};border-radius:4px;padding:1px 6px;font-size:14px;font-weight:700">${t.exitReason||'–'}</span>
+              <span style="color:#cbd5e1;font-size:13px">${t.scenario||'–'}</span>
             </div>
-            <span style="color:${col};font-weight:800;font-size:15px">${t.pnlEur>=0?'+':''}€${t.pnlEur?.toFixed(2)||'0'}</span>
+            <span style="color:${col};font-weight:800;font-size:17px">${t.pnlEur>=0?'+':''}€${t.pnlEur?.toFixed(2)||'0'}</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-bottom:4px">
             ${[['Entry','$'+fmtP(t.entry),'#f0b429'],['Exit','$'+fmtP(t.exitPrice),col],['R/R',t.rr,'#f97316'],['Lot',t.lots,'#94a3b8']].map(([l,v,cv])=>`
-            <div style="background:#080b10;border-radius:5px;padding:3px;text-align:center"><div style="color:#64748b;font-size:9px">${l}</div><div style="color:${cv};font-size:12px;font-weight:700">${v||'–'}</div></div>`).join('')}
+            <div style="background:#080b10;border-radius:5px;padding:3px;text-align:center"><div style="color:#cbd5e1;font-size:11px">${l}</div><div style="color:${cv};font-size:14px;font-weight:700">${v||'–'}</div></div>`).join('')}
           </div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b">
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:#cbd5e1">
             <span>${new Date(t.openedAt).toLocaleString('it-IT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
             <span>Cap: €${t.capitalAfter?.toFixed(0)||'–'} · Conf: ${t.confidence}/100</span>
           </div>
@@ -1705,14 +1705,14 @@ function renderDiary(){
     // Controlli
     html+=`<div style="display:flex;gap:8px;margin-top:4px">
       <button onclick="state.paper.enabled=!state.paper.enabled;savePaperState();renderDiary()" 
-        style="flex:2;background:${p.enabled?'#ef4444':'#22c55e'};color:#fff;border-radius:8px;padding:10px 0;font-size:15px;font-weight:700;border:none">
+        style="flex:2;background:${p.enabled?'#ef4444':'#22c55e'};color:#fde68a;border-radius:8px;padding:10px 0;font-size:17px;font-weight:700;border:none">
         ${p.enabled?'⏹ Stop Auto Trading':'▶ Avvia Auto Trading'}
       </button>
-      <button onclick="resetPaperTrading()" style="flex:1;background:#1a2130;border:1px solid #334155;color:#64748b;border-radius:8px;padding:10px 0;font-size:13px">🗑 Reset</button>
+      <button onclick="resetPaperTrading()" style="flex:1;background:#1a2130;border:1px solid #334155;color:#cbd5e1;border-radius:8px;padding:10px 0;font-size:15px">🗑 Reset</button>
     </div>
     <div style="display:flex;gap:8px;margin-top:6px">
-      <button onclick="exportPaperLog()" style="flex:1;background:#f0b42920;border:1px solid #f0b42944;color:#f0b429;border-radius:8px;padding:8px 0;font-size:13px;font-weight:700">⬇️ CSV</button>
-      <button onclick="exportPaperLogJSON()" style="flex:1;background:#3b82f620;border:1px solid #3b82f644;color:#3b82f6;border-radius:8px;padding:8px 0;font-size:13px;font-weight:700">⬇️ JSON</button>
+      <button onclick="exportPaperLog()" style="flex:1;background:#f0b42920;border:1px solid #f0b42944;color:#f0b429;border-radius:8px;padding:8px 0;font-size:15px;font-weight:700">⬇️ CSV</button>
+      <button onclick="exportPaperLogJSON()" style="flex:1;background:#3b82f620;border:1px solid #3b82f644;color:#3b82f6;border-radius:8px;padding:8px 0;font-size:15px;font-weight:700">⬇️ JSON</button>
     </div>`;
   }
 
@@ -1737,24 +1737,24 @@ function renderDiary(){
       html+=`<div class="card" style="border:1px solid ${col}44;margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;margin-bottom:8px">
           <span style="color:#f0b429;font-weight:700">⏳ Trade Aperto</span>
-          <span style="background:${col}20;color:${col};border-radius:5px;padding:2px 8px;font-size:13px;font-weight:700">${t.direction}</span>
+          <span style="background:${col}20;color:${col};border-radius:5px;padding:2px 8px;font-size:15px;font-weight:700">${t.direction}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-bottom:6px">
           ${[['Entry','$'+fmtP(t.entry),'#f0b429'],['SL','$'+fmtP(t.sl),'#ef4444'],['TP1','$'+fmtP(t.tp1),'#22c55e'],['Lot',t.lots,'#94a3b8']].map(([l,v,cv])=>
-            '<div style="background:#1e2740;border-radius:5px;padding:4px;text-align:center"><div style="color:#64748b;font-size:10px">'+l+'</div><div style="color:'+cv+';font-size:13px;font-weight:700">'+v+'</div></div>'
+            '<div style="background:#1e2740;border-radius:5px;padding:4px;text-align:center"><div style="color:#cbd5e1;font-size:12px">'+l+'</div><div style="color:'+cv+';font-size:15px;font-weight:700">'+v+'</div></div>'
           ).join('')}
         </div>
-        <div style="color:#64748b;font-size:12px">
+        <div style="color:#cbd5e1;font-size:14px">
           ${t.scenario||'–'} · Conf ${t.confidence}/100 · ${new Date(t.openedAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
           ${t.breakEvenSet?'<span style="color:#22c55e;margin-left:6px">✅ BE</span>':''}
           ${t.trailingActive?'<span style="color:#f0b429;margin-left:6px">📍 Trail</span>':''}
         </div>
         ${t.managementLog?.length?'<div style="margin-top:5px;border-top:1px solid #1e2535;padding-top:4px">'+
-          t.managementLog.slice(-2).reverse().map(l=>'<div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;padding:1px 0"><span>'+l.action+'</span><span>'+new Date(l.ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+'</span></div>').join('')+'</div>':''}
+          t.managementLog.slice(-2).reverse().map(l=>'<div style="display:flex;justify-content:space-between;font-size:13px;color:#cbd5e1;padding:1px 0"><span>'+l.action+'</span><span>'+new Date(l.ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+'</span></div>').join('')+'</div>':''}
       </div>`;
     }
     if(pt.length===0){
-      html+=`<div style="text-align:center;padding:28px 0;color:#64748b"><div style="font-size:28px;margin-bottom:8px">🤖</div>Nessun trade automatico.<br><span style="font-size:13px">Avvia dalla pagina 🎯 Score</span></div>`;
+      html+=`<div style="text-align:center;padding:28px 0;color:#cbd5e1"><div style="font-size:28px;margin-bottom:8px">🤖</div>Nessun trade automatico.<br><span style="font-size:15px">Avvia dalla pagina 🎯 Score</span></div>`;
     } else {
       html+=`<div class="card"><div class="section-title">📋 Storico Trade Automatici</div>`;
       pt.slice(0,30).forEach(t=>{
@@ -1763,29 +1763,29 @@ function renderDiary(){
         html+=`<div style="background:#1e2740;border-radius:9px;padding:10px 12px;margin-bottom:6px;border-left:3px solid ${col}">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
             <div style="display:flex;gap:5px;align-items:center">
-              <span style="background:${t.direction==='BUY'?'#22c55e':'#ef4444'}20;color:${t.direction==='BUY'?'#22c55e':'#ef4444'};border-radius:4px;padding:1px 6px;font-size:12px;font-weight:700">${t.direction}</span>
-              <span style="background:${exitCol}20;color:${exitCol};border-radius:4px;padding:1px 6px;font-size:12px;font-weight:700">${t.exitReason||'–'}</span>
-              <span style="color:#64748b;font-size:11px">${t.scenario||'–'}</span>
+              <span style="background:${t.direction==='BUY'?'#22c55e':'#ef4444'}20;color:${t.direction==='BUY'?'#22c55e':'#ef4444'};border-radius:4px;padding:1px 6px;font-size:14px;font-weight:700">${t.direction}</span>
+              <span style="background:${exitCol}20;color:${exitCol};border-radius:4px;padding:1px 6px;font-size:14px;font-weight:700">${t.exitReason||'–'}</span>
+              <span style="color:#cbd5e1;font-size:13px">${t.scenario||'–'}</span>
             </div>
-            <span style="color:${col};font-weight:800;font-size:15px">${t.pnlEur>=0?'+':''}€${(t.pnlEur||0).toFixed(2)}</span>
+            <span style="color:${col};font-weight:800;font-size:17px">${t.pnlEur>=0?'+':''}€${(t.pnlEur||0).toFixed(2)}</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-bottom:4px">
             ${[['Entry','$'+fmtP(t.entry),'#f0b429'],['Exit','$'+fmtP(t.exitPrice),col],['R/R',t.rr||'–','#f97316'],['Cap','€'+(t.capitalAfter?.toFixed(0)||'–'),'#94a3b8']].map(([l,v,cv])=>
-              '<div style="background:#080b10;border-radius:5px;padding:3px;text-align:center"><div style="color:#64748b;font-size:9px">'+l+'</div><div style="color:'+cv+';font-size:12px;font-weight:700">'+v+'</div></div>'
+              '<div style="background:#080b10;border-radius:5px;padding:3px;text-align:center"><div style="color:#cbd5e1;font-size:11px">'+l+'</div><div style="color:'+cv+';font-size:14px;font-weight:700">'+v+'</div></div>'
             ).join('')}
           </div>
-          <div style="font-size:11px;color:#64748b">${new Date(t.openedAt).toLocaleString('it-IT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} · Conf ${t.confidence}/100</div>
+          <div style="font-size:13px;color:#cbd5e1">${new Date(t.openedAt).toLocaleString('it-IT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} · Conf ${t.confidence}/100</div>
         </div>`;
       });
       html+=`</div>`;
     }
     html+=`<div style="display:flex;gap:8px;margin-top:4px">
-      <button onclick="state.paper.enabled=!state.paper.enabled;savePaperState();renderDiary()" style="flex:2;background:${p.enabled?'#ef4444':'#22c55e'};color:#fff;border-radius:8px;padding:10px 0;font-size:15px;font-weight:700;border:none">${p.enabled?'⏹ Stop':'▶ Avvia Auto Trading'}</button>
-      <button onclick="resetPaperTrading()" style="flex:1;background:#1a2130;border:1px solid #334155;color:#64748b;border-radius:8px;padding:10px 0;font-size:13px">🗑 Reset</button>
+      <button onclick="state.paper.enabled=!state.paper.enabled;savePaperState();renderDiary()" style="flex:2;background:${p.enabled?'#ef4444':'#22c55e'};color:#fde68a;border-radius:8px;padding:10px 0;font-size:17px;font-weight:700;border:none">${p.enabled?'⏹ Stop':'▶ Avvia Auto Trading'}</button>
+      <button onclick="resetPaperTrading()" style="flex:1;background:#1a2130;border:1px solid #334155;color:#cbd5e1;border-radius:8px;padding:10px 0;font-size:15px">🗑 Reset</button>
     </div>
     <div style="display:flex;gap:8px;margin-top:6px">
-      <button onclick="exportPaperLog()" style="flex:1;background:#f0b42920;border:1px solid #f0b42944;color:#f0b429;border-radius:8px;padding:8px 0;font-size:13px;font-weight:700">⬇️ CSV</button>
-      <button onclick="exportPaperLogJSON()" style="flex:1;background:#3b82f620;border:1px solid #3b82f644;color:#3b82f6;border-radius:8px;padding:8px 0;font-size:13px;font-weight:700">⬇️ JSON</button>
+      <button onclick="exportPaperLog()" style="flex:1;background:#f0b42920;border:1px solid #f0b42944;color:#f0b429;border-radius:8px;padding:8px 0;font-size:15px;font-weight:700">⬇️ CSV</button>
+      <button onclick="exportPaperLogJSON()" style="flex:1;background:#3b82f620;border:1px solid #3b82f644;color:#3b82f6;border-radius:8px;padding:8px 0;font-size:15px;font-weight:700">⬇️ JSON</button>
     </div>`;
   }
 
@@ -1793,7 +1793,7 @@ function renderDiary(){
   else if(state.diaryTab==='analytics'){
     const p=state.paper, trades=p.trades||[];
     if(!trades.length){
-      html+=`<div style="text-align:center;padding:40px 0;color:#94a3b8"><div style="font-size:32px;margin-bottom:8px">📊</div>Nessun trade automatico ancora.<br><span style="font-size:13px;color:#64748b">Avvia dalla pagina 🎯 Score</span></div>`;
+      html+=`<div style="text-align:center;padding:40px 0;color:#fde68a"><div style="font-size:32px;margin-bottom:8px">📊</div>Nessun trade automatico ancora.<br><span style="font-size:15px;color:#cbd5e1">Avvia dalla pagina 🎯 Score</span></div>`;
     } else {
       const wins=trades.filter(t=>t.isWin), losses=trades.filter(t=>!t.isWin&&t.pnlEur<0);
       const pnlTot=+trades.reduce((s,t)=>s+(t.pnlEur||0),0).toFixed(2);
@@ -1815,8 +1815,8 @@ function renderDiary(){
         const col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
         const lbl={'swing':'📊 Swing','scalp':'⚡ Scalp','trend':'📈 Trend'}[id];
         html+=`<div style="background:#1e2740;border-radius:9px;padding:10px 12px;margin-bottom:7px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#e2e8f0;font-size:15px;font-weight:700">${lbl}</span><div><span style="color:${tpnl>=0?'#22c55e':'#ef4444'};font-size:13px">${tpnl>=0?'+':''}€${tpnl}</span><span style="color:${col};font-size:16px;font-weight:800;margin-left:8px">${wr}%</span></div></div>
-          <div style="color:#64748b;font-size:12px;margin-bottom:4px">${ts.length} trade · ${tw} vinti</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#fde68a;font-size:17px;font-weight:700">${lbl}</span><div><span style="color:${tpnl>=0?'#22c55e':'#ef4444'};font-size:15px">${tpnl>=0?'+':''}€${tpnl}</span><span style="color:${col};font-size:16px;font-weight:800;margin-left:8px">${wr}%</span></div></div>
+          <div style="color:#cbd5e1;font-size:14px;margin-bottom:4px">${ts.length} trade · ${tw} vinti</div>
           <div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div></div>`;
       });
       html+=`</div>`;
@@ -1826,7 +1826,7 @@ function renderDiary(){
       const exitCols={'TP2':'#14b8a6','TP1':'#22c55e','TP1_PA':'#22c55e','BE':'#64748b','SL':'#ef4444'};
       Object.entries(exitMap).sort((a,b)=>b[1].n-a[1].n).forEach(([r,s])=>{
         const wr=Math.round(s.w/s.n*100),col=exitCols[r]||'#f97316';
-        html+=`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1e2535"><div><span style="color:${col};font-weight:700;font-size:14px">${r}</span><span style="color:#64748b;font-size:12px;margin-left:6px">${s.n}x</span></div><div><span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-size:13px;font-weight:700">${s.pnl>=0?'+':''}€${s.pnl.toFixed(0)}</span><span style="color:#64748b;font-size:12px;margin-left:5px">${wr}% WR</span></div></div>`;
+        html+=`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1e2535"><div><span style="color:${col};font-weight:700;font-size:16px">${r}</span><span style="color:#cbd5e1;font-size:14px;margin-left:6px">${s.n}x</span></div><div><span style="color:${s.pnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:700">${s.pnl>=0?'+':''}€${s.pnl.toFixed(0)}</span><span style="color:#cbd5e1;font-size:14px;margin-left:5px">${wr}% WR</span></div></div>`;
       });
       html+=`</div>`;
       html+=`<div class="card"><div class="section-title">⭐ Score Entry vs Esito</div>`;
@@ -1834,17 +1834,17 @@ function renderDiary(){
         const ts=trades.filter(t=>t.confidence>=lo&&t.confidence<hi); if(!ts.length) return;
         const tw=ts.filter(t=>t.isWin).length, wr=Math.round(tw/ts.length*100);
         const col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
-        html+=`<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#94a3b8;font-size:13px">${lbl} (${ts.length})</span><span style="color:${col};font-size:13px;font-weight:700">${wr}%</span></div><div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div></div>`;
+        html+=`<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#fde68a;font-size:15px">${lbl} (${ts.length})</span><span style="color:${col};font-size:15px;font-weight:700">${wr}%</span></div><div class="bar-wrap"><div class="bar" style="width:${wr}%;background:${col}"></div></div></div>`;
       });
       html+=`</div>`;
       html+=`<div class="card" style="border:1px solid #f0b42933">
         <div class="section-title">⬇️ Esporta Log Completo</div>
-        <div style="color:#94a3b8;font-size:13px;margin-bottom:10px;line-height:1.6">CSV con score breakdown per ogni criterio di tutti e 3 gli scenari + log PA. Per ottimizzazione soglie ex post.</div>
+        <div style="color:#fde68a;font-size:15px;margin-bottom:10px;line-height:1.6">CSV con score breakdown per ogni criterio di tutti e 3 gli scenari + log PA. Per ottimizzazione soglie ex post.</div>
         <div style="display:flex;gap:8px">
-          <button onclick="exportPaperLog()" style="flex:1;background:#f0b429;color:#000;border-radius:8px;padding:11px 0;font-size:15px;font-weight:700;border:none">⬇️ CSV</button>
-          <button onclick="exportPaperLogJSON()" style="flex:1;background:#3b82f6;color:#000;border-radius:8px;padding:11px 0;font-size:15px;font-weight:700;border:none">⬇️ JSON</button>
+          <button onclick="exportPaperLog()" style="flex:1;background:#f0b429;color:#000;border-radius:8px;padding:11px 0;font-size:17px;font-weight:700;border:none">⬇️ CSV</button>
+          <button onclick="exportPaperLogJSON()" style="flex:1;background:#3b82f6;color:#000;border-radius:8px;padding:11px 0;font-size:17px;font-weight:700;border:none">⬇️ JSON</button>
         </div>
-        <div style="color:#64748b;font-size:11px;margin-top:5px;text-align:center">CSV → Excel/Sheets · JSON → Python/analisi avanzata</div>
+        <div style="color:#cbd5e1;font-size:13px;margin-top:5px;text-align:center">CSV → Excel/Sheets · JSON → Python/analisi avanzata</div>
       </div>`;
     }
   }
@@ -2655,56 +2655,56 @@ function renderPaperWidget() {
   el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
       <div>
-        <div style="color:#f0b429;font-weight:800;font-size:15px">🤖 Paper Trading Auto</div>
-        <div style="color:#b0bdd0;font-size:12px;margin-top:1px">Leva 1:100 · Spread $${SPREAD} · Rischio 1% · Max pos 5% · Capital €10K</div>
+        <div style="color:#f0b429;font-weight:800;font-size:17px">🤖 Paper Trading Auto</div>
+        <div style="color:#b0bdd0;font-size:14px;margin-top:1px">Leva 1:100 · Spread $${SPREAD} · Rischio 1% · Max pos 5% · Capital €10K</div>
       </div>
-      <button onclick="togglePaperTrading()" style="background:${p.enabled?'#ef4444':'#22c55e'};color:#fff;border-radius:8px;padding:7px 14px;font-size:14px;font-weight:700;border:none">
+      <button onclick="togglePaperTrading()" style="background:${p.enabled?'#ef4444':'#22c55e'};color:#fde68a;border-radius:8px;padding:7px 14px;font-size:16px;font-weight:700;border:none">
         ${p.enabled?'⏹ Stop':'▶ Avvia'}
       </button>
     </div>
 
-    ${ddReached&&!p.enabled?'<div style="background:#ef444415;border:1px solid #ef444433;border-radius:8px;padding:8px 10px;margin-bottom:8px;color:#ef4444;font-size:13px">⛔ Stop automatico: drawdown massimo (10%) raggiunto. Resetta per ricominciare.</div>':''}
+    ${ddReached&&!p.enabled?'<div style="background:#ef444415;border:1px solid #ef444433;border-radius:8px;padding:8px 10px;margin-bottom:8px;color:#ef4444;font-size:15px">⛔ Stop automatico: drawdown massimo (10%) raggiunto. Resetta per ricominciare.</div>':''}
 
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:8px">
       <div style="background:#080b10;border-radius:8px;padding:8px;text-align:center">
-        <div style="color:#b0bdd0;font-size:11px">Capitale</div>
-        <div style="color:#e2e8f0;font-size:15px;font-weight:800">€${p.capital.toFixed(0)}</div>
+        <div style="color:#b0bdd0;font-size:13px">Capitale</div>
+        <div style="color:#fde68a;font-size:17px;font-weight:800">€${p.capital.toFixed(0)}</div>
       </div>
       <div style="background:#080b10;border-radius:8px;padding:8px;text-align:center">
-        <div style="color:#b0bdd0;font-size:11px">P&L</div>
-        <div style="color:${pnlTotal>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:800">${pnlTotal>=0?'+':''}€${pnlTotal.toFixed(0)}</div>
-        <div style="color:${pnlTotal>=0?'#22c55e':'#ef4444'};font-size:11px">${pnlPct>=0?'+':''}${pnlPct}%</div>
+        <div style="color:#b0bdd0;font-size:13px">P&L</div>
+        <div style="color:${pnlTotal>=0?'#22c55e':'#ef4444'};font-size:17px;font-weight:800">${pnlTotal>=0?'+':''}€${pnlTotal.toFixed(0)}</div>
+        <div style="color:${pnlTotal>=0?'#22c55e':'#ef4444'};font-size:13px">${pnlPct>=0?'+':''}${pnlPct}%</div>
       </div>
       <div style="background:#080b10;border-radius:8px;padding:8px;text-align:center">
-        <div style="color:#b0bdd0;font-size:11px">Win Rate</div>
-        <div style="color:${wr>=50?'#22c55e':'#ef4444'};font-size:15px;font-weight:800">${wr}%</div>
-        <div style="color:#b0bdd0;font-size:11px">${p.trades.length}T</div>
+        <div style="color:#b0bdd0;font-size:13px">Win Rate</div>
+        <div style="color:${wr>=50?'#22c55e':'#ef4444'};font-size:17px;font-weight:800">${wr}%</div>
+        <div style="color:#b0bdd0;font-size:13px">${p.trades.length}T</div>
       </div>
       <div style="background:#080b10;border-radius:8px;padding:8px;text-align:center">
-        <div style="color:#b0bdd0;font-size:11px">Drawdown</div>
-        <div style="color:${dd>5?'#ef4444':dd>2?'#f97316':'#22c55e'};font-size:15px;font-weight:800">${dd>0?'-':''}${Math.abs(dd)}%</div>
+        <div style="color:#b0bdd0;font-size:13px">Drawdown</div>
+        <div style="color:${dd>5?'#ef4444':dd>2?'#f97316':'#22c55e'};font-size:17px;font-weight:800">${dd>0?'-':''}${Math.abs(dd)}%</div>
       </div>
     </div>
 
     ${p.openTrade ? `
     <div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:9px;padding:10px 12px;margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="color:#f0b429;font-weight:700;font-size:14px">📈 Trade aperto</span>
-        <span style="background:${p.openTrade.direction==='BUY'?'#22c55e':'#ef4444'}20;color:${p.openTrade.direction==='BUY'?'#22c55e':'#ef4444'};border-radius:5px;padding:2px 8px;font-size:13px;font-weight:700">${p.openTrade.direction}</span>
+        <span style="color:#f0b429;font-weight:700;font-size:16px">📈 Trade aperto</span>
+        <span style="background:${p.openTrade.direction==='BUY'?'#22c55e':'#ef4444'}20;color:${p.openTrade.direction==='BUY'?'#22c55e':'#ef4444'};border-radius:5px;padding:2px 8px;font-size:15px;font-weight:700">${p.openTrade.direction}</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px">
-        ${[['Entry','$'+fmtP(p.openTrade.entry),'#f0b429'],['SL','$'+fmtP(p.openTrade.sl),'#ef4444'],['TP1','$'+fmtP(p.openTrade.tp1),'#22c55e'],['Lot',p.openTrade.lots,'#94a3b8']].map(([l,v,c])=>`<div style="background:#080b10;border-radius:5px;padding:4px;text-align:center"><div style="color:#b0bdd0;font-size:12px">${l}</div><div style="color:${c};font-size:12px;font-weight:700">${v}</div></div>`).join('')}
+        ${[['Entry','$'+fmtP(p.openTrade.entry),'#f0b429'],['SL','$'+fmtP(p.openTrade.sl),'#ef4444'],['TP1','$'+fmtP(p.openTrade.tp1),'#22c55e'],['Lot',p.openTrade.lots,'#94a3b8']].map(([l,v,c])=>`<div style="background:#080b10;border-radius:5px;padding:4px;text-align:center"><div style="color:#b0bdd0;font-size:14px">${l}</div><div style="color:${c};font-size:14px;font-weight:700">${v}</div></div>`).join('')}
       </div>
-      <div style="color:#b0bdd0;font-size:11px;margin-top:5px">Rischio: €${p.openTrade.riskEur} · Conf: ${p.openTrade.confidence}/100 · ${new Date(p.openTrade.openedAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</div>
-    </div>` : p.enabled ? `<div style="background:#22c55e12;border:1px solid #22c55e22;border-radius:8px;padding:8px 10px;color:#22c55e;font-size:13px;text-align:center">
+      <div style="color:#b0bdd0;font-size:13px;margin-top:5px">Rischio: €${p.openTrade.riskEur} · Conf: ${p.openTrade.confidence}/100 · ${new Date(p.openTrade.openedAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>` : p.enabled ? `<div style="background:#22c55e12;border:1px solid #22c55e22;border-radius:8px;padding:8px 10px;color:#22c55e;font-size:15px;text-align:center">
   ✅ In ascolto — conf ≥${MIN_CONF} · ${MIN_SEMS} semafori verdi<br>
-  <span id="paper-last-eval" style="color:#64748b;font-size:12px">Ultimo check: mai</span>
+  <span id="paper-last-eval" style="color:#cbd5e1;font-size:14px">Ultimo check: mai</span>
 </div>` : ''}
 
-    <button onclick="showDiary();setDiaryTabDirect('paper')" style="width:100%;margin-top:6px;background:#1e2740;border:1px solid #2a3550;color:#b0bdd0;border-radius:8px;padding:7px 0;font-size:13px">
+    <button onclick="showDiary();setDiaryTabDirect('paper')" style="width:100%;margin-top:6px;background:#1e2740;border:1px solid #2a3550;color:#b0bdd0;border-radius:8px;padding:7px 0;font-size:15px">
       📊 Storico completo nel Diario →
     </button>
-    <button onclick="resetPaperTrading()" style="width:100%;margin-top:5px;background:transparent;border:1px solid #334155;color:#475569;border-radius:8px;padding:6px 0;font-size:12px">
+    <button onclick="resetPaperTrading()" style="width:100%;margin-top:5px;background:transparent;border:1px solid #334155;color:#b0bdd0;border-radius:8px;padding:6px 0;font-size:14px">
       🗑 Azzera paper trading
     </button>`;
 }
@@ -2801,14 +2801,14 @@ async function refreshSwDiag() {
     const col = ok===null?'#b0bdd0':ok?'#22c55e':'#ef4444';
     const icon = ok===null?'':ok?'✅':'❌';
     return `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1e2535">
-      <span style="color:#94a3b8;font-size:12px">${label}</span>
-      <span style="color:${col};font-size:12px;font-weight:700">${icon} ${value}</span>
+      <span style="color:#fde68a;font-size:14px">${label}</span>
+      <span style="color:${col};font-size:14px;font-weight:700">${icon} ${value}</span>
     </div>`;
   };
 
   el.innerHTML = `
     <div class="card" style="margin-bottom:8px">
-      <div style="color:#3b82f6;font-weight:700;font-size:13px;margin-bottom:8px">🌐 Ambiente</div>
+      <div style="color:#3b82f6;font-weight:700;font-size:15px;margin-bottom:8px">🌐 Ambiente</div>
       ${row('HTTPS', isHttps?'✅ Sì':'❌ No (serve HTTPS)', isHttps)}
       ${row('Service Worker', hasSW?'Supportato':'Non supportato', hasSW)}
       ${row('Permesso notifiche', perm, perm==='granted')}
@@ -2817,7 +2817,7 @@ async function refreshSwDiag() {
     </div>
 
     <div class="card" style="margin-bottom:8px">
-      <div style="color:#f0b429;font-weight:700;font-size:13px;margin-bottom:8px">⚙️ Background</div>
+      <div style="color:#f0b429;font-weight:700;font-size:15px;margin-bottom:8px">⚙️ Background</div>
       ${row('Check ogni 5 min', bgOk?'✅ Attivo':'❌ Non attivo', bgOk)}
       ${row('Paper Trading BG', paperEn?'✅ Abilitato':'○ Disabilitato', paperEn)}
       ${row('Trade aperto nel SW', tradeOk?'✅ Sì':'○ No')}
@@ -2825,7 +2825,7 @@ async function refreshSwDiag() {
     </div>
 
     <div class="card" style="margin-bottom:8px">
-      <div style="color:#22c55e;font-weight:700;font-size:13px;margin-bottom:8px">🤖 Paper Trading</div>
+      <div style="color:#22c55e;font-weight:700;font-size:15px;margin-bottom:8px">🤖 Paper Trading</div>
       ${row('Paper abilitato', p.enabled?'✅ Sì':'○ No', p.enabled)}
       ${row('Trade aperto (app)', p.openTrade?'✅ '+p.openTrade.direction+' @ $'+fmtP(p.openTrade.entry):'○ Nessuno')}
       ${row('Capitale', '€'+p.capital?.toFixed(2)||'10000')}
@@ -2834,7 +2834,7 @@ async function refreshSwDiag() {
     </div>
 
     <div class="card" style="margin-bottom:8px">
-      <div style="color:#94a3b8;font-weight:700;font-size:13px;margin-bottom:8px">📡 API & Dati</div>
+      <div style="color:#fde68a;font-weight:700;font-size:15px;margin-bottom:8px">📡 API & Dati</div>
       ${row('API Key', state.tdKey?'✅ Configurata (…'+state.tdKey.slice(-4)+')':'❌ Mancante', !!state.tdKey)}
       ${row('Candele 1H', state.candles['1h']?.length+' candele')}
       ${row('Candele 4H', state.candles4h?.length+' candele')}
@@ -2844,12 +2844,12 @@ async function refreshSwDiag() {
     </div>
 
     <div style="background:#1e2740;border-radius:8px;padding:10px;margin-bottom:8px">
-      <div style="color:#94a3b8;font-size:11px;font-weight:700;margin-bottom:6px">🧪 Azioni diagnostica:</div>
+      <div style="color:#fde68a;font-size:13px;font-weight:700;margin-bottom:6px">🧪 Azioni diagnostica:</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button onclick="testSwPing()" style="background:#3b82f620;border:1px solid #3b82f644;color:#3b82f6;border-radius:6px;padding:6px 10px;font-size:11px">📡 PING SW</button>
-        <button onclick="testNotification()" style="background:#f0b42920;border:1px solid #f0b42944;color:#f0b429;border-radius:6px;padding:6px 10px;font-size:11px">🔔 Test notifica</button>
-        <button onclick="testForceTrade()" style="background:#22c55e20;border:1px solid #22c55e44;color:#22c55e;border-radius:6px;padding:6px 10px;font-size:11px">🤖 Forza scoring</button>
-        <button onclick="testSyncSw()" style="background:#a855f720;border:1px solid #a855f744;color:#a855f7;border-radius:6px;padding:6px 10px;font-size:11px">🔄 Sync SW</button>
+        <button onclick="testSwPing()" style="background:#3b82f620;border:1px solid #3b82f644;color:#3b82f6;border-radius:6px;padding:6px 10px;font-size:13px">📡 PING SW</button>
+        <button onclick="testNotification()" style="background:#f0b42920;border:1px solid #f0b42944;color:#f0b429;border-radius:6px;padding:6px 10px;font-size:13px">🔔 Test notifica</button>
+        <button onclick="testForceTrade()" style="background:#22c55e20;border:1px solid #22c55e44;color:#22c55e;border-radius:6px;padding:6px 10px;font-size:13px">🤖 Forza scoring</button>
+        <button onclick="testSyncSw()" style="background:#a855f720;border:1px solid #a855f744;color:#a855f7;border-radius:6px;padding:6px 10px;font-size:13px">🔄 Sync SW</button>
       </div>
     </div>
   `;
@@ -3479,7 +3479,7 @@ function renderScalpScreen() {
     content.innerHTML = `<div style="text-align:center;padding:40px 0;color:#b0bdd0">
       <div style="font-size:32px;margin-bottom:8px">⚡</div>
       <div>Servono almeno 20 candele 5M.</div>
-      <button onclick="doScalpFetch()" style="margin-top:14px;background:#f97316;color:#000;border-radius:8px;padding:10px 20px;font-size:15px;font-weight:700;border:none">Carica dati scalping</button>
+      <button onclick="doScalpFetch()" style="margin-top:14px;background:#f97316;color:#000;border-radius:8px;padding:10px 20px;font-size:17px;font-weight:700;border:none">Carica dati scalping</button>
     </div>`;
     return;
   }
@@ -3532,17 +3532,17 @@ function renderScalpScreen() {
   html += `<div class="card" style="border:2px solid ${sig.finalColor}33;padding:16px">
     <div style="text-align:center;margin-bottom:12px">
       <div style="font-size:36px;font-weight:900;color:${sig.finalColor}">${sig.finalDir}</div>
-      <div style="color:#b0bdd0;font-size:14px;margin-top:3px">${sig.buyV} criteri bull · ${sig.sellV} criteri bear · TF: ${sig.tfLabel}</div>
+      <div style="color:#b0bdd0;font-size:16px;margin-top:3px">${sig.buyV} criteri bull · ${sig.sellV} criteri bear · TF: ${sig.tfLabel}</div>
     </div>
     <div style="margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="color:#b0bdd0;font-size:14px;font-weight:600">Confidenza Scalping</span>
+        <span style="color:#b0bdd0;font-size:16px;font-weight:600">Confidenza Scalping</span>
         <span style="font-size:22px;font-weight:900;color:${sig.confColor}">${sig.confidence}/100</span>
       </div>
       <div class="conf-bar">
         <div class="conf-fill" style="width:${sig.confidence}%;background:${sig.confColor}"></div>
       </div>
-      <div style="text-align:center;color:#b0bdd0;font-size:13px;margin-top:4px">
+      <div style="text-align:center;color:#b0bdd0;font-size:15px;margin-top:4px">
         ${sig.confidence>=75?'✅ Segnale FORTE — alta coerenza':sig.confidence>=50?'⚡ Segnale MODERATO':sig.confidence>=35?'⚠ Segnale DEBOLE':'❌ Incerto — non operare'}
       </div>
     </div>
@@ -3551,10 +3551,10 @@ function renderScalpScreen() {
   // ── Chart ────────────────────────────────────────────────────
   html += `<div class="card" style="padding:10px 5px 6px">
     <div style="display:flex;justify-content:space-between;padding:0 7px 4px">
-      <span style="color:#b0bdd0;font-size:12px">XAU/USD ${sig.tfLabel} · Boll + VWAP</span>
+      <span style="color:#b0bdd0;font-size:14px">XAU/USD ${sig.tfLabel} · Boll + VWAP</span>
       <div style="display:flex;gap:8px">
-        <span style="color:#a855f7;font-size:12px">— Bollinger</span>
-        <span style="color:#f0b429;font-size:12px">— VWAP</span>
+        <span style="color:#a855f7;font-size:14px">— Bollinger</span>
+        <span style="color:#f0b429;font-size:14px">— VWAP</span>
       </div>
     </div>
     <svg width="100%" viewBox="0 0 340 140" style="display:block">${chartSvg}</svg>
@@ -3568,7 +3568,7 @@ function renderScalpScreen() {
     const shadow=sem==='green'?'0 0 8px #22c55e88':sem==='red'?'0 0 8px #ef444488':sem==='orange'?'0 0 8px #f9731688':'none';
     html+=`<div style="background:#1e2740;border-radius:10px;padding:10px 12px;border:1px solid ${col}33;display:flex;align-items:center;gap:10px">
       <div style="width:16px;height:16px;border-radius:50%;background:${col};box-shadow:${shadow};flex-shrink:0"></div>
-      <div><div style="color:#e2e8f0;font-size:14px;font-weight:700">${label}</div><div style="color:#b0bdd0;font-size:12px;margin-top:1px">${detail}</div></div>
+      <div><div style="color:#fde68a;font-size:16px;font-weight:700">${label}</div><div style="color:#b0bdd0;font-size:14px;margin-top:1px">${detail}</div></div>
     </div>`;
   });
   html += '</div></div>';
@@ -3592,11 +3592,11 @@ function renderScalpScreen() {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div>
           <div style="color:#f97316;font-weight:800;font-size:16px">📡 Macro Anticipatori Scalping</div>
-          <div style="color:#b0bdd0;font-size:12px;margin-top:2px">EUR/USD + TNX su 1M e 5M → impulso XAU</div>
+          <div style="color:#b0bdd0;font-size:14px;margin-top:2px">EUR/USD + TNX su 1M e 5M → impulso XAU</div>
         </div>
         <div style="text-align:right">
-          <span style="background:${macro.macroColor}22;color:${macro.macroColor};border:1px solid ${macro.macroColor}44;border-radius:6px;padding:4px 10px;font-size:14px;font-weight:800">${macro.macroLabel}</span>
-          ${macro.accelConfirm ? '<div style="color:#f0b429;font-size:11px;margin-top:3px">⚡ Momentum in accelerazione</div>' : ''}
+          <span style="background:${macro.macroColor}22;color:${macro.macroColor};border:1px solid ${macro.macroColor}44;border-radius:6px;padding:4px 10px;font-size:16px;font-weight:800">${macro.macroLabel}</span>
+          ${macro.accelConfirm ? '<div style="color:#f0b429;font-size:13px;margin-top:3px">⚡ Momentum in accelerazione</div>' : ''}
         </div>
       </div>
 
@@ -3610,13 +3610,13 @@ function renderScalpScreen() {
       html += `<div style="background:#1e2740;border-radius:9px;padding:10px;border:1px solid ${col1m}33">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div style="width:12px;height:12px;border-radius:50%;background:${col1m};box-shadow:${semGlow(col1m)};flex-shrink:0"></div>
-          <span style="color:#b0bdd0;font-size:12px;font-weight:700">${eurLabel} 1M</span>
+          <span style="color:#b0bdd0;font-size:14px;font-weight:700">${eurLabel} 1M</span>
         </div>
         <div style="color:${col1m};font-size:17px;font-weight:800">${macro.eurBias1m||'–'}</div>
-        <div style="color:#b0bdd0;font-size:12px;margin-top:2px">Slope: ${macro.eur1mSlope>0?'+':''}${(macro.eur1mSlope*100||0).toFixed(3)}%</div>
-        <div style="color:${col1m};font-size:12px;font-weight:600">${eurDir1m}</div>
-        ${macro.eur1mATR?.spike ? '<div style="color:#f97316;font-size:11px;margin-top:3px">⚡ Spike ATR → evento in corso</div>' : ''}
-        <div style="color:#b0bdd0;font-size:11px;margin-top:2px">RSI7: ${macro.eur1mRSI} ${macro.eur1mLast?`· $${macro.eur1mLast.toFixed(4)}`:''}</div>
+        <div style="color:#b0bdd0;font-size:14px;margin-top:2px">Slope: ${macro.eur1mSlope>0?'+':''}${(macro.eur1mSlope*100||0).toFixed(3)}%</div>
+        <div style="color:${col1m};font-size:14px;font-weight:600">${eurDir1m}</div>
+        ${macro.eur1mATR?.spike ? '<div style="color:#f97316;font-size:13px;margin-top:3px">⚡ Spike ATR → evento in corso</div>' : ''}
+        <div style="color:#b0bdd0;font-size:13px;margin-top:2px">RSI7: ${macro.eur1mRSI} ${macro.eur1mLast?`· $${macro.eur1mLast.toFixed(4)}`:''}</div>
       </div>`;
 
       // EUR/USD 5M
@@ -3625,17 +3625,17 @@ function renderScalpScreen() {
       html += `<div style="background:#1e2740;border-radius:9px;padding:10px;border:1px solid ${col5m}33">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div style="width:12px;height:12px;border-radius:50%;background:${col5m};box-shadow:${semGlow(col5m)};flex-shrink:0"></div>
-          <span style="color:#b0bdd0;font-size:12px;font-weight:700">${eurLabel} 5M</span>
-          ${macro.eurAligned ? '<span style="background:#22c55e20;color:#22c55e;border-radius:4px;padding:1px 5px;font-size:12px;font-weight:700">ALLINEATO</span>' : ''}
-          ${macro.eurDivergence ? '<span style="background:#f9731620;color:#f97316;border-radius:4px;padding:1px 5px;font-size:12px;font-weight:700">DIV</span>' : ''}
+          <span style="color:#b0bdd0;font-size:14px;font-weight:700">${eurLabel} 5M</span>
+          ${macro.eurAligned ? '<span style="background:#22c55e20;color:#22c55e;border-radius:4px;padding:1px 5px;font-size:14px;font-weight:700">ALLINEATO</span>' : ''}
+          ${macro.eurDivergence ? '<span style="background:#f9731620;color:#f97316;border-radius:4px;padding:1px 5px;font-size:14px;font-weight:700">DIV</span>' : ''}
         </div>
         <div style="color:${col5m};font-size:17px;font-weight:800">${macro.eurBias5m||'–'}</div>
-        <div style="color:#b0bdd0;font-size:12px;margin-top:2px">Slope: ${macro.eur5mSlope>0?'+':''}${(macro.eur5mSlope*100||0).toFixed(3)}%</div>
-        <div style="color:${col5m};font-size:12px;font-weight:600">${eurDir5m}</div>
-        ${macro.eurDivergence ? '<div style="color:#f97316;font-size:11px;margin-top:3px">⚠️ 1M vs 5M divergenti → esaurimento?</div>' : ''}
+        <div style="color:#b0bdd0;font-size:14px;margin-top:2px">Slope: ${macro.eur5mSlope>0?'+':''}${(macro.eur5mSlope*100||0).toFixed(3)}%</div>
+        <div style="color:${col5m};font-size:14px;font-weight:600">${eurDir5m}</div>
+        ${macro.eurDivergence ? '<div style="color:#f97316;font-size:13px;margin-top:3px">⚠️ 1M vs 5M divergenti → esaurimento?</div>' : ''}
       </div>`;
     } else {
-      html += `<div style="background:#1e2740;border-radius:9px;padding:10px;opacity:0.4;grid-column:span 2"><div style="color:#b0bdd0;font-size:13px">EUR/USD non disponibile nel piano</div></div>`;
+      html += `<div style="background:#1e2740;border-radius:9px;padding:10px;opacity:0.4;grid-column:span 2"><div style="color:#b0bdd0;font-size:15px">EUR/USD non disponibile nel piano</div></div>`;
     }
 
     // TNX 1M
@@ -3645,13 +3645,13 @@ function renderScalpScreen() {
       html += `<div style="background:#1e2740;border-radius:9px;padding:10px;border:1px solid ${tCol1m}33">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div style="width:12px;height:12px;border-radius:50%;background:${tCol1m};box-shadow:${semGlow(tCol1m)};flex-shrink:0"></div>
-          <span style="color:#b0bdd0;font-size:12px;font-weight:700">${tnxLabel} 1M</span>
+          <span style="color:#b0bdd0;font-size:14px;font-weight:700">${tnxLabel} 1M</span>
         </div>
         <div style="color:${tCol1m};font-size:17px;font-weight:800">${macro.tnxBias1m||'–'}</div>
-        <div style="color:#b0bdd0;font-size:12px;margin-top:2px">Slope: ${macro.tnx1mSlope>0?'+':''}${(macro.tnx1mSlope*100||0).toFixed(3)}%</div>
-        <div style="color:${tCol1m};font-size:12px;font-weight:600">${tnxDir1m}</div>
-        ${macro.tnx1mATR?.spike ? '<div style="color:#f97316;font-size:11px;margin-top:3px">⚡ Spike ATR → movimento yield</div>' : ''}
-        <div style="color:#b0bdd0;font-size:11px;margin-top:2px">RSI7: ${macro.tnx1mRSI} ${macro.tnx1mLast?`· ${macro.tnx1mLast.toFixed(3)}%`:''}</div>
+        <div style="color:#b0bdd0;font-size:14px;margin-top:2px">Slope: ${macro.tnx1mSlope>0?'+':''}${(macro.tnx1mSlope*100||0).toFixed(3)}%</div>
+        <div style="color:${tCol1m};font-size:14px;font-weight:600">${tnxDir1m}</div>
+        ${macro.tnx1mATR?.spike ? '<div style="color:#f97316;font-size:13px;margin-top:3px">⚡ Spike ATR → movimento yield</div>' : ''}
+        <div style="color:#b0bdd0;font-size:13px;margin-top:2px">RSI7: ${macro.tnx1mRSI} ${macro.tnx1mLast?`· ${macro.tnx1mLast.toFixed(3)}%`:''}</div>
       </div>`;
 
       // TNX 5M
@@ -3660,17 +3660,17 @@ function renderScalpScreen() {
       html += `<div style="background:#1e2740;border-radius:9px;padding:10px;border:1px solid ${tCol5m}33">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div style="width:12px;height:12px;border-radius:50%;background:${tCol5m};box-shadow:${semGlow(tCol5m)};flex-shrink:0"></div>
-          <span style="color:#b0bdd0;font-size:12px;font-weight:700">${tnxLabel} 5M</span>
-          ${macro.tnxAligned ? '<span style="background:#22c55e20;color:#22c55e;border-radius:4px;padding:1px 5px;font-size:12px;font-weight:700">ALLINEATO</span>' : ''}
-          ${macro.tnxDivergence ? '<span style="background:#f9731620;color:#f97316;border-radius:4px;padding:1px 5px;font-size:12px;font-weight:700">DIV</span>' : ''}
+          <span style="color:#b0bdd0;font-size:14px;font-weight:700">${tnxLabel} 5M</span>
+          ${macro.tnxAligned ? '<span style="background:#22c55e20;color:#22c55e;border-radius:4px;padding:1px 5px;font-size:14px;font-weight:700">ALLINEATO</span>' : ''}
+          ${macro.tnxDivergence ? '<span style="background:#f9731620;color:#f97316;border-radius:4px;padding:1px 5px;font-size:14px;font-weight:700">DIV</span>' : ''}
         </div>
         <div style="color:${tCol5m};font-size:17px;font-weight:800">${macro.tnxBias5m||'–'}</div>
-        <div style="color:#b0bdd0;font-size:12px;margin-top:2px">Slope: ${macro.tnx5mSlope>0?'+':''}${(macro.tnx5mSlope*100||0).toFixed(3)}%</div>
-        <div style="color:${tCol5m};font-size:12px;font-weight:600">${tnxDir5m}</div>
-        ${macro.tnxDivergence ? '<div style="color:#f97316;font-size:11px;margin-top:3px">⚠️ 1M vs 5M divergenti → cautela</div>' : ''}
+        <div style="color:#b0bdd0;font-size:14px;margin-top:2px">Slope: ${macro.tnx5mSlope>0?'+':''}${(macro.tnx5mSlope*100||0).toFixed(3)}%</div>
+        <div style="color:${tCol5m};font-size:14px;font-weight:600">${tnxDir5m}</div>
+        ${macro.tnxDivergence ? '<div style="color:#f97316;font-size:13px;margin-top:3px">⚠️ 1M vs 5M divergenti → cautela</div>' : ''}
       </div>`;
     } else {
-      html += `<div style="background:#1e2740;border-radius:9px;padding:10px;opacity:0.4;grid-column:span 2"><div style="color:#b0bdd0;font-size:13px">TNX non disponibile nel piano</div></div>`;
+      html += `<div style="background:#1e2740;border-radius:9px;padding:10px;opacity:0.4;grid-column:span 2"><div style="color:#b0bdd0;font-size:15px">TNX non disponibile nel piano</div></div>`;
     }
 
     html += `</div>`; // close grid
@@ -3680,19 +3680,19 @@ function renderScalpScreen() {
       const icon = macro.macroDir === 'BUY' ? '🟢' : '🔴';
       const boost = sig.macro?.confidenceBoost || 0;
       html += `<div style="background:${macro.macroColor}12;border:1px solid ${macro.macroColor}33;border-radius:9px;padding:10px 12px">
-        <div style="color:${macro.macroColor};font-weight:800;font-size:15px;margin-bottom:4px">${icon} ${macro.macroLabel}</div>
-        <div style="color:#e2e8f0;font-size:13px;line-height:1.6">
+        <div style="color:${macro.macroColor};font-weight:800;font-size:17px;margin-bottom:4px">${icon} ${macro.macroLabel}</div>
+        <div style="color:#fde68a;font-size:15px;line-height:1.6">
           ${macro.macroStr >= 3
             ? `EUR/USD e TNX concordano su ${macro.macroDir === 'BUY' ? 'dollaro debole e yield in calo' : 'dollaro forte e yield in salita'} su entrambi i TF → impulso macro ${macro.macroDir === 'BUY' ? 'rialzista' : 'ribassista'} confermato.`
             : `${macro.macroStr} segnali macro su ${macro.macroDir === 'BUY' ? 'rialzo' : 'ribasso'} XAU.`}
           ${macro.accelConfirm ? ' Movimento in accelerazione.' : ''}
         </div>
-        <div style="color:#b0bdd0;font-size:12px;margin-top:5px">Boost confidence: <span style="color:#f0b429;font-weight:700">+${boost} pt</span></div>
+        <div style="color:#b0bdd0;font-size:14px;margin-top:5px">Boost confidence: <span style="color:#f0b429;font-weight:700">+${boost} pt</span></div>
       </div>`;
     } else if (macro.eurDivergence || macro.tnxDivergence) {
       html += `<div style="background:#f9731612;border:1px solid #f9731633;border-radius:9px;padding:9px 11px">
-        <div style="color:#f97316;font-weight:700;font-size:14px">⚠️ Divergenza 1M vs 5M rilevata</div>
-        <div style="color:#b0bdd0;font-size:13px;margin-top:3px">Il momentum a breve contrasta con la struttura a medio termine. Attendi chiarimento prima di entrare.</div>
+        <div style="color:#f97316;font-weight:700;font-size:16px">⚠️ Divergenza 1M vs 5M rilevata</div>
+        <div style="color:#b0bdd0;font-size:15px;margin-top:3px">Il momentum a breve contrasta con la struttura a medio termine. Attendi chiarimento prima di entrare.</div>
       </div>`;
     }
 
@@ -3702,16 +3702,16 @@ function renderScalpScreen() {
   // ── Pattern candele ──────────────────────────────────────────
   html += `<div class="card"><div class="section-title">🕯 Pattern Rilevati</div>`;
   if (sig.patterns.length === 0) {
-    html += `<div style="color:#b0bdd0;font-size:14px;text-align:center;padding:8px 0">Nessun pattern significativo nelle ultime candele</div>`;
+    html += `<div style="color:#b0bdd0;font-size:16px;text-align:center;padding:8px 0">Nessun pattern significativo nelle ultime candele</div>`;
   } else {
     sig.patterns.forEach(p=>{
       const col=p.bias==='BUY'?'#22c55e':p.bias==='SELL'?'#ef4444':'#f97316';
       html+=`<div style="background:#1e2740;border-radius:9px;padding:10px 12px;margin-bottom:7px;border-left:3px solid ${col}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-          <span style="color:#e2e8f0;font-size:15px;font-weight:700">${p.name}</span>
-          <span style="background:${col}20;color:${col};border:1px solid ${col}44;border-radius:5px;padding:1px 8px;font-size:12px;font-weight:700">${p.bias}</span>
+          <span style="color:#fde68a;font-size:17px;font-weight:700">${p.name}</span>
+          <span style="background:${col}20;color:${col};border:1px solid ${col}44;border-radius:5px;padding:1px 8px;font-size:14px;font-weight:700">${p.bias}</span>
         </div>
-        <div style="color:#b0bdd0;font-size:13px">${p.desc}</div>
+        <div style="color:#b0bdd0;font-size:15px">${p.desc}</div>
       </div>`;
     });
   }
@@ -3726,17 +3726,17 @@ function renderScalpScreen() {
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px">
           ${[['Entry',sig.entry,'#f0b429'],['SL',sig.sl,'#ef4444'],['TP1',sig.tp1,'#22c55e'],['TP2',sig.tp2,'#14b8a6']].map(([l,v,c])=>`
           <div style="background:#141920;border-radius:6px;padding:6px 4px;text-align:center">
-            <div style="color:#b0bdd0;font-size:11px">${l}</div>
-            <div style="color:${c};font-size:14px;font-weight:700">$${fmtP(v)}</div>
+            <div style="color:#b0bdd0;font-size:13px">${l}</div>
+            <div style="color:${c};font-size:16px;font-weight:700">$${fmtP(v)}</div>
           </div>`).join('')}
         </div>
-        <div style="display:flex;gap:12px;margin-top:8px;font-size:13px">
+        <div style="display:flex;gap:12px;margin-top:8px;font-size:15px">
           <span style="color:#b0bdd0">R/R: <span style="color:#f97316;font-weight:700">1:${(Math.abs(sig.tp1-sig.entry)/Math.abs(sig.sl-sig.entry)).toFixed(1)}</span></span>
-          <span style="color:#b0bdd0">ATR: <span style="color:#e2e8f0;font-weight:700">${sig.atrVal}</span></span>
+          <span style="color:#b0bdd0">ATR: <span style="color:#fde68a;font-weight:700">${sig.atrVal}</span></span>
           <span style="color:#b0bdd0">SL dist: <span style="color:#ef4444;font-weight:700">${Math.abs(sig.sl-sig.entry).toFixed(1)} pts</span></span>
         </div>
       </div>
-      <div style="background:#f9731615;border:1px solid #f9731633;border-radius:8px;padding:8px 10px;font-size:13px;color:#b0bdd0">
+      <div style="background:#f9731615;border:1px solid #f9731633;border-radius:8px;padding:8px 10px;font-size:15px;color:#b0bdd0">
         ⚠️ Setup basato su ATR x1.2 SL · x1.5/2.5 TP. Adatta alle tue regole di risk management. Max 1-2% del capitale per trade.
       </div>
     </div>`;
@@ -3749,7 +3749,7 @@ function renderScalpScreen() {
       const col = l.above ? '#f87171' : '#4ade80';
       html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:7px;margin-bottom:4px;background:#1e2740">
         <span style="color:${col};font-weight:700;font-size:16px">$${l.level.toFixed(0)}</span>
-        <span style="color:#b0bdd0;font-size:13px">${l.above?'▲ resistenza':'▼ supporto'} · dist ${l.dist} pts</span>
+        <span style="color:#b0bdd0;font-size:15px">${l.above?'▲ resistenza':'▼ supporto'} · dist ${l.dist} pts</span>
       </div>`;
     });
     html += '</div>';
@@ -3759,34 +3759,34 @@ function renderScalpScreen() {
   html += `<div class="card"><div class="section-title">📊 Volatilità & Squeeze</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div style="background:#1e2740;border-radius:9px;padding:10px">
-        <div style="color:#b0bdd0;font-size:12px;margin-bottom:4px">ATR (7)</div>
+        <div style="color:#b0bdd0;font-size:14px;margin-bottom:4px">ATR (7)</div>
         <div style="color:${sig.atr.spike?'#f97316':'#e2e8f0'};font-size:18px;font-weight:800">${sig.atr.current}</div>
-        <div style="color:#b0bdd0;font-size:12px">ratio: x${sig.atr.ratio} vs avg ${sig.atr.avg}</div>
-        ${sig.atr.spike?'<div style="color:#f97316;font-size:12px;margin-top:4px">⚡ SPIKE — momentum alto</div>':''}
+        <div style="color:#b0bdd0;font-size:14px">ratio: x${sig.atr.ratio} vs avg ${sig.atr.avg}</div>
+        ${sig.atr.spike?'<div style="color:#f97316;font-size:14px;margin-top:4px">⚡ SPIKE — momentum alto</div>':''}
       </div>
       <div style="background:#1e2740;border-radius:9px;padding:10px">
-        <div style="color:#b0bdd0;font-size:12px;margin-bottom:4px">Bollinger Squeeze</div>
+        <div style="color:#b0bdd0;font-size:14px;margin-bottom:4px">Bollinger Squeeze</div>
         <div style="color:${sig.squeeze.squeeze?'#a855f7':'#e2e8f0'};font-size:18px;font-weight:800">${sig.squeeze.squeeze?'🤏 SÌ':'NO'}</div>
-        <div style="color:#b0bdd0;font-size:12px">BW: ${sig.squeeze.bwCurrent} (${sig.squeeze.pct}°pct)</div>
-        ${sig.squeeze.squeeze?'<div style="color:#a855f7;font-size:12px;margin-top:4px">Breakout imminente</div>':''}
+        <div style="color:#b0bdd0;font-size:14px">BW: ${sig.squeeze.bwCurrent} (${sig.squeeze.pct}°pct)</div>
+        ${sig.squeeze.squeeze?'<div style="color:#a855f7;font-size:14px;margin-top:4px">Breakout imminente</div>':''}
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
       <div style="background:#1e2740;border-radius:9px;padding:10px">
-        <div style="color:#b0bdd0;font-size:12px;margin-bottom:4px">VWAP</div>
+        <div style="color:#b0bdd0;font-size:14px;margin-bottom:4px">VWAP</div>
         <div style="color:#f0b429;font-size:17px;font-weight:800">$${fmtP(sig.vwapNow)}</div>
-        <div style="color:${sig.lastPrice>sig.vwapNow?'#22c55e':'#ef4444'};font-size:12px">Prezzo ${sig.lastPrice>sig.vwapNow?'sopra ▲':'sotto ▼'} VWAP</div>
+        <div style="color:${sig.lastPrice>sig.vwapNow?'#22c55e':'#ef4444'};font-size:14px">Prezzo ${sig.lastPrice>sig.vwapNow?'sopra ▲':'sotto ▼'} VWAP</div>
       </div>
       <div style="background:#1e2740;border-radius:9px;padding:10px">
-        <div style="color:#b0bdd0;font-size:12px;margin-bottom:4px">RSI 7 vs RSI7/5M</div>
+        <div style="color:#b0bdd0;font-size:14px;margin-bottom:4px">RSI 7 vs RSI7/5M</div>
         <div style="color:${sig.rsiDiv?'#f97316':'#e2e8f0'};font-size:17px;font-weight:800">${sig.rsi7} vs ${sig.rsi5m}</div>
-        ${sig.rsiDiv?`<div style="color:#f97316;font-size:12px;margin-top:2px">⚡ DIVERGENZA → ${sig.rsiDivDir}</div>`:'<div style="color:#b0bdd0;font-size:12px">No divergenza</div>'}
+        ${sig.rsiDiv?`<div style="color:#f97316;font-size:14px;margin-top:2px">⚡ DIVERGENZA → ${sig.rsiDivDir}</div>`:'<div style="color:#b0bdd0;font-size:14px">No divergenza</div>'}
       </div>
     </div>
   </div>`;
 
 
-  html += `<div style="text-align:center;color:#b0bdd0;font-size:11px;line-height:1.5;padding:4px 8px;border-top:1px solid #1e2535">
+  html += `<div style="text-align:center;color:#b0bdd0;font-size:13px;line-height:1.5;padding:4px 8px;border-top:1px solid #1e2535">
     ⚠️ Solo scopo didattico. Lo scalping è ad alto rischio. Non operare senza money management.
   </div>`;
 
@@ -4082,7 +4082,7 @@ function renderTrendScreen() {
   if (!sig) {
     content.innerHTML = `<div style="text-align:center;padding:40px 0;color:#b0bdd0">
       <div style="font-size:32px;margin-bottom:8px">📈</div>
-      <div>Servono dati Daily + 1H.<br><button onclick="doTrendFetch()" style="margin-top:14px;background:#22c55e;color:#000;border-radius:8px;padding:10px 20px;font-size:15px;font-weight:700;border:none">Carica dati trend</button></div>
+      <div>Servono dati Daily + 1H.<br><button onclick="doTrendFetch()" style="margin-top:14px;background:#22c55e;color:#000;border-radius:8px;padding:10px 20px;font-size:17px;font-weight:700;border:none">Carica dati trend</button></div>
     </div>`;
     return;
   }
@@ -4093,15 +4093,15 @@ function renderTrendScreen() {
   html += `<div class="card" style="border:2px solid ${sig.finalColor}33">
     <div style="text-align:center;margin-bottom:12px">
       <div style="font-size:36px;font-weight:900;color:${sig.finalColor}">${sig.finalDir}</div>
-      <div style="color:#b0bdd0;font-size:14px;margin-top:3px">Daily: ${sig.dailyBias} · ${sig.tf4hLabel}: ${sig.h4Bias}</div>
+      <div style="color:#b0bdd0;font-size:16px;margin-top:3px">Daily: ${sig.dailyBias} · ${sig.tf4hLabel}: ${sig.h4Bias}</div>
     </div>
     <div style="margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="color:#b0bdd0;font-size:14px;font-weight:600">Confidenza Trend</span>
+        <span style="color:#b0bdd0;font-size:16px;font-weight:600">Confidenza Trend</span>
         <span style="font-size:22px;font-weight:900;color:${sig.confColor}">${sig.confidence}/100</span>
       </div>
       <div class="conf-bar"><div class="conf-fill" style="width:${sig.confidence}%;background:${sig.confColor}"></div></div>
-      <div style="text-align:center;color:#b0bdd0;font-size:13px;margin-top:4px">
+      <div style="text-align:center;color:#b0bdd0;font-size:15px;margin-top:4px">
         ${sig.confidence>=75?'✅ Trend FORTE':sig.confidence>=50?'⚡ Trend MODERATO':sig.confidence>=35?'⚠ Trend DEBOLE':'❌ Assenza di trend — non operare'}
       </div>
     </div>
@@ -4112,9 +4112,9 @@ function renderTrendScreen() {
     <div class="section-title">🏗️ Struttura Mercato</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div style="background:#1e2740;border-radius:9px;padding:10px;border:1px solid ${sig.d_struct.structure==='UPTREND'?'#22c55e33':sig.d_struct.structure==='DOWNTREND'?'#ef444433':'#2a3550'}">
-        <div style="color:#b0bdd0;font-size:12px;font-weight:700;margin-bottom:4px">📅 DAILY</div>
+        <div style="color:#b0bdd0;font-size:14px;font-weight:700;margin-bottom:4px">📅 DAILY</div>
         <div style="color:${sig.d_struct.structure==='UPTREND'?'#22c55e':sig.d_struct.structure==='DOWNTREND'?'#ef4444':'#b0bdd0'};font-size:18px;font-weight:800">${sig.d_struct.structure}</div>
-        <div style="color:#94a3b8;font-size:12px;margin-top:3px">
+        <div style="color:#fde68a;font-size:14px;margin-top:3px">
           ${sig.d_struct.hh?'<span style="color:#22c55e">HH</span> ':''} 
           ${sig.d_struct.hl?'<span style="color:#22c55e">HL</span> ':''}
           ${sig.d_struct.lh?'<span style="color:#ef4444">LH</span> ':''}
@@ -4122,12 +4122,12 @@ function renderTrendScreen() {
         </div>
       </div>
       <div style="background:#1e2740;border-radius:9px;padding:10px;border:1px solid ${sig.d_adx.adx>25?'#f0b42933':'#2a3550'}">
-        <div style="color:#b0bdd0;font-size:12px;font-weight:700;margin-bottom:4px">📊 ADX (14)</div>
+        <div style="color:#b0bdd0;font-size:14px;font-weight:700;margin-bottom:4px">📊 ADX (14)</div>
         <div style="color:${sig.d_adx.adx>30?'#f0b429':sig.d_adx.adx>20?'#94a3b8':'#64748b'};font-size:22px;font-weight:800">${sig.d_adx.adx}</div>
-        <div style="font-size:12px;margin-top:3px">
+        <div style="font-size:14px;margin-top:3px">
           <span style="color:#22c55e">+DI ${sig.d_adx.pdi}</span> · <span style="color:#ef4444">-DI ${sig.d_adx.mdi}</span>
         </div>
-        <div style="color:#94a3b8;font-size:11px;margin-top:2px">${sig.d_adx.adx>30?'Trend forte':sig.d_adx.adx>20?'Trend moderato':'Laterale'}</div>
+        <div style="color:#fde68a;font-size:13px;margin-top:2px">${sig.d_adx.adx>30?'Trend forte':sig.d_adx.adx>20?'Trend moderato':'Laterale'}</div>
       </div>
     </div>
   </div>`;
@@ -4151,11 +4151,11 @@ function renderTrendScreen() {
     const col = above === null ? '#94a3b8' : above ? '#22c55e' : '#ef4444';
     const near = parseFloat(dist) < (sig.atr1h || 15);
     html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#1e2740;border-radius:8px;border:1px solid ${near?col+'44':'#2a3550'}">
-      <span style="color:#b0bdd0;font-size:13px">${label}</span>
+      <span style="color:#b0bdd0;font-size:15px">${label}</span>
       <div style="text-align:right">
-        <span style="color:${col};font-size:14px;font-weight:700">$${fmtP(val)}</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">${above?'▲':'▼'} dist ${dist}</span>
-        ${near?`<span style="color:${col};font-size:11px;margin-left:4px">◀ vicino</span>`:''}
+        <span style="color:${col};font-size:16px;font-weight:700">$${fmtP(val)}</span>
+        <span style="color:#cbd5e1;font-size:14px;margin-left:6px">${above?'▲':'▼'} dist ${dist}</span>
+        ${near?`<span style="color:${col};font-size:13px;margin-left:4px">◀ vicino</span>`:''}
       </div>
     </div>`;
   });
@@ -4169,7 +4169,7 @@ function renderTrendScreen() {
     const shadow = sem==='green'?'0 0 8px #22c55e88':sem==='red'?'0 0 8px #ef444488':sem==='orange'?'0 0 8px #f9731688':'none';
     html += `<div style="background:#1e2740;border-radius:10px;padding:10px 12px;border:1px solid ${col}33;display:flex;align-items:center;gap:10px">
       <div style="width:14px;height:14px;border-radius:50%;background:${col};box-shadow:${shadow};flex-shrink:0"></div>
-      <div><div style="color:#e2e8f0;font-size:14px;font-weight:700">${label}</div><div style="color:#94a3b8;font-size:12px;margin-top:1px">${detail}</div></div>
+      <div><div style="color:#fde68a;font-size:16px;font-weight:700">${label}</div><div style="color:#fde68a;font-size:14px;margin-top:1px">${detail}</div></div>
     </div>`;
   });
   html += `</div></div>`;
@@ -4184,26 +4184,26 @@ function renderTrendScreen() {
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:6px">
           ${[['Entry',sig.entry,'#f0b429'],['SL',sig.sl,'#ef4444'],['TP1',sig.tp1,'#22c55e'],['TP2',sig.tp2,'#14b8a6']].map(([l,v,c])=>`
           <div style="background:#141920;border-radius:6px;padding:6px 4px;text-align:center">
-            <div style="color:#94a3b8;font-size:11px">${l}</div>
-            <div style="color:${c};font-size:14px;font-weight:700">$${fmtP(v)}</div>
+            <div style="color:#fde68a;font-size:13px">${l}</div>
+            <div style="color:${c};font-size:16px;font-weight:700">$${fmtP(v)}</div>
           </div>`).join('')}
         </div>
-        <div style="display:flex;gap:12px;font-size:13px">
-          <span style="color:#94a3b8">R/R: <span style="color:#f97316;font-weight:700">1:${rr}</span></span>
-          <span style="color:#94a3b8">SL: <span style="color:#e2e8f0;font-weight:700">${Math.abs(sig.sl-sig.entry).toFixed(1)} pts</span></span>
-          <span style="color:#94a3b8">ATR: <span style="color:#e2e8f0;font-weight:700">${sig.atr1h.toFixed(1)}</span></span>
+        <div style="display:flex;gap:12px;font-size:15px">
+          <span style="color:#fde68a">R/R: <span style="color:#f97316;font-weight:700">1:${rr}</span></span>
+          <span style="color:#fde68a">SL: <span style="color:#fde68a;font-weight:700">${Math.abs(sig.sl-sig.entry).toFixed(1)} pts</span></span>
+          <span style="color:#fde68a">ATR: <span style="color:#fde68a;font-weight:700">${sig.atr1h.toFixed(1)}</span></span>
         </div>
       </div>
-      ${(sig.pullbackToEma20||sig.pullbackToEma50)?`<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:8px 10px;font-size:13px;color:#94a3b8">
+      ${(sig.pullbackToEma20||sig.pullbackToEma50)?`<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:8px 10px;font-size:15px;color:#fde68a">
         ✅ Pullback attivo su ${sig.pullbackToEma20?'EMA20':'EMA50'} — condizione entry trend ottimale
-      </div>`:`<div style="background:#f0b42912;border:1px solid #f0b42933;border-radius:8px;padding:8px 10px;font-size:13px;color:#94a3b8">
+      </div>`:`<div style="background:#f0b42912;border:1px solid #f0b42933;border-radius:8px;padding:8px 10px;font-size:15px;color:#fde68a">
         ⏳ Attendi pullback su EMA20/EMA50 per entry ottimale nel trend
       </div>`}
     </div>`;
   }
 
 
-  html += `<div style="text-align:center;color:#94a3b8;font-size:11px;line-height:1.5;padding:4px 8px;border-top:1px solid #2a3550">
+  html += `<div style="text-align:center;color:#fde68a;font-size:13px;line-height:1.5;padding:4px 8px;border-top:1px solid #2a3550">
     ⚠️ Solo scopo didattico. Il trend following richiede pazienza e gestione rigida del rischio.
   </div>`;
 
@@ -4232,13 +4232,13 @@ function renderPaperWidgetIn(el) {
   const dd = +((p.initialCapital - p.capital) / p.initialCapital * 100).toFixed(1);
   el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div style="color:#f0b429;font-weight:800;font-size:15px">🤖 Paper Trading</div>
-      <button onclick="togglePaperTrading()" style="background:${p.enabled?'#ef4444':'#22c55e'};color:#fff;border-radius:7px;padding:6px 12px;font-size:13px;font-weight:700;border:none">${p.enabled?'⏹ Stop':'▶ Avvia'}</button>
+      <div style="color:#f0b429;font-weight:800;font-size:17px">🤖 Paper Trading</div>
+      <button onclick="togglePaperTrading()" style="background:${p.enabled?'#ef4444':'#22c55e'};color:#fde68a;border-radius:7px;padding:6px 12px;font-size:15px;font-weight:700;border:none">${p.enabled?'⏹ Stop':'▶ Avvia'}</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
-      <div style="background:#080b10;border-radius:7px;padding:7px;text-align:center"><div style="color:#94a3b8;font-size:11px">Capitale</div><div style="color:#e2e8f0;font-size:15px;font-weight:800">€${p.capital.toFixed(0)}</div></div>
-      <div style="background:#080b10;border-radius:7px;padding:7px;text-align:center"><div style="color:#94a3b8;font-size:11px">P&L</div><div style="color:${pnlTotal>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:800">${pnlTotal>=0?'+':''}€${pnlTotal.toFixed(0)}</div></div>
-      <div style="background:#080b10;border-radius:7px;padding:7px;text-align:center"><div style="color:#94a3b8;font-size:11px">WR</div><div style="color:${wr>=50?'#22c55e':'#ef4444'};font-size:15px;font-weight:800">${wr}%</div></div>
+      <div style="background:#080b10;border-radius:7px;padding:7px;text-align:center"><div style="color:#fde68a;font-size:13px">Capitale</div><div style="color:#fde68a;font-size:17px;font-weight:800">€${p.capital.toFixed(0)}</div></div>
+      <div style="background:#080b10;border-radius:7px;padding:7px;text-align:center"><div style="color:#fde68a;font-size:13px">P&L</div><div style="color:${pnlTotal>=0?'#22c55e':'#ef4444'};font-size:17px;font-weight:800">${pnlTotal>=0?'+':''}€${pnlTotal.toFixed(0)}</div></div>
+      <div style="background:#080b10;border-radius:7px;padding:7px;text-align:center"><div style="color:#fde68a;font-size:13px">WR</div><div style="color:${wr>=50?'#22c55e':'#ef4444'};font-size:17px;font-weight:800">${wr}%</div></div>
     </div>`;
 }
 
@@ -4668,20 +4668,20 @@ function renderRecapScreen() {
     recap = computeAllScenarios();
   } catch(e) {
     console.error('[recap] computeAllScenarios error:', e.message);
-    content.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#94a3b8">
+    content.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#fde68a">
       <div style="font-size:32px;margin-bottom:10px">⟳</div>
-      <div style="color:#f0b429;font-size:14px;font-weight:700;margin-bottom:6px">Aggiornamento in corso...</div>
-      <div style="font-size:12px;color:#64748b">I dati si aggiorneranno al prossimo refresh</div>
+      <div style="color:#f0b429;font-size:16px;font-weight:700;margin-bottom:6px">Aggiornamento in corso...</div>
+      <div style="font-size:14px;color:#cbd5e1">I dati si aggiorneranno al prossimo refresh</div>
     </div>`;
     return;
   }
-  if (!recap) { content.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8">Errore calcolo scenari.</div>'; return; }
+  if (!recap) { content.innerHTML = '<div style="text-align:center;padding:40px;color:#fde68a">Errore calcolo scenari.</div>'; return; }
 
   const { scores, best, consensus, consensusColor, sess, regime, adx } = recap;
   let html = "";
 
   if (consensus === "CARICAMENTO") {
-    content.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#94a3b8"><div style="font-size:40px;margin-bottom:12px">⟳</div><div style="font-size:18px;font-weight:700;color:#f0b429;margin-bottom:8px">Caricamento dati...</div><div style="font-size:14px">Attendere il fetch iniziale</div></div>';
+    content.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#fde68a"><div style="font-size:40px;margin-bottom:12px">⟳</div><div style="font-size:18px;font-weight:700;color:#f0b429;margin-bottom:8px">Caricamento dati...</div><div style="font-size:16px">Attendere il fetch iniziale</div></div>';
     return;
   }
 
@@ -4693,19 +4693,19 @@ function renderRecapScreen() {
   html += `<div class="card" style="border:2px solid ${consensusColor}55;padding:14px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
       <div>
-        <div style="color:#94a3b8;font-size:12px;font-weight:700;letter-spacing:.05em">CONSENSO SCENARI</div>
+        <div style="color:#fde68a;font-size:14px;font-weight:700;letter-spacing:.05em">CONSENSO SCENARI</div>
         <div style="color:${consensusColor};font-size:24px;font-weight:900;line-height:1.1">${consensus}</div>
-        <div style="color:#94a3b8;font-size:12px;margin-top:2px">${sess.sessInfo.emoji} ${sess.sess} · Vol ${sess.sessInfo.vol} · ADX ${adx.adx} ${regime==="TRENDING"?"📈":regime==="RANGING"?"↔️":"〰️"}</div>
+        <div style="color:#fde68a;font-size:14px;margin-top:2px">${sess.sessInfo.emoji} ${sess.sess} · Vol ${sess.sessInfo.vol} · ADX ${adx.adx} ${regime==="TRENDING"?"📈":regime==="RANGING"?"↔️":"〰️"}</div>
       </div>
       <div style="text-align:right">
-        <div style="color:#e2e8f0;font-size:22px;font-weight:800">$${fmtP(lastXau?.c)}</div>
-        <div style="color:${pnlTot>=0?"#22c55e":"#ef4444"};font-size:14px;font-weight:700">🤖 ${pnlTot>=0?"+":""}€${pnlTot.toFixed(0)}</div>
-        <div style="color:${p.enabled?"#22c55e":"#64748b"};font-size:12px">${p.enabled?"● Auto ON":"○ Auto OFF"}${p.openTrade?" · Trade "+p.openTrade.direction:""}</div>
+        <div style="color:#fde68a;font-size:22px;font-weight:800">$${fmtP(lastXau?.c)}</div>
+        <div style="color:${pnlTot>=0?"#22c55e":"#ef4444"};font-size:16px;font-weight:700">🤖 ${pnlTot>=0?"+":""}€${pnlTot.toFixed(0)}</div>
+        <div style="color:${p.enabled?"#22c55e":"#64748b"};font-size:14px">${p.enabled?"● Auto ON":"○ Auto OFF"}${p.openTrade?" · Trade "+p.openTrade.direction:""}</div>
       </div>
     </div>
     ${sess.nextEvent?`<div style="background:#1e2740;border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between">
-      <span style="color:#94a3b8;font-size:13px">${sess.nextEvent.label}</span>
-      <span style="color:#f0b429;font-weight:700;font-size:13px">${sess.minToNext<60?sess.minToNext+"m":Math.floor(sess.minToNext/60)+"h"+sess.minToNext%60+"m"}</span>
+      <span style="color:#fde68a;font-size:15px">${sess.nextEvent.label}</span>
+      <span style="color:#f0b429;font-weight:700;font-size:15px">${sess.minToNext<60?sess.minToNext+"m":Math.floor(sess.minToNext/60)+"h"+sess.minToNext%60+"m"}</span>
     </div>`:""}
   </div>`;
 
@@ -4722,16 +4722,16 @@ function renderRecapScreen() {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div>
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
-            ${isBest?`<span style="background:${s.color}20;color:${s.color};border:1px solid ${s.color}44;border-radius:5px;padding:1px 6px;font-size:12px;font-weight:700">🥇 MIGLIORE</span>`:""}
-            <span style="color:#e2e8f0;font-size:17px;font-weight:800">${s.label}</span>
+            ${isBest?`<span style="background:${s.color}20;color:${s.color};border:1px solid ${s.color}44;border-radius:5px;padding:1px 6px;font-size:14px;font-weight:700">🥇 MIGLIORE</span>`:""}
+            <span style="color:#fde68a;font-size:17px;font-weight:800">${s.label}</span>
           </div>
-          <div style="color:#64748b;font-size:12px">${s.tf} · soglia ${s.threshold}</div>
+          <div style="color:#cbd5e1;font-size:14px">${s.tf} · soglia ${s.threshold}</div>
         </div>
         <div style="text-align:right">
           <div style="color:${s.bestDir==="BUY"?"#22c55e":s.bestDir==="SELL"?"#ef4444":"#64748b"};font-size:18px;font-weight:900">
             ${s.bestDir==="BUY"?"▲ BUY":s.bestDir==="SELL"?"▼ SELL":"● WAIT"}
           </div>
-          ${s.bestDir!=="WAIT"?`<div style="color:#f0b429;font-size:13px;font-weight:700">${s.bestScore}/100</div>`:""}
+          ${s.bestDir!=="WAIT"?`<div style="color:#f0b429;font-size:15px;font-weight:700">${s.bestScore}/100</div>`:""}
         </div>
       </div>
 
@@ -4739,29 +4739,29 @@ function renderRecapScreen() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px">
         <div style="background:${buyElig?"#22c55e12":"#1a2030"};border:1px solid ${buyElig?"#22c55e44":"#1e2535"};border-radius:8px;padding:8px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-            <span style="color:#22c55e;font-size:12px;font-weight:700">▲ BUY</span>
+            <span style="color:#22c55e;font-size:14px;font-weight:700">▲ BUY</span>
             <span style="color:${buyElig?"#22c55e":"#64748b"};font-size:18px;font-weight:900">${buyScore}</span>
           </div>
           <div style="background:#0d1117;border-radius:99px;height:4px;overflow:hidden;position:relative;margin-bottom:4px">
             <div style="width:${buyScore}%;height:100%;background:${buyScore>=75?"#22c55e":buyScore>=s.threshold?"#f0b429":"#334155"};border-radius:99px"></div>
             <div style="position:absolute;left:${s.threshold}%;top:0;width:1px;height:100%;background:#fff;opacity:.3"></div>
           </div>
-          ${buyElig?`<div style="color:#22c55e;font-size:10px;font-weight:700;margin-bottom:2px">✅ ELIGIBLE</div>`:""}
-          ${(s.buy?.R||[]).slice(0,2).map(r=>`<div style="color:#22c55e;font-size:10px;line-height:1.4;margin-bottom:1px">${r.slice(0,40)}</div>`).join("")}
-          ${(s.buy?.P||[]).slice(0,1).map(r=>`<div style="color:#ef4444;font-size:10px;line-height:1.4">${r.slice(0,40)}</div>`).join("")}
+          ${buyElig?`<div style="color:#22c55e;font-size:12px;font-weight:700;margin-bottom:2px">✅ ELIGIBLE</div>`:""}
+          ${(s.buy?.R||[]).slice(0,2).map(r=>`<div style="color:#22c55e;font-size:12px;line-height:1.4;margin-bottom:1px">${r.slice(0,40)}</div>`).join("")}
+          ${(s.buy?.P||[]).slice(0,1).map(r=>`<div style="color:#ef4444;font-size:12px;line-height:1.4">${r.slice(0,40)}</div>`).join("")}
         </div>
         <div style="background:${sellElig?"#ef444412":"#1a2030"};border:1px solid ${sellElig?"#ef444444":"#1e2535"};border-radius:8px;padding:8px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-            <span style="color:#ef4444;font-size:12px;font-weight:700">▼ SELL</span>
+            <span style="color:#ef4444;font-size:14px;font-weight:700">▼ SELL</span>
             <span style="color:${sellElig?"#ef4444":"#64748b"};font-size:18px;font-weight:900">${sellScore}</span>
           </div>
           <div style="background:#0d1117;border-radius:99px;height:4px;overflow:hidden;position:relative;margin-bottom:4px">
             <div style="width:${sellScore}%;height:100%;background:${sellScore>=75?"#ef4444":sellScore>=s.threshold?"#f0b429":"#334155"};border-radius:99px"></div>
             <div style="position:absolute;left:${s.threshold}%;top:0;width:1px;height:100%;background:#fff;opacity:.3"></div>
           </div>
-          ${sellElig?`<div style="color:#ef4444;font-size:10px;font-weight:700;margin-bottom:2px">✅ ELIGIBLE</div>`:""}
-          ${(s.sell?.R||[]).slice(0,2).map(r=>`<div style="color:#ef4444;font-size:10px;line-height:1.4;margin-bottom:1px">${r.slice(0,40)}</div>`).join("")}
-          ${(s.sell?.P||[]).slice(0,1).map(r=>`<div style="color:#22c55e;font-size:10px;line-height:1.4">${r.slice(0,40)}</div>`).join("")}
+          ${sellElig?`<div style="color:#ef4444;font-size:12px;font-weight:700;margin-bottom:2px">✅ ELIGIBLE</div>`:""}
+          ${(s.sell?.R||[]).slice(0,2).map(r=>`<div style="color:#ef4444;font-size:12px;line-height:1.4;margin-bottom:1px">${r.slice(0,40)}</div>`).join("")}
+          ${(s.sell?.P||[]).slice(0,1).map(r=>`<div style="color:#22c55e;font-size:12px;line-height:1.4">${r.slice(0,40)}</div>`).join("")}
         </div>
       </div>
 
@@ -4770,13 +4770,13 @@ function renderRecapScreen() {
       <div style="background:#080b10;border-radius:8px;padding:8px;margin-bottom:7px">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px">
           ${[["Entry",s.setup.entry,"#f0b429"],["SL",s.setup.sl,"#ef4444"],["TP1",s.setup.tp1,"#22c55e"],["TP2",s.setup.tp2,"#14b8a6"]].map(([l,v,cv])=>
-            `<div style="background:#141920;border-radius:5px;padding:4px;text-align:center"><div style="color:#64748b;font-size:10px">${l}</div><div style="color:${cv};font-size:12px;font-weight:700">$${fmtP(v)}</div></div>`
+            `<div style="background:#141920;border-radius:5px;padding:4px;text-align:center"><div style="color:#cbd5e1;font-size:12px">${l}</div><div style="color:${cv};font-size:14px;font-weight:700">$${fmtP(v)}</div></div>`
           ).join("")}
         </div>
       </div>
-      ${!p.openTrade?`<button onclick="launchPaperFromRecap(${JSON.stringify({direction:s.bestDir,entry:s.setup.entry,sl:s.setup.sl,tp1:s.setup.tp1,tp2:s.setup.tp2,confidence:s.bestScore,scenario:s.id,label:s.label}).replace(/"/g,"&quot;")})" style="width:100%;background:${s.bestDir==="BUY"?"#22c55e":"#ef4444"};color:#000;border-radius:8px;padding:9px 0;font-size:14px;font-weight:800;border:none">
+      ${!p.openTrade?`<button onclick="launchPaperFromRecap(${JSON.stringify({direction:s.bestDir,entry:s.setup.entry,sl:s.setup.sl,tp1:s.setup.tp1,tp2:s.setup.tp2,confidence:s.bestScore,scenario:s.id,label:s.label}).replace(/"/g,"&quot;")})" style="width:100%;background:${s.bestDir==="BUY"?"#22c55e":"#ef4444"};color:#000;border-radius:8px;padding:9px 0;font-size:16px;font-weight:800;border:none">
         ${s.bestDir==="BUY"?"▲":"▼"} Apri Paper Trade ${s.bestDir}
-      </button>`:p.openTrade&&isBest?`<div style="background:#f0b42912;border:1px solid #f0b42933;border-radius:7px;padding:7px;font-size:13px;color:#f0b429;text-align:center">Trade aperto — gestione auto attiva</div>`:""}
+      </button>`:p.openTrade&&isBest?`<div style="background:#f0b42912;border:1px solid #f0b42933;border-radius:7px;padding:7px;font-size:15px;color:#f0b429;text-align:center">Trade aperto — gestione auto attiva</div>`:""}
       ` : ""}
     </div>`;
   });
@@ -4791,17 +4791,17 @@ function renderRecapScreen() {
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div>
         <div style="color:#f0b429;font-weight:800;font-size:16px">🤖 Paper Trading Automatico</div>
-        <div style="color:#64748b;font-size:12px">Leva 1:100 · $${SPREAD} spread · 1% rischio · max 5%</div>
+        <div style="color:#cbd5e1;font-size:14px">Leva 1:100 · $${SPREAD} spread · 1% rischio · max 5%</div>
       </div>
-      <button onclick="togglePaperTrading()" style="background:${p.enabled?"#ef4444":"#22c55e"};color:#000;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:700;border:none">${p.enabled?"⏹ Stop":"▶ Avvia"}</button>
+      <button onclick="togglePaperTrading()" style="background:${p.enabled?"#ef4444":"#22c55e"};color:#000;border-radius:8px;padding:8px 14px;font-size:16px;font-weight:700;border:none">${p.enabled?"⏹ Stop":"▶ Avvia"}</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:8px">
-      <div style="background:#1e2740;border-radius:7px;padding:7px;text-align:center"><div style="color:#64748b;font-size:11px">Capitale</div><div style="color:#e2e8f0;font-size:15px;font-weight:800">€${p.capital?.toFixed(0)||10000}</div></div>
-      <div style="background:#1e2740;border-radius:7px;padding:7px;text-align:center"><div style="color:#64748b;font-size:11px">P&L</div><div style="color:${pnlTot>=0?"#22c55e":"#ef4444"};font-size:15px;font-weight:800">${pnlTot>=0?"+":""}€${pnlTot.toFixed(0)}</div></div>
-      <div style="background:#1e2740;border-radius:7px;padding:7px;text-align:center"><div style="color:#64748b;font-size:11px">WR</div><div style="color:${wr>=50?"#22c55e":"#ef4444"};font-size:15px;font-weight:800">${wr}%</div></div>
-      <div style="background:#1e2740;border-radius:7px;padding:7px;text-align:center"><div style="color:#64748b;font-size:11px">DD</div><div style="color:${dd>7?"#ef4444":dd>3?"#f97316":"#22c55e"};font-size:15px;font-weight:800">${dd>0?"-":""}${Math.abs(dd)}%</div></div>
+      <div style="background:#1e2740;border-radius:7px;padding:7px;text-align:center"><div style="color:#cbd5e1;font-size:13px">Capitale</div><div style="color:#fde68a;font-size:17px;font-weight:800">€${p.capital?.toFixed(0)||10000}</div></div>
+      <div style="background:#1e2740;border-radius:7px;padding:7px;text-align:center"><div style="color:#cbd5e1;font-size:13px">P&L</div><div style="color:${pnlTot>=0?"#22c55e":"#ef4444"};font-size:17px;font-weight:800">${pnlTot>=0?"+":""}€${pnlTot.toFixed(0)}</div></div>
+      <div style="background:#1e2740;border-radius:7px;padding:7px;text-align:center"><div style="color:#cbd5e1;font-size:13px">WR</div><div style="color:${wr>=50?"#22c55e":"#ef4444"};font-size:17px;font-weight:800">${wr}%</div></div>
+      <div style="background:#1e2740;border-radius:7px;padding:7px;text-align:center"><div style="color:#cbd5e1;font-size:13px">DD</div><div style="color:${dd>7?"#ef4444":dd>3?"#f97316":"#22c55e"};font-size:17px;font-weight:800">${dd>0?"-":""}${Math.abs(dd)}%</div></div>
     </div>
-    ${ddReached?`<div style="background:#ef444415;border:1px solid #ef444433;border-radius:7px;padding:7px;margin-bottom:7px;color:#ef4444;font-size:13px">⛔ Drawdown max. <button onclick="resetPaperTrading()" style="background:#ef4444;color:#fff;border-radius:4px;padding:1px 7px;font-size:12px;border:none;margin-left:5px">Reset</button></div>`:""}
+    ${ddReached?`<div style="background:#ef444415;border:1px solid #ef444433;border-radius:7px;padding:7px;margin-bottom:7px;color:#ef4444;font-size:15px">⛔ Drawdown max. <button onclick="resetPaperTrading()" style="background:#ef4444;color:#fde68a;border-radius:4px;padding:1px 7px;font-size:14px;border:none;margin-left:5px">Reset</button></div>`:""}
     ${p.openTrade ? (() => {
       const t=p.openTrade, col=t.direction==="BUY"?"#22c55e":"#ef4444";
       const cur=lastXau?.c||t.entry;
@@ -4810,35 +4810,35 @@ function renderRecapScreen() {
       const profRR=Math.abs(t.entry-t.sl)>0?(pnlPts/Math.abs(t.entry-t.sl)).toFixed(2):"–";
       return `<div style="background:#f0b42912;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-bottom:7px">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span style="color:#f0b429;font-weight:700;font-size:14px">📈 Trade Aperto</span>
-          <span style="background:${col}20;color:${col};border-radius:4px;padding:1px 7px;font-size:13px;font-weight:700">${t.direction}</span>
+          <span style="color:#f0b429;font-weight:700;font-size:16px">📈 Trade Aperto</span>
+          <span style="background:${col}20;color:${col};border-radius:4px;padding:1px 7px;font-size:15px;font-weight:700">${t.direction}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-bottom:5px">
           ${[["Entry","$"+fmtP(t.entry),"#f0b429"],["SL","$"+fmtP(t.sl),"#ef4444"],["TP1","$"+fmtP(t.tp1),"#22c55e"],["Lot",t.lots,"#94a3b8"]].map(([l,v,cv])=>
-            `<div style="background:#080b10;border-radius:5px;padding:4px;text-align:center"><div style="color:#64748b;font-size:10px">${l}</div><div style="color:${cv};font-size:12px;font-weight:700">${v}</div></div>`
+            `<div style="background:#080b10;border-radius:5px;padding:4px;text-align:center"><div style="color:#cbd5e1;font-size:12px">${l}</div><div style="color:${cv};font-size:14px;font-weight:700">${v}</div></div>`
           ).join("")}
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;background:#080b10;border-radius:6px;padding:5px 8px;margin-bottom:4px">
-          <span style="color:#94a3b8;font-size:12px">P&L corrente</span>
-          <span style="color:${pnlEur>=0?"#22c55e":"#ef4444"};font-weight:800;font-size:15px">${pnlEur>=0?"+":""}€${pnlEur.toFixed(2)} (${profRR}R)</span>
+          <span style="color:#fde68a;font-size:14px">P&L corrente</span>
+          <span style="color:${pnlEur>=0?"#22c55e":"#ef4444"};font-weight:800;font-size:17px">${pnlEur>=0?"+":""}€${pnlEur.toFixed(2)} (${profRR}R)</span>
         </div>
-        <div style="display:flex;gap:6px;font-size:11px;color:#64748b">
+        <div style="display:flex;gap:6px;font-size:13px;color:#cbd5e1">
           ${t.breakEvenSet?"<span style='color:#22c55e'>✅ Breakeven</span>":""}
           ${t.trailingActive?"<span style='color:#f0b429'>📍 Trail</span>":""}
           <span>${t.scenario||"–"} · Conf ${t.confidence}/100</span>
         </div>
-        ${t.managementLog?.length?`<div style="margin-top:5px;border-top:1px solid #1e2535;padding-top:4px">${t.managementLog.slice(-2).reverse().map(l=>`<div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b"><span>${l.action}</span><span>${new Date(l.ts).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span></div>`).join("")}</div>`:""}
+        ${t.managementLog?.length?`<div style="margin-top:5px;border-top:1px solid #1e2535;padding-top:4px">${t.managementLog.slice(-2).reverse().map(l=>`<div style="display:flex;justify-content:space-between;font-size:13px;color:#cbd5e1"><span>${l.action}</span><span>${new Date(l.ts).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span></div>`).join("")}</div>`:""}
       </div>`;
-    })() : p.enabled?`<div style="background:#22c55e12;border:1px solid #22c55e22;border-radius:7px;padding:8px;color:#22c55e;font-size:13px;text-align:center">✅ In ascolto — entra quando score ≥ soglia<div id="paper-last-eval" style="color:#64748b;font-size:12px;margin-top:2px">Ultimo check: mai</div></div>`:""}
-    ${p.trades.length?`<div style="margin-top:7px"><div style="color:#64748b;font-size:12px;font-weight:700;margin-bottom:4px">ULTIMI TRADE</div>${p.trades.slice(0,3).map(t=>{
+    })() : p.enabled?`<div style="background:#22c55e12;border:1px solid #22c55e22;border-radius:7px;padding:8px;color:#22c55e;font-size:15px;text-align:center">✅ In ascolto — entra quando score ≥ soglia<div id="paper-last-eval" style="color:#cbd5e1;font-size:14px;margin-top:2px">Ultimo check: mai</div></div>`:""}
+    ${p.trades.length?`<div style="margin-top:7px"><div style="color:#cbd5e1;font-size:14px;font-weight:700;margin-bottom:4px">ULTIMI TRADE</div>${p.trades.slice(0,3).map(t=>{
       const tc=t.isWin?"#22c55e":t.pnlEur===0?"#64748b":"#ef4444";
       return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2535">
-        <div><span style="color:${t.direction==="BUY"?"#22c55e":"#ef4444"};font-size:13px;font-weight:700">${t.direction}</span><span style="color:#64748b;font-size:12px;margin-left:5px">${t.exitReason||"–"}</span><span style="color:#475569;font-size:11px;margin-left:5px">${new Date(t.openedAt).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span></div>
-        <span style="color:${tc};font-weight:700;font-size:14px">${t.pnlEur>=0?"+":""}€${t.pnlEur?.toFixed(2)||"0"}</span>
+        <div><span style="color:${t.direction==="BUY"?"#22c55e":"#ef4444"};font-size:15px;font-weight:700">${t.direction}</span><span style="color:#cbd5e1;font-size:14px;margin-left:5px">${t.exitReason||"–"}</span><span style="color:#b0bdd0;font-size:13px;margin-left:5px">${new Date(t.openedAt).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span></div>
+        <span style="color:${tc};font-weight:700;font-size:16px">${t.pnlEur>=0?"+":""}€${t.pnlEur?.toFixed(2)||"0"}</span>
       </div>`;}).join("")}</div>`:""}
     <div style="display:flex;gap:6px;margin-top:8px">
-      <button onclick="showDiary();setDiaryTabDirect('paper')" style="flex:2;background:#1e2740;border:1px solid #2a3550;color:#b0bdd0;border-radius:7px;padding:8px 0;font-size:13px">📋 Storico Diario</button>
-      <button onclick="resetPaperTrading()" style="flex:1;background:transparent;border:1px solid #334155;color:#475569;border-radius:7px;padding:8px 0;font-size:12px">🗑 Reset</button>
+      <button onclick="showDiary();setDiaryTabDirect('paper')" style="flex:2;background:#1e2740;border:1px solid #2a3550;color:#b0bdd0;border-radius:7px;padding:8px 0;font-size:15px">📋 Storico Diario</button>
+      <button onclick="resetPaperTrading()" style="flex:1;background:transparent;border:1px solid #334155;color:#b0bdd0;border-radius:7px;padding:8px 0;font-size:14px">🗑 Reset</button>
     </div>
   </div>`;
 
@@ -4846,28 +4846,28 @@ function renderRecapScreen() {
   html += `<div class="card" style="border:1px solid ${bgActive?"#22c55e44":"#2a3550"}">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div style="color:#f0b429;font-weight:700;font-size:15px">🔔 Notifiche Background</div>
-        <div id="bg-status" style="color:#64748b;font-size:12px;margin-top:2px">${bgActive?"✅ Attivo — check ogni 5 min":"Non attivo"}</div>
+        <div style="color:#f0b429;font-weight:700;font-size:17px">🔔 Notifiche Background</div>
+        <div id="bg-status" style="color:#cbd5e1;font-size:14px;margin-top:2px">${bgActive?"✅ Attivo — check ogni 5 min":"Non attivo"}</div>
       </div>
-      <button id="bg-toggle" onclick="toggleBackground()" style="background:${bgActive?"#ef4444":"#f0b429"};color:#000;border-radius:8px;padding:7px 14px;font-size:14px;font-weight:700;border:none">${bgActive?"Disattiva":"Attiva"}</button>
+      <button id="bg-toggle" onclick="toggleBackground()" style="background:${bgActive?"#ef4444":"#f0b429"};color:#000;border-radius:8px;padding:7px 14px;font-size:16px;font-weight:700;border:none">${bgActive?"Disattiva":"Attiva"}</button>
     </div>
-    <div id="bg-last-check" style="color:#64748b;font-size:12px;margin-top:5px;display:none"></div>
-    <div id="notif-debug" style="color:#475569;font-size:11px;margin-top:3px;padding:3px;background:#080b10;border-radius:4px"></div>
+    <div id="bg-last-check" style="color:#cbd5e1;font-size:14px;margin-top:5px;display:none"></div>
+    <div id="notif-debug" style="color:#b0bdd0;font-size:13px;margin-top:3px;padding:3px;background:#080b10;border-radius:4px"></div>
     <div id="alert-config" style="display:${bgActive?"block":"none"};margin-top:10px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
         ${[["cfg-pivot","📍 Pivot/R1/S1"],["cfg-rsi-ob","⚠️ RSI OB/OS"],["cfg-spike","⚡ Spike ATR"],["cfg-lead","📡 Lead macro"]].map(([id,label])=>
-          `<label style="display:flex;align-items:center;gap:5px;background:#1e2740;border-radius:7px;padding:7px;cursor:pointer"><input type="checkbox" id="${id}" checked style="width:15px;height:15px;accent-color:#f0b429"/><span style="color:#b0bdd0;font-size:13px">${label}</span></label>`
+          `<label style="display:flex;align-items:center;gap:5px;background:#1e2740;border-radius:7px;padding:7px;cursor:pointer"><input type="checkbox" id="${id}" checked style="width:15px;height:15px;accent-color:#f0b429"/><span style="color:#b0bdd0;font-size:15px">${label}</span></label>`
         ).join("")}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
-        <div><div style="color:#64748b;font-size:11px;margin-bottom:2px">Alert sopra $</div><input type="number" id="cfg-price-above" placeholder="es. 4400" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#e2e8f0;font-size:14px"/></div>
-        <div><div style="color:#64748b;font-size:11px;margin-bottom:2px">Alert sotto $</div><input type="number" id="cfg-price-below" placeholder="es. 4100" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#e2e8f0;font-size:14px"/></div>
+        <div><div style="color:#cbd5e1;font-size:13px;margin-bottom:2px">Alert sopra $</div><input type="number" id="cfg-price-above" placeholder="es. 4400" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#fde68a;font-size:16px"/></div>
+        <div><div style="color:#cbd5e1;font-size:13px;margin-bottom:2px">Alert sotto $</div><input type="number" id="cfg-price-below" placeholder="es. 4100" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#fde68a;font-size:16px"/></div>
       </div>
-      <button onclick="saveAlertConfig()" style="width:100%;background:#f0b429;color:#000;border-radius:7px;padding:7px 0;font-size:14px;font-weight:700;border:none">Salva config notifiche</button>
+      <button onclick="saveAlertConfig()" style="width:100%;background:#f0b429;color:#000;border-radius:7px;padding:7px 0;font-size:16px;font-weight:700;border:none">Salva config notifiche</button>
     </div>
   </div>`;
 
-  html += `<div style="text-align:center;color:#64748b;font-size:11px;padding:4px;border-top:1px solid #1e2535;margin-top:4px">⚠️ Solo scopo didattico · Paper trading simulato · Non consulenza finanziaria</div>`;
+  html += `<div style="text-align:center;color:#cbd5e1;font-size:13px;padding:4px;border-top:1px solid #1e2535;margin-top:4px">⚠️ Solo scopo didattico · Paper trading simulato · Non consulenza finanziaria</div>`;
 
   content.innerHTML = html;
 }
