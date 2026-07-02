@@ -1029,6 +1029,13 @@ async function updateLivePrice() {
     if (state.paper?.openTrade && price > 0) {
       try { evaluateAutoExit(price); } catch(e) { console.warn('[price] evaluateAutoExit:', e.message); }
     }
+    // Se lo Score è ancora in "Caricamento", prova a renderizzare ora
+    if (state.mode === 'recap') {
+      const recapEl = document.getElementById('recap-content');
+      if (recapEl && recapEl.textContent.includes('Caricamento')) {
+        try { renderRecapScreen(); } catch(e) {}
+      }
+    }
   } catch(e) {
     // Silenzioso: rate limit o rete — non mostrare errori all'utente
     console.warn('[price] fetch failed silently:', e.message);
@@ -1060,8 +1067,13 @@ async function doFetch(){
     const now=new Date();
     document.getElementById('hdr-sub').textContent=`Twelve Data · ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})} · key …${state.tdKey.slice(-4)}`;
     updateUI();
-    // Ridisegna Score se è la vista corrente
-    if (state.mode === 'recap') renderRecapScreen();
+    // Ridisegna Score sempre (anche se mode non è ancora 'recap' durante init)
+    renderRecapScreen();
+    if (state.mode !== 'recap') {
+      // Nasconde se non siamo in Score
+      const rc = document.getElementById('recap-content');
+      if (rc && state.mode !== 'recap') { /* già gestito da setMode */ }
+    }
     // Paper trading: valuta exit con prezzo 1H aggiornato
     const cur1hPrice = state.candles['1h']?.slice(-1)[0]?.c;
     if(cur1hPrice) {
@@ -2987,16 +2999,15 @@ async function handleSetup(){
     document.getElementById('app-screen').style.display='block';
     document.getElementById('alert-panel').style.display='none';
 
-    // Mostra subito Score, poi carica i dati in background
     setMode('recap');
-    doFetch().catch(e=>console.warn('doFetch:',e.message)).finally(()=>{
-      doScalpFetch().catch(e=>console.warn('doScalpFetch:',e.message)).finally(()=>{
-        fetchTrendCandles().catch(e=>console.warn('fetchTrend:',e.message)).finally(()=>{
-          renderRecapScreen();
-          if(!state.paper.openTrade) evaluateAutoEntry();
-        });
-      });
-    });
+    (async () => {
+      try { await doFetch(); } catch(e) { console.warn('[setup] doFetch:', e.message); }
+      renderRecapScreen();
+      try { await doScalpFetch(); } catch(e) { console.warn('[setup] scalp:', e.message); }
+      try { await fetchTrendCandles(); } catch(e) { console.warn('[setup] trend:', e.message); }
+      renderRecapScreen();
+      if(!state.paper.openTrade) evaluateAutoEntry();
+    })();
 
     if(state.fetchTimer)clearInterval(state.fetchTimer);
     state.fetchTimer=setInterval(doFetch,5*60000);
@@ -4368,16 +4379,21 @@ function computeAllScenarios() {
   const last5m = cc5m.length ? cc5m[cc5m.length-1] : null;
   const last1m = cc1m.length ? cc1m[cc1m.length-1] : null;
 
+  // Se non ci sono candele 1H, mostra stato parziale invece di bloccarsi
   if (!cc1h.length) {
-    const empty = {buy:0,sell:0,buyR:[],sellR:[],bestDir:"WAIT",bestScore:0,setup:null};
-    return {
-      scores:[
-        {id:"swing",label:"📊 Swing",      buy:empty,sell:empty,color:"#f0b429",tf:"1H/4H",      threshold:60},
-        {id:"scalp",label:"⚡ Scalp",       buy:empty,sell:empty,color:"#f97316",tf:"1M/5M",      threshold:65},
-        {id:"trend",label:"📈 Trend",       es:{score:0,dir:"WAIT",reasons:["⏳ Caricamento"],R:[],P:[],setup:null},color:"#22c55e",tf:"Daily/4H/1H",threshold:60},
-      ],
-      best:null,consensus:"CARICAMENTO",consensusColor:"#64748b",sess,regime:"RANGING",adx:{adx:0,pdi:0,mdi:0}
-    };
+    // Prova a usare comunque il prezzo dell'header se disponibile
+    const hdrPrice = parseFloat(document.getElementById('hdr-price')?.textContent?.replace('$','')) || 0;
+    if (!hdrPrice) {
+      const empty = {buy:0,sell:0,buyR:[],sellR:[],bestDir:"WAIT",bestScore:0,setup:null};
+      return {
+        scores:[
+          {id:"swing",label:"📊 Swing",      buy:empty,sell:empty,color:"#f0b429",tf:"1H/4H",      threshold:60},
+          {id:"scalp",label:"⚡ Scalp",       buy:empty,sell:empty,color:"#f97316",tf:"1M/5M",      threshold:65},
+          {id:"trend",label:"📈 Trend",       buy:empty,sell:empty,color:"#22c55e",tf:"Daily/4H/1H",threshold:60},
+        ],
+        best:null,consensus:"CARICAMENTO",consensusColor:"#64748b",sess,regime:"RANGING",adx:{adx:0,pdi:0,mdi:0}
+      };
+    }
   }
 
   // ── Indicatori globali ────────────────────────────────────
@@ -4954,13 +4970,17 @@ function setMode(mode) {
     if(screens.recap) screens.recap.style.display='block';
     // Carica tutto e mostra Score
     const loadAndRender = async () => {
-      await Promise.all([
-        state.candles['1h'].length < 5 ? doFetch() : Promise.resolve(),
-        state.candles['5m'].length < 5 ? doScalpFetch() : Promise.resolve(),
-        state.candles4h.length < 5 ? fetchTrendCandles() : Promise.resolve(),
-      ]);
+      // Mostra subito quello che c'è
       renderRecapScreen();
-      // Valuta auto-entry dopo ogni aggiornamento
+      // Poi carica i dati mancanti
+      const fetches = [];
+      if (!state.candles['1h']?.length) fetches.push(doFetch().catch(e=>console.warn('[recap] 1H:', e.message)));
+      if (!state.candles['5m']?.length) fetches.push(doScalpFetch().catch(e=>console.warn('[recap] 5M:', e.message)));
+      if (!state.candles4h?.length)     fetches.push(fetchTrendCandles().catch(e=>console.warn('[recap] 4H:', e.message)));
+      if (fetches.length) {
+        await Promise.allSettled(fetches);
+        renderRecapScreen();
+      }
       if (!state.paper.openTrade) evaluateAutoEntry();
     };
     loadAndRender();
@@ -5325,18 +5345,17 @@ async function restoreBgState() {
     document.getElementById('app-screen').style.display='block';
     document.getElementById('alert-panel').style.display='none';
 
-    // Mostra subito Score con dati vuoti, poi carica in background
     setMode('recap');
 
-    // Fetch dati sequenziale con fallback silenzioso
-    doFetch().catch(e => console.warn('[init] doFetch:', e.message)).finally(() => {
-      doScalpFetch().catch(e => console.warn('[init] doScalpFetch:', e.message)).finally(() => {
-        fetchTrendCandles().catch(e => console.warn('[init] fetchTrend:', e.message)).finally(() => {
-          renderRecapScreen();
-          if (!state.paper.openTrade) evaluateAutoEntry();
-        });
-      });
-    });
+    // Fetch sequenziale — aggiorna Score dopo ogni step
+    (async () => {
+      try { await doFetch(); } catch(e) { console.warn('[init] doFetch:', e.message); }
+      renderRecapScreen();
+      try { await doScalpFetch(); } catch(e) { console.warn('[init] scalp:', e.message); }
+      try { await fetchTrendCandles(); } catch(e) { console.warn('[init] trend:', e.message); }
+      renderRecapScreen();
+      if (!state.paper.openTrade) evaluateAutoEntry();
+    })();
 
     state.fetchTimer = setInterval(doFetch, 5*60000);
     state.priceTimer = setInterval(updateLivePrice, 30000);
