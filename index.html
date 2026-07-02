@@ -108,6 +108,7 @@ button{cursor:pointer}
         <span id="mtf-badge" style="background:#64748b20;color:#b0bdd0;border:1px solid #64748b44;border-radius:5px;padding:4px 12px;font-size:15px;font-weight:700">–</span>
         <button onclick="showDiary()" style="background:#a855f715;border:1px solid #a855f744;color:#a855f7;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700" id="diary-btn">📓 Diario</button>
             <button onclick="toggleAlertPanel()" style="background:#f0b42915;border:1px solid #f0b42944;color:#f0b429;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700" id="alert-btn">🔔</button>
+      <button onclick="showSwDiag()" style="background:#141920;border:1px solid #3b82f644;color:#3b82f6;border-radius:8px;padding:3px 9px;font-size:11px;font-weight:700" title="Diagnostica">🔧</button>
       </div>
     </div>
     <!-- Error banner -->
@@ -342,6 +343,19 @@ button{cursor:pointer}
       <div>Calcolo riepilogo scenari...</div>
     </div>
   </div>
+</div>
+
+<!-- ══ SW DIAGNOSTICS PANEL ═════════════════════════════════ -->
+<div id="sw-diag-panel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#080b10;z-index:999;overflow-y:auto;padding:16px;max-width:480px;margin:0 auto">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div style="color:#3b82f6;font-size:18px;font-weight:800">🔧 Diagnostica SW</div>
+    <button onclick="hideSwDiag()" style="background:#1e2740;border:1px solid #2a3550;color:#b0bdd0;border-radius:8px;padding:8px 14px;font-size:13px;border:none">✕ Chiudi</button>
+  </div>
+  <div id="sw-diag-content">
+    <div style="color:#64748b;text-align:center;padding:20px">Caricamento diagnostica...</div>
+  </div>
+  <button onclick="refreshSwDiag()" style="width:100%;background:#3b82f6;color:#fff;border-radius:8px;padding:10px;font-size:13px;font-weight:700;border:none;margin-top:10px">🔄 Aggiorna</button>
+  <div id="sw-diag-log" style="margin-top:12px;background:#0d1117;border-radius:8px;padding:10px;font-family:monospace;font-size:11px;color:#22c55e;min-height:80px;max-height:200px;overflow-y:auto"></div>
 </div>
 
 <!-- ══ DIARY SCREEN ══════════════════════════════════════════ -->
@@ -2711,6 +2725,213 @@ function setDiaryTabDirect(tab) {
     b.classList.add('inactive');
   });
   renderDiary();
+}
+
+// ══ SW DIAGNOSTICS ═══════════════════════════════════════════
+let diagLog = [];
+
+function logDiag(msg, color='#94a3b8') {
+  const ts = new Date().toLocaleTimeString('it-IT');
+  diagLog.unshift({ ts, msg, color });
+  if (diagLog.length > 50) diagLog.pop();
+  const el = document.getElementById('sw-diag-log');
+  if (el) el.innerHTML = diagLog.map(l =>
+    `<div style="color:${l.color};padding:1px 0">[${l.ts}] ${l.msg}</div>`
+  ).join('');
+}
+
+function showSwDiag() {
+  document.getElementById('sw-diag-panel').style.display = 'block';
+  refreshSwDiag();
+}
+
+function hideSwDiag() {
+  document.getElementById('sw-diag-panel').style.display = 'none';
+}
+
+async function refreshSwDiag() {
+  const el = document.getElementById('sw-diag-content');
+  if (!el) return;
+
+  const p = state.paper;
+  const pnlTot = +(p.capital - (p.initialCapital||10000)).toFixed(2);
+
+  // Stato SW
+  const hasSW   = 'serviceWorker' in navigator;
+  const ctrl    = navigator.serviceWorker?.controller;
+  const perm    = 'Notification' in window ? Notification.permission : 'N/A';
+  const isHttps = location.protocol === 'https:';
+  const swState = ctrl ? ctrl.state : 'non controllato';
+
+  // Ping al SW per stato real-time
+  let swResponse = null;
+  if (ctrl) {
+    const pingPromise = new Promise(resolve => {
+      const handler = e => {
+        if (e.data?.type === 'PONG') {
+          navigator.serviceWorker.removeEventListener('message', handler);
+          resolve(e.data);
+        }
+      };
+      navigator.serviceWorker.addEventListener('message', handler);
+      setTimeout(() => resolve(null), 3000); // timeout 3s
+    });
+    sendToSW({ type: 'PING' }).catch(()=>{});
+    swResponse = await pingPromise;
+  }
+
+  const swOk    = swResponse !== null;
+  const bgOk    = swResponse?.bgActive;
+  const tradeOk = swResponse?.hasTrade;
+  const paperEn = swResponse?.paperEnabled;
+
+  const row = (label, value, ok=null) => {
+    const col = ok===null?'#b0bdd0':ok?'#22c55e':'#ef4444';
+    const icon = ok===null?'':ok?'✅':'❌';
+    return `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1e2535">
+      <span style="color:#94a3b8;font-size:12px">${label}</span>
+      <span style="color:${col};font-size:12px;font-weight:700">${icon} ${value}</span>
+    </div>`;
+  };
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:8px">
+      <div style="color:#3b82f6;font-weight:700;font-size:13px;margin-bottom:8px">🌐 Ambiente</div>
+      ${row('HTTPS', isHttps?'✅ Sì':'❌ No (serve HTTPS)', isHttps)}
+      ${row('Service Worker', hasSW?'Supportato':'Non supportato', hasSW)}
+      ${row('Permesso notifiche', perm, perm==='granted')}
+      ${row('SW Controller', swState)}
+      ${row('SW risponde al PING', swOk?'✅ Sì ('+swResponse?.ts?new Date(swResponse.ts).toLocaleTimeString('it-IT'):'–'+')':'❌ No (timeout 3s)', swOk)}
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div style="color:#f0b429;font-weight:700;font-size:13px;margin-bottom:8px">⚙️ Background</div>
+      ${row('Check ogni 5 min', bgOk?'✅ Attivo':'❌ Non attivo', bgOk)}
+      ${row('Paper Trading BG', paperEn?'✅ Abilitato':'○ Disabilitato', paperEn)}
+      ${row('Trade aperto nel SW', tradeOk?'✅ Sì':'○ No')}
+      ${row('bgActive (app)', bgActive?'✅ Sì':'○ No', bgActive)}
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div style="color:#22c55e;font-weight:700;font-size:13px;margin-bottom:8px">🤖 Paper Trading</div>
+      ${row('Paper abilitato', p.enabled?'✅ Sì':'○ No', p.enabled)}
+      ${row('Trade aperto (app)', p.openTrade?'✅ '+p.openTrade.direction+' @ $'+fmtP(p.openTrade.entry):'○ Nessuno')}
+      ${row('Capitale', '€'+p.capital?.toFixed(2)||'10000')}
+      ${row('P&L totale', (pnlTot>=0?'+':'')+'€'+pnlTot, pnlTot>=0)}
+      ${row('Trade storici', (p.trades?.length||0)+' trade')}
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div style="color:#94a3b8;font-weight:700;font-size:13px;margin-bottom:8px">📡 API & Dati</div>
+      ${row('API Key', state.tdKey?'✅ Configurata (…'+state.tdKey.slice(-4)+')':'❌ Mancante', !!state.tdKey)}
+      ${row('Candele 1H', state.candles['1h']?.length+' candele')}
+      ${row('Candele 4H', state.candles4h?.length+' candele')}
+      ${row('Candele Daily', state.candles['1d']?.length+' candele')}
+      ${row('Candele 5M', state.candles['5m']?.length+' candele')}
+      ${row('Pivot', state.pivots?.pivot?'$'+fmtP(state.pivots.pivot):'N/D')}
+    </div>
+
+    <div style="background:#1e2740;border-radius:8px;padding:10px;margin-bottom:8px">
+      <div style="color:#94a3b8;font-size:11px;font-weight:700;margin-bottom:6px">🧪 Azioni diagnostica:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button onclick="testSwPing()" style="background:#3b82f620;border:1px solid #3b82f644;color:#3b82f6;border-radius:6px;padding:6px 10px;font-size:11px">📡 PING SW</button>
+        <button onclick="testNotification()" style="background:#f0b42920;border:1px solid #f0b42944;color:#f0b429;border-radius:6px;padding:6px 10px;font-size:11px">🔔 Test notifica</button>
+        <button onclick="testForceTrade()" style="background:#22c55e20;border:1px solid #22c55e44;color:#22c55e;border-radius:6px;padding:6px 10px;font-size:11px">🤖 Forza scoring</button>
+        <button onclick="testSyncSw()" style="background:#a855f720;border:1px solid #a855f744;color:#a855f7;border-radius:6px;padding:6px 10px;font-size:11px">🔄 Sync SW</button>
+      </div>
+    </div>
+  `;
+}
+
+async function testSwPing() {
+  logDiag('→ PING inviato al SW...', '#3b82f6');
+  const ok = await sendToSW({ type: 'PING' });
+  if (!ok) { logDiag('✗ PING fallito: nessun SW controller', '#ef4444'); return; }
+  logDiag('✓ PING inviato (attendi PONG)', '#22c55e');
+}
+
+async function testNotification() {
+  if (Notification.permission !== 'granted') {
+    logDiag('✗ Permesso notifiche non concesso', '#ef4444');
+    return;
+  }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification('🔧 Test Diagnostica', {
+      body: 'Notifica di test — il sistema funziona!',
+      icon: '/icon-192.png', tag: 'diag-test', vibrate: [200,100,200],
+    });
+    logDiag('✓ Notifica di test inviata', '#22c55e');
+  } catch(e) {
+    logDiag('✗ Errore notifica: ' + e.message, '#ef4444');
+  }
+}
+
+async function testForceTrade() {
+  logDiag('→ Calcolo scoring in corso...', '#f0b429');
+  try {
+    const recap = computeAllScenarios();
+    if (!recap || recap.consensus === 'CARICAMENTO') {
+      logDiag('✗ Dati non pronti — fai prima un refresh', '#ef4444');
+      return;
+    }
+    const { scores, best, consensus } = recap;
+    logDiag(`✓ Consenso: ${consensus}`, '#22c55e');
+    scores.forEach(s => {
+      logDiag(`  ${s.label}: BUY=${s.buy?.score||0} SELL=${s.sell?.score||0} → ${s.bestDir}`, '#b0bdd0');
+    });
+    if (best) {
+      logDiag(`  Migliore: ${best.label} ${best.bestDir} score=${best.bestScore}`, '#f0b429');
+      if (best.bestScore >= 60) {
+        logDiag(`  → Soglia superata! Trade partirebbe.`, '#22c55e');
+      } else {
+        logDiag(`  → Sotto soglia (${best.bestScore} < 60)`, '#94a3b8');
+      }
+    } else {
+      logDiag('  → Nessuno scenario sopra soglia', '#94a3b8');
+    }
+  } catch(e) {
+    logDiag('✗ Errore scoring: ' + e.message, '#ef4444');
+  }
+}
+
+async function testSyncSw() {
+  logDiag('→ Sync stato paper al SW...', '#a855f7');
+  const p = state.paper;
+  const ok = await sendToSW({
+    type: 'PAPER_STATE_SYNC',
+    paperEnabled: p.enabled,
+    paperCapital: p.capital,
+    paperTrades:  p.trades,
+    openTrade:    p.openTrade,
+  });
+  if (ok) logDiag('✓ Sync inviato al SW', '#22c55e');
+  else logDiag('✗ Sync fallito — SW non raggiungibile', '#ef4444');
+}
+
+// Intercetta messaggi SW per log diagnostica
+const _origSwHandler = handleSwMessage;
+function handleSwMessage(e) {
+  _origSwHandler(e);
+  const d = e.data;
+  if (!d) return;
+  // Log tutti i messaggi SW nel diagnostics
+  const colors = {
+    'BG_UPDATE':'#64748b','BG_STARTED':'#22c55e','BG_STOPPED':'#f97316',
+    'BG_TRADE_OPENED':'#22c55e','BG_TRADE_CLOSED':'#f0b429',
+    'BG_UPDATE_SL':'#3b82f6','BG_EXIT_SIGNAL':'#ef4444',
+    'ALERT_FIRED':'#f0b429','PONG':'#3b82f6','BG_ERROR':'#ef4444',
+    'BG_TRADE_UPDATE':'#64748b',
+  };
+  const col = colors[d.type] || '#94a3b8';
+  if (d.type === 'BG_UPDATE') {
+    logDiag(`SW → ${d.type}: price=$${d.price?.toFixed(2)||'–'} rsi=${d.rsi||'–'}`, col);
+  } else if (d.type === 'PONG') {
+    logDiag(`SW → PONG: bg=${d.bgActive} trade=${d.hasTrade} paper=${d.paperEnabled}`, col);
+    refreshSwDiag();
+  } else if (d.type !== 'BG_UPDATE') {
+    logDiag(`SW → ${d.type}${d.trade?' ['+d.trade.direction+']':''}${d.price?' $'+d.price.toFixed(2):''}`, col);
+  }
 }
 
 function closeTradeById(id){
