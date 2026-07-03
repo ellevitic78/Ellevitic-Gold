@@ -2062,6 +2062,8 @@ function evaluateAutoEntry() {
 
   const best = recap.best;
   if (!best.setup || best.bestDir === 'WAIT') return;
+  if (isWeekendRisk()) { console.log('[PAPER] Skip: weekend gap risk'); return; }
+  if (best.setup.chasing) { console.log('[PAPER] Skip: prezzo esteso (chasing)'); return; }
 
   // Usa bestDir e bestScore dal nuovo scoring duale
   const es = {
@@ -2379,10 +2381,29 @@ function evaluateAutoExit(currentPrice) {
       }
     }
 
-    // ── 7. TP1 colpito ───────────────────────────────────
-    if (!closed) {
-      if (dir === 'BUY'  && currentPrice >= t.tp1) { exitReason = 'TP1'; exitPrice = t.tp1; closed = true; }
-      if (dir === 'SELL' && currentPrice <= t.tp1) { exitReason = 'TP1'; exitPrice = t.tp1; closed = true; }
+    // ── 7. TP1: chiusura PARZIALE 50%, resto corre a TP2 ──
+    if (!closed && !t.partialDone) {
+      const hitTp1 = (dir === 'BUY' && currentPrice >= t.tp1) || (dir === 'SELL' && currentPrice <= t.tp1);
+      if (hitTp1) {
+        const halfLots = +(t.lots / 2).toFixed(2);
+        const exitHalf = dir === 'BUY' ? +(t.tp1 - SPREAD/2).toFixed(2) : +(t.tp1 + SPREAD/2).toFixed(2);
+        const pnlHalf  = +((dir==='BUY' ? exitHalf - t.entry : t.entry - exitHalf) * halfLots * 100).toFixed(2);
+        p.capital = +(p.capital + pnlHalf).toFixed(2);
+        t.lots = +(t.lots - halfLots).toFixed(2);
+        t.partialDone = true;
+        t.partialPnl = pnlHalf;
+        // SL a breakeven pieno dopo il parziale (trade ora risk-free)
+        const beSL = dir === 'BUY' ? +(t.entry + SPREAD).toFixed(2) : +(t.entry - SPREAD).toFixed(2);
+        if ((dir==='BUY' && beSL > t.sl) || (dir==='SELL' && beSL < t.sl)) t.sl = beSL;
+        t.breakEvenSet = true;
+        logAction(`TP1 parziale 50%: +€${pnlHalf} · resto ${t.lots} lot corre a TP2 · SL→BE`);
+        if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+          navigator.serviceWorker.ready.then(reg => reg.showNotification('🎯 TP1 — 50% incassato', {
+            body: `+€${pnlHalf} · Resto corre a TP2 $${fmtP(t.tp2)} · SL a breakeven`,
+            icon: '/icon-192.png', tag: 'paper-partial', vibrate: [200,100,200],
+          })).catch(()=>{});
+        }
+      }
     }
 
     // ── 8. Estensione TP2 su momentum forte ─────────────
@@ -2440,6 +2461,8 @@ function evaluateAutoExit(currentPrice) {
     closedAt:      new Date().toISOString(),
     capitalAfter:  p.capital,
     rr:            +(pnlPts / Math.abs(t.entry - t.sl || 1)).toFixed(2),
+    pnlTotal:      +((pnlEur + (t.partialPnl||0))).toFixed(2),
+    partialPnl:    t.partialPnl || 0,
     paAtClose:     pa ? { warnScore: pa.warnScore, strScore: pa.strScore, topWarning: pa.warnings[0]?.msg } : null,
     managementLog: t.managementLog,
     trailMult,
@@ -4247,6 +4270,28 @@ function renderPaperWidgetIn(el) {
 
 // ── Helper functions per scoring (globali) ──────────────────
 function distAbs(price, level) { return Math.abs(price - (level||0)); }
+// SL strutturale: oltre l'ultimo swing (min/max ultime N candele) + buffer
+function structuralSL(candles, dir, atr, nBars=8) {
+  if (!candles || candles.length < nBars) return null;
+  const recent = candles.slice(-nBars);
+  const buf = atr * 0.3;
+  if (dir === 'BUY') {
+    const swingLow = Math.min(...recent.map(cd=>cd.l));
+    return +(swingLow - buf).toFixed(2);
+  } else {
+    const swingHigh = Math.max(...recent.map(cd=>cd.h));
+    return +(swingHigh + buf).toFixed(2);
+  }
+}
+// Guard anti-inseguimento: prezzo esteso oltre 2.5 ATR dall'EMA20 → non entrare
+function isChasing(price, ema20, atr) {
+  return ema20 && Math.abs(price - ema20) > atr * 3.5;
+}
+// Weekend guard: no entry da venerdì 20:00 UTC a domenica 22:00 UTC
+function isWeekendRisk() {
+  const d = new Date(), day = d.getUTCDay(), h = d.getUTCHours();
+  return (day === 5 && h >= 20) || day === 6 || (day === 0 && h < 22);
+}
 function distPct(price, level) { return level ? Math.abs(price-level)/level*100 : 999; }
 
 
@@ -4362,7 +4407,7 @@ function coherenceMultiplier(dir, checks) {
   const cohRatio = agreeW / total; // 0 = tutto contro, 1 = tutto a favore
 
   // Moltiplica: piena coerenza +20%, piena contraddizione -50%
-  const mult = 0.5 + cohRatio * 0.7; // range 0.5 (0% agree) → 1.2 (100% agree)
+  const mult = 0.75 + cohRatio * 0.45; // range 0.75 → 1.2 (floor alzato: no dimezzamenti)
   return { mult: Math.min(1.2, Math.max(0.5, +mult.toFixed(3))), cohRatio: +cohRatio.toFixed(2), confirms, conflicts, agree, disagree };
 }
 
@@ -4441,7 +4486,7 @@ function computeAllScenarios() {
       const macroAgainst = isBuy ? macroDn : macroUp;
       if (macroStr>=2 && macroFavor)         {score+=25; R.push(`✅ Lead macro FORTE → ${dir} (str ${macroStr})`);}
       else if (macroStr>=1 && macroFavor)    {score+=14; R.push(`⚡ Lead macro debole → ${dir}`);}
-      else if (macroStr>=2 && macroAgainst)  {score-=18; P.push(`❌ Lead macro FORTE → ${opp} — opposto`);}
+      else if (macroStr>=2 && macroAgainst)  {score-=9; P.push(`❌ Lead macro FORTE → ${opp} — opposto`);}
       else if (macroStr>=1 && macroAgainst)  {score-=8;  P.push(`⚠️ Lead macro → ${opp}`);}
       else                                    {score+=2;  R.push("⚪ Lead macro neutro");}
 
@@ -4476,18 +4521,32 @@ function computeAllScenarios() {
       if (div?.type==="BULLISH" && isBuy)       {score+=12; R.push(`✅ RSI ${rsi} + div bullish`);}
       else if (div?.type==="BEARISH" && !isBuy)  {score+=12; R.push(`✅ RSI ${rsi} + div bearish`);}
       else if (div?.type?.includes("WARN") && (div.type==="BEARISH_WARN"&&isBuy||div.type==="BULLISH_WARN"&&!isBuy)) {score-=8; P.push(`❌ Div RSI contraria`);}
-      else if (isBuy) {
-        if (rsi<35)      {score+=12; R.push(`✅ RSI ${rsi} OS — zona BUY`);}
-        else if (rsi<48) {score+=8;  R.push(`⚡ RSI ${rsi} lato BUY`);}
-        else if (rsi<60) {score+=4;  R.push(`⚡ RSI ${rsi} neutro`);}
-        else if (rsi>70) {score-=10; P.push(`❌ RSI ${rsi} OB — BUY rischiosa`);}
-        else             {score-=4;  P.push(`⚠️ RSI ${rsi} zona SELL`);}
+      else if (regime === "TRENDING") {
+        if (isBuy) {
+          if (rsi>=55 && rsi<=78) {score+=12; R.push(`✅ RSI ${rsi} momentum bull (trend)`);}
+          else if (rsi>=45)        {score+=6;  R.push(`⚡ RSI ${rsi} neutro in trend`);}
+          else if (rsi>78)         {score-=4;  P.push(`⚠️ RSI ${rsi} estremo`);}
+          else                     {score-=6;  P.push(`⚠️ RSI ${rsi} debole per trend BUY`);}
+        } else {
+          if (rsi<=45 && rsi>=22) {score+=12; R.push(`✅ RSI ${rsi} momentum bear (trend)`);}
+          else if (rsi<=55)        {score+=6;  R.push(`⚡ RSI ${rsi} neutro in trend`);}
+          else if (rsi<22)         {score-=4;  P.push(`⚠️ RSI ${rsi} estremo`);}
+          else                     {score-=6;  P.push(`⚠️ RSI ${rsi} forte contro SELL`);}
+        }
       } else {
-        if (rsi>65)      {score+=12; R.push(`✅ RSI ${rsi} OB — zona SELL`);}
-        else if (rsi>52) {score+=8;  R.push(`⚡ RSI ${rsi} lato SELL`);}
-        else if (rsi>40) {score+=4;  R.push(`⚡ RSI ${rsi} neutro`);}
-        else if (rsi<30) {score-=10; P.push(`❌ RSI ${rsi} OS — SELL rischiosa`);}
-        else             {score-=4;  P.push(`⚠️ RSI ${rsi} zona BUY`);}
+        if (isBuy) {
+          if (rsi<35)      {score+=12; R.push(`✅ RSI ${rsi} OS — zona BUY`);}
+          else if (rsi<48) {score+=8;  R.push(`⚡ RSI ${rsi} lato BUY`);}
+          else if (rsi<60) {score+=4;  R.push(`⚡ RSI ${rsi} neutro`);}
+          else if (rsi>70) {score-=10; P.push(`❌ RSI ${rsi} OB — BUY rischiosa`);}
+          else             {score-=4;  P.push(`⚠️ RSI ${rsi} zona SELL`);}
+        } else {
+          if (rsi>65)      {score+=12; R.push(`✅ RSI ${rsi} OB — zona SELL`);}
+          else if (rsi>52) {score+=8;  R.push(`⚡ RSI ${rsi} lato SELL`);}
+          else if (rsi>40) {score+=4;  R.push(`⚡ RSI ${rsi} neutro`);}
+          else if (rsi<30) {score-=10; P.push(`❌ RSI ${rsi} OS — SELL rischiosa`);}
+          else             {score-=4;  P.push(`⚠️ RSI ${rsi} zona BUY`);}
+        }
       }
     }
 
@@ -4506,6 +4565,19 @@ function computeAllScenarios() {
           if (isSupport){score+=8; R.push(`✅ Vicino ${pc.nearest.name} $${fmtP(pc.nearest.val)}`);}
           else          {score-=5; P.push(`⚠️ Vicino ${pc.nearest.name} — ostacolo`);}
         } else {score+=4;}
+      }
+    }
+
+    // ── Trend-rider: pullback continuation (peso 12) ─────────
+    if (regime === "TRENDING" && last1h && ema20_1h.length) {
+      const e20tr = ema20_1h[ema20_1h.length-1];
+      const tfsAligned2 = [d1t,h4t,h1t].filter(t=>t===dir).length;
+      const distE20 = Math.abs(last1h.c - e20tr) / (atr1h||15);
+      const rightSide = isBuy ? last1h.c > e20tr*0.999 : last1h.c < e20tr*1.001;
+      if (tfsAligned2 >= 2 && rightSide && distE20 < 1.0) {
+        score += 12; R.push(`✅ Pullback continuation ${dir}: ${distE20.toFixed(1)} ATR da EMA20`);
+      } else if (tfsAligned2 === 3 && rightSide) {
+        score += 6; R.push(`⚡ Trend ${dir} pieno — momentum entry`);
       }
     }
 
@@ -4611,20 +4683,40 @@ function computeAllScenarios() {
 
     // Score finale con coerenza
     const rawScore = Math.max(0, score);
-    const finalScore = Math.max(0, Math.min(100, Math.round(rawScore * cohMult)));
+    let finalScore = Math.max(0, Math.min(100, Math.round(rawScore * cohMult)));
 
-    // Setup per quella direzione
+    // Setup per quella direzione — SL strutturale, R:R minimo, anti-chase
     const entry=last1h?.c||0;
-    let atrMult = scenario==="trend"?2.0:scenario==="scalp"?1.2:1.5;
-    let tpMult1 = scenario==="trend"?3.0:scenario==="scalp"?1.5:2.0;
-    let tpMult2 = scenario==="trend"?5.0:scenario==="scalp"?2.5:3.5;
-    const setup = entry ? {
-      direction:dir, entry,
-      sl:  isBuy ? +(entry-atr1h*atrMult).toFixed(2) : +(entry+atr1h*atrMult).toFixed(2),
-      tp1: isBuy ? +(entry+atr1h*tpMult1).toFixed(2) : +(entry-atr1h*tpMult1).toFixed(2),
-      tp2: isBuy ? +(entry+atr1h*tpMult2).toFixed(2) : +(entry-atr1h*tpMult2).toFixed(2),
-    } : null;
+    const atrMult = scenario==="trend"?2.0:scenario==="scalp"?1.2:1.5;
+    const tpMult1 = scenario==="trend"?3.0:scenario==="scalp"?1.5:2.0;
+    const tpMult2 = scenario==="trend"?5.0:scenario==="scalp"?2.5:3.5;
+    let setup = null;
+    if (entry) {
+      // SL: strutturale (swing) se ragionevole, altrimenti ATR
+      const scCandles = scenario==="scalp" ? (cc5m.length?cc5m:cc1h) : cc1h;
+      const scAtr     = scenario==="scalp" ? (last5m?.atr||atr1h*0.3) : atr1h;
+      const slStruct  = structuralSL(scCandles, dir, scAtr, scenario==="scalp"?6:8);
+      const slAtr     = isBuy ? +(entry-scAtr*atrMult).toFixed(2) : +(entry+scAtr*atrMult).toFixed(2);
+      // Usa lo strutturale se non troppo lontano (max 1.5x della distanza ATR)
+      let sl = slAtr;
+      if (slStruct !== null) {
+        const dStruct = Math.abs(entry - slStruct), dAtr = Math.abs(entry - slAtr);
+        if (dStruct > dAtr*0.4 && dStruct < dAtr*1.5) sl = slStruct;
+      }
+      const risk = Math.abs(entry - sl);
+      const tp1  = isBuy ? +(entry+risk*1.5).toFixed(2) : +(entry-risk*1.5).toFixed(2); // R:R fisso 1.5 a TP1
+      const tp2  = isBuy ? +(entry+risk*3.0).toFixed(2) : +(entry-risk*3.0).toFixed(2); // 3R a TP2
+      setup = { direction:dir, entry, sl, tp1, tp2, risk:+risk.toFixed(2) };
+      // Anti-chase: se prezzo esteso dall'EMA20, marca il setup
+      const e20 = ema20_1h.length ? ema20_1h[ema20_1h.length-1] : null;
+      if (isChasing(entry, e20, atr1h)) { setup.chasing = true; }
+    }
+    // Penalità score se chasing o weekend
+    let finalAdj = 0;
+    if (setup?.chasing)   { finalAdj -= 10; P.push("❌ Prezzo esteso >2.5 ATR da EMA20 — non inseguire"); }
+    if (isWeekendRisk())  { finalAdj -= 12; P.push("❌ Weekend gap risk — evita nuove entry"); }
 
+    finalScore = Math.max(0, Math.min(100, finalScore + finalAdj));
     return {score:finalScore, rawScore, cohRatio:coh?.cohRatio, R, P, reasons:[...R,...P], setup, dir};
   }
 

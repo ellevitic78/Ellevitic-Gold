@@ -357,13 +357,17 @@ async function tryAutoEntry(scoring) {
 
   const { bestDir, bestScore, price, atr1h } = scoring;
   if (bestDir === 'WAIT' || bestScore < MIN_SCORE) return;
+  // Weekend gap guard
+  const wd = new Date(), day = wd.getUTCDay(), hh = wd.getUTCHours();
+  if ((day===5 && hh>=20) || day===6 || (day===0 && hh<22)) return;
 
   const entry = bestDir === 'BUY'
     ? +(price + SPREAD/2).toFixed(2)
     : +(price - SPREAD/2).toFixed(2);
   const sl  = bestDir === 'BUY' ? +(entry - atr1h*1.5).toFixed(2) : +(entry + atr1h*1.5).toFixed(2);
-  const tp1 = bestDir === 'BUY' ? +(entry + atr1h*2.0).toFixed(2) : +(entry - atr1h*2.0).toFixed(2);
-  const tp2 = bestDir === 'BUY' ? +(entry + atr1h*3.5).toFixed(2) : +(entry - atr1h*3.5).toFixed(2);
+  const risk = Math.abs(entry - sl);
+  const tp1 = bestDir === 'BUY' ? +(entry + risk*1.5).toFixed(2) : +(entry - risk*1.5).toFixed(2);
+  const tp2 = bestDir === 'BUY' ? +(entry + risk*3.0).toFixed(2) : +(entry - risk*3.0).toFixed(2);
   const lots    = calcLotSize(paperCapital, entry, sl);
   const riskEur = +(Math.abs(entry-sl)*lots*100).toFixed(2);
 
@@ -430,8 +434,23 @@ async function monitorTrade() {
   if (dir==='SELL' && price >= t.sl)  { closed=true; exitReason='SL';  exitPrice=t.sl; }
   if (!closed && dir==='BUY'  && price >= t.tp2) { closed=true; exitReason='TP2'; exitPrice=t.tp2; }
   if (!closed && dir==='SELL' && price <= t.tp2) { closed=true; exitReason='TP2'; exitPrice=t.tp2; }
-  if (!closed && dir==='BUY'  && price >= t.tp1) { closed=true; exitReason='TP1'; exitPrice=t.tp1; }
-  if (!closed && dir==='SELL' && price <= t.tp1) { closed=true; exitReason='TP1'; exitPrice=t.tp1; }
+  if (!closed && !t.partialDone && ((dir==='BUY' && price >= t.tp1) || (dir==='SELL' && price <= t.tp1))) {
+    const halfLots = +(t.lots/2).toFixed(2);
+    const exitHalf = dir==='BUY' ? +(t.tp1-SPREAD/2).toFixed(2) : +(t.tp1+SPREAD/2).toFixed(2);
+    const pnlHalf  = +((dir==='BUY'?exitHalf-t.entry:t.entry-exitHalf)*halfLots*100).toFixed(2);
+    paperCapital = +(paperCapital + pnlHalf).toFixed(2);
+    t.lots = +(t.lots - halfLots).toFixed(2);
+    t.partialDone = true; t.partialPnl = pnlHalf;
+    const beSL = dir==='BUY' ? +(t.entry+SPREAD).toFixed(2) : +(t.entry-SPREAD).toFixed(2);
+    if ((dir==='BUY'&&beSL>t.sl)||(dir==='SELL'&&beSL<t.sl)) t.sl = beSL;
+    t.breakEvenSet = true;
+    logAction(`TP1 parziale 50%: +€${pnlHalf} · SL→BE`);
+    notifyClients({ type:'BG_TRADE_UPDATE', trade:t, price, profRR, ts:Date.now() });
+    await self.registration.showNotification('🎯 TP1 — 50% incassato [BG]', {
+      body:`+€${pnlHalf} · Resto corre a TP2 $${t.tp2.toFixed(2)}`,
+      icon:'/icon-192.png', tag:'paper-partial', vibrate:[200,100,200],
+    });
+  }
 
   if (!closed) {
     // Breakeven
