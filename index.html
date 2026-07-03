@@ -2108,10 +2108,10 @@ function evaluateAutoEntry() {
     allScores: recap.scores.map(s => ({
       id:       s.id,
       label:    s.label,
-      score:    s.es.score,
-      dir:      s.es.dir,
-      reasons:  s.es.reasons,
-      eligible: s.es.score >= s.threshold,
+      buyScore: s.buy?.score ?? 0,
+      sellScore:s.sell?.score ?? 0,
+      dir:      s.bestDir,
+      eligible: s.bestDir !== 'WAIT',
     })),
   };
 
@@ -2127,6 +2127,8 @@ function evaluateAutoEntry() {
     macroDir:      '–',
     atrAtEntry:    (state.candles['1h']||[]).slice(-1)[0]?.atr || 0,
     scenario:      best.id,
+    timedExitUTC:  es.setup.timedExitUTC ?? null,
+    bias:          es.setup.bias ?? null,
     entryReasons:  es.reasons,
     scoreSnapshot,
     managementLog: [],
@@ -2188,12 +2190,12 @@ function getScenarioCandles(scenario) {
 
 // Soglia warnScore per scenario (trend tollera più rumore)
 function getWarnThreshold(scenario) {
-  return scenario === "scalp" ? 3 : scenario === "swing" ? 6 : 8;
+  return scenario === "scalp" ? 3 : scenario === "swing" ? 6 : scenario === "bias" ? 5 : 8;
 }
 
 // Moltiplicatore ATR per trailing stop per scenario
 function getTrailMult(scenario) {
-  return scenario === "scalp" ? 0.8 : scenario === "swing" ? 1.5 : 2.0;
+  return scenario === "scalp" ? 0.8 : scenario === "swing" ? 1.5 : scenario === "bias" ? 1.0 : 2.0;
 }
 
 function analyzePriceAction(candles, direction) {
@@ -4411,6 +4413,140 @@ function coherenceMultiplier(dir, checks) {
   return { mult: Math.min(1.2, Math.max(0.5, +mult.toFixed(3))), cohRatio: +cohRatio.toFixed(2), confirms, conflicts, agree, disagree };
 }
 
+// ═══ Scenario ⏰ BIAS — bias orari documentati sull'oro (stile Unger) ═══
+// Regole binarie backtestabili: London Open Breakout, Asia Range Fade, NY Continuation.
+// Exit a orario (21:00 UTC) gestita in evaluateAutoExit per scenario==='bias'.
+function computeBiasScenario(cc1h, last1h, atr1h, dailyTrend, adx, regime) {
+  const empty = (why) => {
+    const s = {score:0, rawScore:0, cohRatio:null, R:[], P:[why?`⚪ ${why}`:"⚪ Fuori finestra bias"], reasons:[], setup:null};
+    return { id:"bias", label:"⏰ Bias", color:"#a855f7", tf:"Orario UTC", threshold:50,
+             buy:{...s,dir:"BUY"}, sell:{...s,dir:"SELL"}, bestDir:"WAIT", bestScore:0, setup:null };
+  };
+  if (!cc1h || cc1h.length < 24 || !last1h) return empty("Dati insufficienti");
+  if (isWeekendRisk()) return empty("Weekend gap risk");
+
+  const now = new Date();
+  const h   = now.getUTCHours() + now.getUTCMinutes()/60;
+  const price = last1h.c;
+  const atr = atr1h || 15;
+
+  // Estrai le candele di OGGI (UTC) per sessione
+  const today = now.toISOString().slice(0,10);
+  const isToday = (cd) => cd.t && new Date(cd.t).toISOString().slice(0,10) === today;
+  const hourOf  = (cd) => new Date(cd.t).getUTCHours();
+  const todayCandles = cc1h.filter(isToday);
+
+  const sessRange = (h1, h2) => {
+    const cs = todayCandles.filter(cd => hourOf(cd) >= h1 && hourOf(cd) < h2);
+    if (!cs.length) return null;
+    return { hi: Math.max(...cs.map(cd=>cd.h)), lo: Math.min(...cs.map(cd=>cd.l)),
+             open: cs[0].o, close: cs[cs.length-1].c, n: cs.length };
+  };
+
+  const asia   = sessRange(0, 7);   // Asia 0-7 UTC
+  const lonH1  = sessRange(8, 9);   // Prima ora Londra
+  const london = sessRange(8, 13);  // Londra fino a NY
+
+  const scoreDir2 = (dir) => {
+    const isBuy = dir === "BUY";
+    const R=[], P=[];
+    let score = 0;
+    let setup = null;
+    let activeBias = null;
+
+    // ── Filtri comuni (stile Unger: pochi e binari) ─────────
+    const trendOk = dailyTrend === dir;
+    const trendAg = dailyTrend !== "WAIT" && dailyTrend !== dir;
+    if (trendOk)  { score += 15; R.push(`✅ Trend Daily ${dir}`); }
+    if (trendAg)  { score -= 12; P.push(`❌ Trend Daily contro`); }
+    if (adx?.adx >= 20) { score += 8; R.push(`✅ ADX ${adx.adx} — direzionale`); }
+
+    // ── BIAS A: London Open Breakout (9:00-12:00 UTC) ───────
+    if (h >= 9 && h < 12 && lonH1) {
+      const rng = lonH1.hi - lonH1.lo;
+      const rngOk = rng > atr*0.3 && rng < atr*2.5; // range sensato
+      const broke = isBuy ? price > lonH1.hi : price < lonH1.lo;
+      const margin = isBuy ? price - lonH1.hi : lonH1.lo - price;
+      if (rngOk && broke && margin < atr*1.2) {
+        activeBias = "LONDON_BREAKOUT";
+        score += 35; R.push(`✅ Breakout Londra ${dir}: range 8-9h $${lonH1.lo.toFixed(0)}-$${lonH1.hi.toFixed(0)} rotto`);
+        const sl  = isBuy ? +(lonH1.lo - atr*0.2).toFixed(2) : +(lonH1.hi + atr*0.2).toFixed(2);
+        const risk= Math.abs(price - sl);
+        setup = { direction:dir, entry:price, sl,
+                  tp1: isBuy ? +(price+risk*1.5).toFixed(2) : +(price-risk*1.5).toFixed(2),
+                  tp2: isBuy ? +(price+risk*2.5).toFixed(2) : +(price-risk*2.5).toFixed(2),
+                  risk:+risk.toFixed(2), timedExitUTC: 21, bias:"LONDON_BREAKOUT" };
+      } else if (rngOk && broke) {
+        P.push(`⚠️ Breakout Londra già esteso (+${margin.toFixed(0)}pt)`);
+      }
+    }
+
+    // ── BIAS B: Asia Range Fade (2:00-6:00 UTC) ─────────────
+    // L'oro in Asia tende al mean-reverting: fade degli estremi verso il mid
+    if (h >= 2 && h < 6 && asia && asia.n >= 2 && regime !== "TRENDING") {
+      const mid = (asia.hi + asia.lo) / 2;
+      const rng = asia.hi - asia.lo;
+      if (rng > atr*0.5) {
+        const atExtreme = isBuy ? price <= asia.lo + rng*0.15 : price >= asia.hi - rng*0.15;
+        if (atExtreme) {
+          activeBias = "ASIA_FADE";
+          score += 42; R.push(`✅ Asia fade ${dir}: prezzo all'estremo del range asiatico`);
+          const rsiF = last1h.rsi || 50;
+          if (isBuy ? rsiF < 42 : rsiF > 58) { score += 8; R.push(`✅ RSI ${rsiF} conferma estremo`); }
+          const sl  = isBuy ? +(asia.lo - atr*0.4).toFixed(2) : +(asia.hi + atr*0.4).toFixed(2);
+          const risk= Math.abs(price - sl);
+          setup = { direction:dir, entry:price, sl,
+                    tp1:+mid.toFixed(2),
+                    tp2: isBuy ? +(asia.hi - rng*0.15).toFixed(2) : +(asia.lo + rng*0.15).toFixed(2),
+                    risk:+risk.toFixed(2), timedExitUTC: 7, bias:"ASIA_FADE" };
+        }
+      }
+    }
+
+    // ── BIAS C: NY Continuation (13:30-16:00 UTC) ───────────
+    // Se Londra ha stampato un trend chiaro, NY tende a continuarlo nella prima parte
+    if (h >= 13.5 && h < 16 && london && london.n >= 4) {
+      const lonMove = london.close - london.open;
+      const lonDir  = lonMove > atr*0.6 ? "BUY" : lonMove < -atr*0.6 ? "SELL" : "WAIT";
+      if (lonDir === dir) {
+        const pullback = isBuy ? price < london.hi : price > london.lo; // non sui massimi assoluti
+        activeBias = "NY_CONTINUATION";
+        score += 30; R.push(`✅ NY continuation ${dir}: Londra ${lonMove>0?"+":""}${lonMove.toFixed(0)}pt`);
+        if (pullback) { score += 5; R.push(`⚡ Entry non sull'estremo`); }
+        const sl  = isBuy ? +(price - atr*1.2).toFixed(2) : +(price + atr*1.2).toFixed(2);
+        const risk= Math.abs(price - sl);
+        setup = { direction:dir, entry:price, sl,
+                  tp1: isBuy ? +(price+risk*1.5).toFixed(2) : +(price-risk*1.5).toFixed(2),
+                  tp2: isBuy ? +(price+risk*2.5).toFixed(2) : +(price-risk*2.5).toFixed(2),
+                  risk:+risk.toFixed(2), timedExitUTC: 21, bias:"NY_CONTINUATION" };
+      } else if (lonDir !== "WAIT" && lonDir !== dir) {
+        score -= 10; P.push(`❌ Londra ha spinto ${lonDir}`);
+      }
+    }
+
+    if (!activeBias) {
+      if (h < 2 || (h >= 6 && h < 9) || (h >= 12 && h < 13.5) || h >= 16) {
+        P.push("⚪ Nessuna finestra bias attiva ora");
+      }
+      score = Math.min(score, 40); // senza bias attivo non si supera mai la soglia
+    }
+
+    const finalScore = Math.max(0, Math.min(100, Math.round(score)));
+    return { score:finalScore, rawScore:finalScore, cohRatio:null, R, P,
+             reasons:[...R,...P], setup, dir, activeBias };
+  };
+
+  const buyS  = scoreDir2("BUY");
+  const sellS = scoreDir2("SELL");
+  const threshold = 50;
+  const bestDir   = buyS.score>=sellS.score && buyS.score>=threshold && buyS.setup ? "BUY"
+                  : sellS.score>buyS.score && sellS.score>=threshold && sellS.setup ? "SELL" : "WAIT";
+  const bestScore = Math.max(buyS.score, sellS.score);
+  const bestSetup = bestDir==="BUY" ? buyS.setup : bestDir==="SELL" ? sellS.setup : null;
+  return { id:"bias", label:"⏰ Bias", color:"#a855f7", tf:"Orario UTC", threshold,
+           buy:buyS, sell:sellS, bestDir, bestScore, setup:bestSetup };
+}
+
 function computeAllScenarios() {
   const sess   = getSessionStatus();
   const cc1h   = state.candles["1h"] || [];
@@ -4737,6 +4873,7 @@ function computeAllScenarios() {
     makeScenario("swing","📊 Swing", "#f0b429","1H/4H",      THRESHOLDS.swing),
     makeScenario("scalp","⚡ Scalp",  "#f97316","1M/5M",      THRESHOLDS.scalp),
     makeScenario("trend","📈 Trend",  "#22c55e","Daily/4H/1H",THRESHOLDS.trend),
+    computeBiasScenario(cc1h, last1h, atr1h, d1t, adx, regime),
   ];
 
   const eligible = scores.filter(s=>s.bestDir!=="WAIT");
