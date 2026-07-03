@@ -31,8 +31,8 @@ const RISK_PCT     = 0.01;
 const LEVERAGE     = 100;
 const MAX_POS_PCT  = 0.05;
 const MAX_DD       = 0.10;
-const MIN_SCORE    = 60;    // soglia minima per entry
-const COOL_TRADE   = 5 * 60 * 1000; // 5 min cooldown tra trade
+const MIN_SCORE    = 62; // conservativo in background    // soglia minima per entry
+const COOL_TRADE   = 15 * 60 * 1000; // 15 min in background // 5 min cooldown tra trade
 let lastTradeTs    = 0;
 const COOL_ALERT   = 15 * 60 * 1000;
 
@@ -388,6 +388,11 @@ async function tryAutoEntry(scoring) {
   console.log('[SW] Trade aperto in background:', openTrade.direction, '@', entry);
 }
 
+async function hasVisibleClient() {
+  const clients = await self.clients.matchAll({ type:'window', includeUncontrolled:true });
+  return clients.some(c => c.visibilityState === 'visible');
+}
+
 async function monitorTrade() {
   if (!openTrade) return;
 
@@ -396,6 +401,9 @@ async function monitorTrade() {
 
   // Aggiorna header
   notifyClients({ type: 'BG_UPDATE', price, ts: Date.now() });
+
+  // Se l'app è visibile, gestisce lei il trade — evita azioni duplicate
+  if (await hasVisibleClient()) return;
 
   const t   = openTrade;
   const dir = t.direction;

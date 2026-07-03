@@ -1025,8 +1025,8 @@ async function updateLivePrice() {
     const sub = document.getElementById('hdr-sub');
     if (sub) sub.textContent = `Twelve Data · ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})} · key …${state.tdKey.slice(-4)}`;
 
-    // Paper trading: valuta exit SOLO se il prezzo è valido e c'è un trade aperto
-    if (state.paper?.openTrade && price > 0) {
+    // Paper trading: gestione solo quando app visibile (in background gestisce il SW)
+    if (state.paper?.openTrade && price > 0 && document.visibilityState === 'visible') {
       try { evaluateAutoExit(price); } catch(e) { console.warn('[price] evaluateAutoExit:', e.message); }
     }
     // Se lo Score è ancora in "Caricamento", prova a renderizzare ora
@@ -2922,8 +2922,8 @@ async function testSyncSw() {
 }
 
 // Intercetta messaggi SW per log diagnostica
-const _origSwHandler = handleSwMessage;
-function handleSwMessage(e) {
+const _origSwHandler = handleSwMessageCore;
+function handleSwMessageCore(e) {
   _origSwHandler(e);
   const d = e.data;
   if (!d) return;
@@ -5357,7 +5357,9 @@ async function restoreBgState() {
       if (!state.paper.openTrade) evaluateAutoEntry();
     })();
 
+    if (state.fetchTimer) clearInterval(state.fetchTimer);
     state.fetchTimer = setInterval(doFetch, 5*60000);
+    if (state.priceTimer) clearInterval(state.priceTimer);
     state.priceTimer = setInterval(updateLivePrice, 30000);
     restoreBgState();
     // Wake Lock: impedisce al telefono di spegnere lo schermo (Android Chrome)
