@@ -487,6 +487,24 @@ button{cursor:pointer}
     </details>
 
     <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
+      <summary style="color:#e879f9;font-size:13px;font-weight:700;cursor:pointer">🧬 Pesi interni scoring (per scenario)</summary>
+      <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
+        Ottimizza i <b>pesi dei criteri dentro lo score</b> (macro, MTF, ADX, RSI, pivot, pullback,
+        criteri specifici, sessione) come moltiplicatori ×0–×2, un criterio alla volta, scenario isolato.
+        Se il risultato batte la baseline, <b style="color:#22c55e">i pesi live dello scenario vengono aggiornati</b>.
+        ~57 backtest: 3-6 minuti.
+      </div>
+      <div style="display:flex;gap:6px;align-items:flex-end">
+        <div style="flex:1"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Scenario</div>
+          <select id="wopt-target" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:8px;font-size:13px">
+            <option value="swing" selected>📊 Swing</option>
+            <option value="trend">📈 Trend</option>
+          </select></div>
+        <button id="wopt-btn" onclick="runWeightOptimization()" style="flex:1;background:#e879f9;color:#000;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🧬 Ottimizza pesi</button>
+      </div>
+    </details>
+
+    <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
       <summary style="color:#f97316;font-size:13px;font-weight:700;cursor:pointer">🔁 Sweep — testa un range su UN parametro</summary>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
         <div style="grid-column:1/4"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parametro</div>
@@ -3286,7 +3304,9 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
   const backup = {
     candles: state.candles, candles4h: state.candles4h,
     pivots: state.pivots, corrData: state.corrData, btNow: state.btNow,
+    btWeights: state.btWeights,
   };
+  if (P.weights) state.btWeights = P.weights;
 
   const START_CAP = 10000;
   let capital = START_CAP, openT = null, lastCloseIdx = -999;
@@ -3429,6 +3449,7 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
     state.candles = backup.candles; state.candles4h = backup.candles4h;
     state.pivots = backup.pivots; state.corrData = backup.corrData;
     state.btNow = backup.btNow || null;
+    state.btWeights = backup.btWeights || null;
   }
 
   return { trades, startCap: START_CAP, endCap: capital,
@@ -3749,6 +3770,125 @@ async function runScenOptimization() {
     progText.textContent = '❌ ' + e.message;
   }
   btn.disabled=false; btn.style.opacity='1'; btn.textContent='🎯 Ottimizza scenario';
+  btRunning = false;
+}
+
+// ── OTTIMIZZAZIONE PESI INTERNI dello scoring, per scenario ──
+const WEIGHT_GROUPS = ['macro','mtf','adx','rsi','pivot','pullback','specific','sess'];
+const WEIGHT_VALUES = [0, 0.5, 0.75, 1, 1.25, 1.5, 2];
+
+async function runWeightOptimization() {
+  if (btRunning) return;
+  btRunning = true;
+  const btn = document.getElementById('wopt-btn');
+  const progCard = document.getElementById('bt-progress-card');
+  const progBar  = document.getElementById('bt-progress-bar');
+  const progText = document.getElementById('bt-progress-text');
+  const resEl    = document.getElementById('bt-results');
+  btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Ottimizzazione pesi...';
+  progCard.style.display='block'; resEl.innerHTML='';
+
+  const scen = document.getElementById('wopt-target').value;
+  const maxBars = 5000;
+  const useScen = { swing:false, trend:false, bias:false, scalp:false };
+  useScen[scen] = true;
+  const scenNames = { swing:'📊 Swing', trend:'📈 Trend' };
+
+  const totalRuns = 1 + WEIGHT_GROUPS.length * WEIGHT_VALUES.length + 1;
+  let runCount = 0;
+  const t0 = Date.now();
+  const baseP = () => {
+    const b = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
+    return { ...b, riskPct: b.riskPct/100, partialPct: b.partialPct/100 };
+  };
+  const tick = async (label) => {
+    runCount++;
+    progBar.style.width = Math.round(runCount/totalRuns*100)+'%';
+    const el=(Date.now()-t0)/1000;
+    progText.textContent = `${scenNames[scen]} pesi · ${label} · run ${runCount}/${totalRuns} · ETA ${Math.round(el/runCount*(totalRuns-runCount))}s`;
+    await new Promise(r=>setTimeout(r,0));
+  };
+  const mkWeights = (w) => ({ [scen]: { ...SCORE_WEIGHTS[scen], ...w } });
+
+  try {
+    // Baseline: pesi live correnti
+    await tick('baseline');
+    const baseRes = await btRun('1h', maxBars, useScen, { ...baseP(), weights: mkWeights({}) }, null);
+    const baseSt  = btStats(baseRes.trades, baseRes.startCap);
+
+    // Coordinate descent: per ogni gruppo, prova tutti i valori, fissa il migliore
+    let current = { ...SCORE_WEIGHTS[scen] };
+    delete current._v;
+    const perGroup = [];
+    for (const g of WEIGHT_GROUPS) {
+      let bestV = current[g] ?? 1, bestPnl = -Infinity, rows = [];
+      for (const v of WEIGHT_VALUES) {
+        await tick(`${g} = ${v}`);
+        const res = await btRun('1h', maxBars, useScen,
+          { ...baseP(), weights: mkWeights({ ...current, [g]: v }) }, null);
+        const st = btStats(res.trades, res.startCap);
+        rows.push({ v, st });
+        const pnl = st ? st.pnl : -Infinity;
+        const pfN = st ? (st.pf==='∞'?10:parseFloat(st.pf)) : 0;
+        if (pnl > bestPnl && (st?.n||0) >= 5 && pfN >= 0.9) { bestPnl = pnl; bestV = v; }
+      }
+      current[g] = bestV;
+      perGroup.push({ g, rows, bestV });
+    }
+
+    // Run finale combinato
+    await tick('finale');
+    const finalRes = await btRun('1h', maxBars, useScen, { ...baseP(), weights: mkWeights(current) }, null);
+    const finalSt  = btStats(finalRes.trades, finalRes.startCap);
+    progBar.style.width='100%';
+
+    const basePnl = baseSt ? baseSt.pnl : -1e9;
+    const finPnl  = finalSt ? finalSt.pnl : -1e9;
+    const finPf   = finalSt ? (finalSt.pf==='∞'?10:parseFloat(finalSt.pf)) : 0;
+    const improved = finPnl > basePnl && finPf >= 1.05 && (finalSt?.n||0) >= 10;
+
+    let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55;margin-bottom:10px">
+      <div style="color:#e879f9;font-weight:800;font-size:15px;margin-bottom:8px">🧬 Pesi interni ${scenNames[scen]} — ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (pesi live)</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${baseSt?baseSt.n:0} trade · WR ${baseSt?baseSt.wr:'–'}%<br>PF ${baseSt?baseSt.pf:'–'} · DD ${baseSt?baseSt.maxDD:'–'}%</div>
+          <div style="color:${(baseSt?.pnl||0)>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900;margin-top:3px">€${baseSt?baseSt.pnl:0}</div></div>
+        <div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${improved?'#22c55e44':'#2a3550'}"><div style="color:#22c55e;font-size:10px;font-weight:700">PESI OTTIMIZZATI</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${finalSt?finalSt.n:0} trade · WR ${finalSt?finalSt.wr:'–'}%<br>PF ${finalSt?finalSt.pf:'–'} · DD ${finalSt?finalSt.maxDD:'–'}%</div>
+          <div style="color:${finPnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900;margin-top:3px">€${finalSt?finalSt.pnl:0}</div></div>
+      </div>`;
+
+    perGroup.forEach(({ g, rows, bestV }) => {
+      html += `<div style="color:#f0f4fa;font-size:12px;font-weight:700;margin:8px 0 4px">${g} — migliore: <span style="color:#f0b429">×${bestV}</span></div>
+        <div style="display:flex;gap:2px;flex-wrap:wrap">`;
+      rows.forEach(r => {
+        const pnl = r.st ? r.st.pnl : null;
+        const isBest = r.v === bestV;
+        const col = pnl===null?'#475569':pnl>=0?'#22c55e':'#ef4444';
+        html += `<div style="background:${isBest?'#f0b42920':'#0d1117'};border:1px solid ${isBest?'#f0b42955':'#1e2535'};border-radius:5px;padding:4px 6px;text-align:center;min-width:50px">
+          <div style="color:#94a3b8;font-size:9px">×${r.v}</div>
+          <div style="color:${col};font-size:10px;font-weight:700">${pnl===null?'–':(pnl>=0?'+':'')+Math.round(pnl)}</div>
+          <div style="color:#64748b;font-size:8px">${r.st?r.st.n+'t':''}</div></div>`;
+      });
+      html += `</div>`;
+    });
+
+    if (improved) {
+      saveScoreWeights(scen, current);
+      html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:10px;color:#22c55e;font-size:12px;font-weight:700">
+        ✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)}) — PESI LIVE DI ${scenNames[scen].toUpperCase()} AGGIORNATI:<br>
+        <span style="font-weight:400">${Object.entries(current).map(([k,v])=>k+'×'+v).join(' · ')}</span></div>`;
+    } else {
+      html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:10px;color:#f0b429;font-size:12px">
+        ⚪ Nessun miglioramento affidabile (P&L > baseline, PF ≥ 1.05, ≥ 10 trade). Pesi live invariati.</div>`;
+    }
+    html += `<div style="color:#94a3b8;font-size:10px;margin-top:8px">⚠️ ×0 spegne il criterio, ×2 lo raddoppia. 8 gruppi × 7 valori: attenzione all'overfitting — diffida dei ×0/×2 estremi vincenti per pochi euro.</div></div>`;
+    resEl.innerHTML = html;
+    progText.textContent = 'Ottimizzazione pesi completata.';
+  } catch(e) {
+    progText.textContent = '❌ ' + e.message;
+  }
+  btn.disabled=false; btn.style.opacity='1'; btn.textContent='🧬 Ottimizza pesi';
   btRunning = false;
 }
 
@@ -5562,6 +5702,31 @@ let PAPER_PARAMS = (() => {
     return fresh;
   } catch(e) { return { ...PAPER_PARAMS_DEFAULTS }; }
 })();
+// ── Pesi INTERNI dello scoring, per scenario (moltiplicatori, 1.0 = default) ──
+const SCORE_WEIGHTS_DEFAULTS = {
+  _v: 1,
+  swing: { macro:1, mtf:1, adx:1, rsi:1, pivot:1, pullback:1, specific:1, sess:1 },
+  trend: { macro:1, mtf:1, adx:1, rsi:1, pivot:1, pullback:1, specific:1, sess:1 },
+  scalp: { macro:1, mtf:1, adx:1, rsi:1, pivot:1, pullback:1, specific:1, sess:1 },
+};
+let SCORE_WEIGHTS = (() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('xauapp_score_weights') || 'null');
+    if (saved && saved._v === SCORE_WEIGHTS_DEFAULTS._v) {
+      return { ...SCORE_WEIGHTS_DEFAULTS, ...saved,
+        swing:{...SCORE_WEIGHTS_DEFAULTS.swing,...(saved.swing||{})},
+        trend:{...SCORE_WEIGHTS_DEFAULTS.trend,...(saved.trend||{})},
+        scalp:{...SCORE_WEIGHTS_DEFAULTS.scalp,...(saved.scalp||{})} };
+    }
+    return JSON.parse(JSON.stringify(SCORE_WEIGHTS_DEFAULTS));
+  } catch(e) { return JSON.parse(JSON.stringify(SCORE_WEIGHTS_DEFAULTS)); }
+})();
+function saveScoreWeights(scen, w) {
+  SCORE_WEIGHTS[scen] = { ...SCORE_WEIGHTS[scen], ...w };
+  SCORE_WEIGHTS._v = SCORE_WEIGHTS_DEFAULTS._v;
+  try { localStorage.setItem('xauapp_score_weights', JSON.stringify(SCORE_WEIGHTS)); } catch(e) {}
+}
+
 function savePaperParams(p) {
   PAPER_PARAMS = { ...PAPER_PARAMS, ...p, _v: PAPER_PARAMS_DEFAULTS._v };
   try { localStorage.setItem('xauapp_live_params', JSON.stringify(PAPER_PARAMS)); } catch(e) {}
@@ -5907,12 +6072,18 @@ function computeAllScenarios() {
   // Restituisce score 0-100 per quella specifica direzione
 
   function scoreDirection(dir, scenario) {
+    // Pesi interni: live da SCORE_WEIGHTS, in backtest da state.btWeights (override)
+    const _SW = (state.btWeights && state.btWeights[scenario]) || SCORE_WEIGHTS[scenario] || {};
+    const wf = (k) => (_SW[k] ?? 1);
+
     const R=[], P=[];
     let score=0;
     const isBuy = dir==="BUY";
     const opp   = isBuy ? "SELL" : "BUY";
 
     // ── Anticipatori macro (peso 25 — il più importante) ────
+    { const _s0_macro = score;
+
     // EUR/USD sale + TNX scende = oro sale = BUY
     // EUR/USD scende + TNX sale = oro scende = SELL
     if (macro) {
@@ -5930,7 +6101,10 @@ function computeAllScenarios() {
       if ((macro.eurDivergence||macro.tnxDivergence) && macroFavor) {score-=5; P.push("⚠️ Div macro 1M/5M");}
     }
 
+        score = _s0_macro + (score - _s0_macro) * wf('macro'); }
     // ── Struttura multi-TF (peso 20) ─────────────────────────
+    { const _s0_mtf = score;
+
     const tfsFor    = [d1t,h4t,h1t].filter(t=>t===dir).length;
     const tfsAgainst= [d1t,h4t,h1t].filter(t=>t!=="WAIT"&&t!==dir).length;
     if (tfsFor===3)         {score+=20; R.push(`✅ 3/3 TF ${dir}`);}
@@ -5939,7 +6113,10 @@ function computeAllScenarios() {
     else                    {score+=0;  P.push(`❌ 0 TF ${dir}`);}
     if (tfsAgainst>=2)      {score-=10; P.push(`❌ ${tfsAgainst} TF contro`);}
 
+        score = _s0_mtf + (score - _s0_mtf) * wf('mtf'); }
     // ── ADX direzionale (peso 15) ────────────────────────────
+    { const _s0_adx = score;
+
     const diFor  = isBuy ? adx.pdi : adx.mdi;
     const diOpp2 = isBuy ? adx.mdi : adx.pdi;
     const diLead = diFor - diOpp2;
@@ -5948,7 +6125,10 @@ function computeAllScenarios() {
     else if (adx.adx>14 && diLead>0) {score+=5;  R.push(`⚡ ADX moderato ${dir}`);}
     else if (diLead<-5)               {score-=8;  P.push(`❌ DI${isBuy?"+":"-"} ${diFor} < ${diOpp2} — forza ${opp}`);}
 
+        score = _s0_adx + (score - _s0_adx) * wf('adx'); }
     // ── RSI 1H con zona entry specifica (peso 12) ────────────
+    { const _s0_rsi = score;
+
     if (last1h) {
       const rsi = last1h.rsi||50;
       const div = detectRsiDivergence(cc1h.slice(-20), dir, 8);
@@ -5984,7 +6164,10 @@ function computeAllScenarios() {
       }
     }
 
+        score = _s0_rsi + (score - _s0_rsi) * wf('rsi'); }
     // ── Pivot: spazio e livelli (peso 10) ────────────────────
+    { const _s0_pivot = score;
+
     if (last1h && pv.pivot) {
       const price=last1h.c;
       const pc = pivotContext(price, dir, atr1h);
@@ -6002,7 +6185,10 @@ function computeAllScenarios() {
       }
     }
 
+        score = _s0_pivot + (score - _s0_pivot) * wf('pivot'); }
     // ── Trend-rider: pullback continuation (peso 12) ─────────
+    { const _s0_pullback = score;
+
     if (regime === "TRENDING" && last1h && ema20_1h.length) {
       const e20tr = ema20_1h[ema20_1h.length-1];
       const tfsAligned2 = [d1t,h4t,h1t].filter(t=>t===dir).length;
@@ -6015,7 +6201,10 @@ function computeAllScenarios() {
       }
     }
 
+        score = _s0_pullback + (score - _s0_pullback) * wf('pullback'); }
     // ── Criteri specifici per scenario ───────────────────────
+    { const _s0_specific = score;
+
     if (scenario==="scalp") {
       // Semafori scalp nella dir
       const sems=scalp?.sems||[];
@@ -6097,11 +6286,15 @@ function computeAllScenarios() {
       if (regime==="RANGING") {score+=3; R.push("⚡ Ranging — swing su pivot valido");}
     }
 
+        score = _s0_specific + (score - _s0_specific) * wf('specific'); }
     // ── Sessione (peso 5) ────────────────────────────────────
+    { const _s0_sess = score;
+
     if (sess.sess==="Overlap"||sess.sess==="New York") {score+=5; R.push(`✅ ${sess.sess}`);}
     else if (sess.sess==="Londra") {score+=3;}
     else if (scenario==="scalp")   {score-=4; P.push("❌ Asia — spread alto scalp");}
 
+        score = _s0_sess + (score - _s0_sess) * wf('sess'); }
     // ── Coherence multiplier ─────────────────────────────────
     const checks=[
       {signal:d1t,       weight:3, label:"Daily"},
