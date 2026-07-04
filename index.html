@@ -454,6 +454,17 @@ button{cursor:pointer}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Rischio %</div><input type="number" id="btp-risk" value="5" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min confidence</div><input type="number" id="btp-minconf" value="60" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Swing</div><input type="number" id="btp-thr-swing" value="54" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Trend</div><input type="number" id="btp-thr-trend" value="58" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Scalp</div><input type="number" id="btp-thr-scalp" value="62" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Bias</div><input type="number" id="btp-thr-bias" value="72" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">BE trigger (R)</div><input type="number" id="btp-berr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail trigger (R)</div><input type="number" id="btp-trailrr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Swing ×ATR</div><input type="number" id="btp-trail-swing" value="2.7" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Trend ×ATR</div><input type="number" id="btp-trail-trend" value="2.0" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Scalp ×ATR</div><input type="number" id="btp-trail-scalp" value="0.8" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parziale TP1 %</div><input type="number" id="btp-partial" value="15" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div></div>
     </details>
 
+    <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
+      <summary style="color:#3b82f6;font-size:13px;font-weight:700;cursor:pointer">🛡️ Sanity check anti-overfitting</summary>
+      <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
+        Valida la configurazione live corrente con 3 prove: <b>Out-of-Sample</b> (ultimo 30% del periodo),
+        <b>walk-forward</b> (4 finestre sequenziali) e <b>robustezza</b> (i parametri perturbati di ±1 passo
+        devono reggere). Include anche la gamba <b>Scalp 1M</b> se il 1M profondo è scaricato (modello complessivo). Verdetto: 🟢 robusto · 🟡 fragile · 🔴 probabile overfit. ~15-17 backtest, 2-4 min.
+        Consigliato <b>dopo ogni ottimizzazione</b> prima di fidarsi dei nuovi parametri.
+      </div>
+      <button id="sanity-btn" onclick="runSanityCheck()" style="width:100%;background:#3b82f6;color:#fff;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🛡️ Avvia sanity check</button>
+    </details>
+
     <details open style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
       <summary style="color:#a855f7;font-size:13px;font-weight:700;cursor:pointer">🔥 Ottimizzazione (Simulated Annealing)</summary>
       <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
@@ -481,6 +492,7 @@ button{cursor:pointer}
             <option value="trend" selected>📈 Trend</option>
             <option value="swing">📊 Swing</option>
             <option value="bias">⏰ Bias</option>
+            <option value="scalp">⚡ Scalp (1M profondo)</option>
           </select></div>
         <button id="scen-opt-btn" onclick="runScenOptimization()" style="flex:1;background:#3b82f6;color:#fff;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🎯 Ottimizza scenario</button>
       </div>
@@ -499,6 +511,7 @@ button{cursor:pointer}
           <select id="wopt-target" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:8px;font-size:13px">
             <option value="swing" selected>📊 Swing</option>
             <option value="trend">📈 Trend</option>
+            <option value="scalp">⚡ Scalp (1M profondo — lento: 10-20 min)</option>
           </select></div>
         <button id="wopt-btn" onclick="runWeightOptimization()" style="flex:1;background:#e879f9;color:#000;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🧬 Ottimizza pesi</button>
       </div>
@@ -3263,7 +3276,12 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
   const raw = await histLoad(seriesKey);
   if (!raw?.candles?.length) throw new Error(`Serve lo storico ${is1m?'XAU 1M (usa "1M profondo")':isScalp?'XAU 5M':'XAU 1H'} — scaricalo prima.`);
 
-  const src = raw.candles.slice(-maxBars);
+  let src = raw.candles.slice(-maxBars);
+  if (P._range) {
+    const a = Math.floor(src.length * P._range[0]);
+    const b = Math.floor(src.length * P._range[1]);
+    src = src.slice(a, b);
+  }
   const fullBase = btEnrich(src);
 
   // Contesto TF superiori
@@ -3649,6 +3667,8 @@ const SCEN_OPT_SPACE = {
            { key:'trailTrend',label:'Trail ×ATR',  min:1.0, max:3.0, step:0.2 } ],
   bias:  [ { key:'thrBias',   label:'Soglia',      min:50,  max:80,  step:3   },
            { key:'trailBias', label:'Trail ×ATR',  min:0.6, max:2.0, step:0.2 } ],
+  scalp: [ { key:'thrScalp',  label:'Soglia',      min:55,  max:75,  step:2   },
+           { key:'trailScalp',label:'Trail ×ATR',  min:0.4, max:1.6, step:0.1 } ],
 };
 
 async function runScenOptimization() {
@@ -3665,11 +3685,12 @@ async function runScenOptimization() {
   const scen = document.getElementById('scen-opt-target').value;
   const space = SCEN_OPT_SPACE[scen];
   const maxBars = 5000;
+  const btMode = scen === 'scalp' ? '1m' : '1h';
   // Scenario ISOLATO: attribuzione pulita dei risultati al solo scenario in esame
   const useScen = { swing:false, trend:false, bias:false, scalp:false };
   useScen[scen] = true;
 
-  const scenNames = { swing:'📊 Swing', trend:'📈 Trend', bias:'⏰ Bias' };
+  const scenNames = { swing:'📊 Swing', trend:'📈 Trend', bias:'⏰ Bias', scalp:'⚡ Scalp (1M)' };
   const totalRuns = 1 + space.reduce((s,p) => s + Math.round((p.max-p.min)/p.step) + 1, 0);
   let runCount = 0;
   const t0 = Date.now();
@@ -3692,7 +3713,7 @@ async function runScenOptimization() {
   try {
     // ── Baseline: parametri live, scenario isolato ─────────
     await tick('baseline');
-    const baseRes = await btRun('1h', maxBars, useScen, paramsFor({}), null);
+    const baseRes = await btRun(btMode, maxBars, useScen, paramsFor({}), null);
     const baseSt  = btStats(baseRes.trades, baseRes.startCap);
 
     // ── Coordinate descent: line search per parametro ──────
@@ -3704,7 +3725,7 @@ async function runScenOptimization() {
       for (let v = p.min; v <= p.max + 1e-9; v += p.step) {
         const vv = +v.toFixed(3);
         await tick(`${p.label} = ${vv}`);
-        const res = await btRun('1h', maxBars, useScen, paramsFor({ ...current, [p.key]: vv }), null);
+        const res = await btRun(btMode, maxBars, useScen, paramsFor({ ...current, [p.key]: vv }), null);
         const st = btStats(res.trades, res.startCap);
         rows.push({ v: vv, st });
         const pnl = st ? st.pnl : -Infinity;
@@ -3717,7 +3738,7 @@ async function runScenOptimization() {
     }
 
     // ── Valutazione finale combinata ───────────────────────
-    const finalRes = await btRun('1h', maxBars, useScen, paramsFor(current), null);
+    const finalRes = await btRun(btMode, maxBars, useScen, paramsFor(current), null);
     const finalSt  = btStats(finalRes.trades, finalRes.startCap);
     progBar.style.width='100%';
 
@@ -3773,6 +3794,188 @@ async function runScenOptimization() {
   btRunning = false;
 }
 
+// ── SANITY CHECK ANTI-OVERFITTING ─────────────────────────────
+// Valida la configurazione LIVE corrente (parametri + pesi) con:
+// 1) split In-Sample/Out-of-Sample  2) walk-forward a 4 finestre  3) perturbazione parametri
+async function runSanityCheck() {
+  if (btRunning) return;
+  btRunning = true;
+  const btn = document.getElementById('sanity-btn');
+  const progCard = document.getElementById('bt-progress-card');
+  const progBar  = document.getElementById('bt-progress-bar');
+  const progText = document.getElementById('bt-progress-text');
+  const resEl    = document.getElementById('bt-results');
+  btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Sanity check...';
+  progCard.style.display='block'; resEl.innerHTML='';
+
+  const maxBars = 5000;
+  const useScen = {
+    swing: document.getElementById('bt-scen-swing').checked,
+    trend: document.getElementById('bt-scen-trend').checked,
+    bias:  document.getElementById('bt-scen-bias').checked, scalp:false,
+  };
+  const N_PERTURB = 8;
+  const totalRuns = 1 + 2 + 4 + N_PERTURB + 2; // +2 gamba scalp 1M (saltata se dati assenti)
+  let runCount = 0;
+  const t0 = Date.now();
+
+  const liveP = () => {
+    const b = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
+    return { ...b, riskPct: b.riskPct/100, partialPct: b.partialPct/100 };
+  };
+  const tick = async (label) => {
+    runCount++;
+    progBar.style.width = Math.round(runCount/totalRuns*100)+'%';
+    const el=(Date.now()-t0)/1000;
+    progText.textContent = `🛡️ ${label} · run ${runCount}/${totalRuns} · ETA ${Math.round(el/runCount*(totalRuns-runCount))}s`;
+    await new Promise(r=>setTimeout(r,0));
+  };
+  const pfN = (st) => st ? (st.pf==='∞'?10:parseFloat(st.pf)) : 0;
+  const runAt = async (range, pOver) => {
+    const P = { ...liveP(), ...(pOver||{}) };
+    if (range) P._range = range;
+    const res = await btRun('1h', maxBars, useScen, P, null);
+    return btStats(res.trades, res.startCap);
+  };
+
+  try {
+    // ── 0. Riferimento: tutto il periodo ─────────────────────
+    await tick('riferimento (tutto il periodo)');
+    const fullSt = await runAt(null);
+
+    // ── 1. In-Sample 70% / Out-of-Sample 30% ─────────────────
+    await tick('In-Sample 70%');
+    const isSt  = await runAt([0, 0.7]);
+    await tick('Out-of-Sample 30%');
+    const oosSt = await runAt([0.7, 1]);
+
+    let oosVerdict = 'fail';
+    if (oosSt && oosSt.pnl > 0 && pfN(oosSt) >= 1.05) {
+      oosVerdict = (isSt && pfN(oosSt) < pfN(isSt)*0.6) ? 'warn' : 'pass';
+    } else if (oosSt && oosSt.pnl > 0) oosVerdict = 'warn';
+
+    // ── 2. Walk-forward: 4 finestre sequenziali ──────────────
+    const folds = [];
+    for (let k = 0; k < 4; k++) {
+      await tick(`Walk-forward finestra ${k+1}/4`);
+      folds.push(await runAt([k*0.25, (k+1)*0.25]));
+    }
+    const profFolds = folds.filter(f => f && f.pnl > 0).length;
+    const wfVerdict = profFolds >= 3 ? 'pass' : profFolds === 2 ? 'warn' : 'fail';
+
+    // ── 3. Perturbazione parametri (robustezza) ─────────────
+    const jitter = () => {
+      const p = {};
+      p.thrSwing   = PAPER_PARAMS.thrSwing   + (Math.random()<0.5?-2:2);
+      p.thrTrend   = PAPER_PARAMS.thrTrend   + (Math.random()<0.5?-2:2);
+      p.minConf    = Math.max(0, PAPER_PARAMS.minConf + (Math.random()<0.5?-5:5));
+      p.beRR       = +(PAPER_PARAMS.beRR     + (Math.random()<0.5?-0.1:0.1)).toFixed(2);
+      p.trailRR    = +(PAPER_PARAMS.trailRR  + (Math.random()<0.5?-0.1:0.1)).toFixed(2);
+      p.trailSwing = +(PAPER_PARAMS.trailSwing + (Math.random()<0.5?-0.2:0.2)).toFixed(2);
+      p.trailTrend = +(PAPER_PARAMS.trailTrend + (Math.random()<0.5?-0.2:0.2)).toFixed(2);
+      return p;
+    };
+    const perturbed = [];
+    for (let k = 0; k < N_PERTURB; k++) {
+      await tick(`Perturbazione ${k+1}/${N_PERTURB}`);
+      const j = jitter();
+      const st = await runAt(null, { ...j, partialPct: PAPER_PARAMS.partialPct/100, riskPct: PAPER_PARAMS.riskPct/100 });
+      perturbed.push({ j, st });
+    }
+    const pPnls = perturbed.map(p => p.st ? p.st.pnl : -1e9).sort((a,b)=>a-b);
+    const medianP = pPnls[Math.floor(pPnls.length/2)];
+    const curPnl  = fullSt ? fullSt.pnl : 0;
+    let robVerdict = 'fail';
+    if (curPnl > 0 && medianP >= curPnl*0.6) robVerdict = 'pass';
+    else if (curPnl > 0 && medianP >= curPnl*0.3) robVerdict = 'warn';
+    const knifeEdge = curPnl > 0 && pPnls[pPnls.length-1] < curPnl*0.5;
+
+    // ── 4. Gamba Scalp 1M (modello complessivo) ─────────────
+    let scalpFull = null, scalpOos = null, scalpVerdict = 'skip';
+    const has1m = !!(await histLoad('xauusd_1m'))?.candles?.length;
+    if (has1m) {
+      const scalpScen = { swing:false, trend:false, bias:false, scalp:true };
+      await tick('Scalp 1M — periodo intero');
+      try {
+        const r1 = await btRun('1m', maxBars, scalpScen, liveP(), null);
+        scalpFull = btStats(r1.trades, r1.startCap);
+      } catch(e) {}
+      await tick('Scalp 1M — Out-of-Sample 30%');
+      try {
+        const r2 = await btRun('1m', maxBars, scalpScen, { ...liveP(), _range:[0.7,1] }, null);
+        scalpOos = btStats(r2.trades, r2.startCap);
+      } catch(e) {}
+      if (!scalpFull || scalpFull.n < 5) scalpVerdict = 'warn'; // troppo pochi trade per giudicare
+      else if (scalpFull.pnl > 0 && scalpOos && scalpOos.pnl > 0) scalpVerdict = 'pass';
+      else if (scalpFull.pnl > 0) scalpVerdict = 'warn';
+      else scalpVerdict = 'fail';
+    }
+
+    progBar.style.width='100%';
+
+    // ── Verdetto composito ────────────────────────────────────
+    const verdicts = [oosVerdict, wfVerdict, robVerdict, ...(scalpVerdict!=='skip'?[scalpVerdict]:[])];
+    const overall = verdicts.includes('fail') ? 'fail' : verdicts.includes('warn') ? 'warn' : 'pass';
+    const light = { pass:['🟢','ROBUSTO','#22c55e'], warn:['🟡','FRAGILE','#f0b429'], fail:['🔴','PROBABILE OVERFIT','#ef4444'] };
+    const [emoji, label, col] = light[overall];
+    const vIcon = (v) => v==='pass'?'🟢':v==='warn'?'🟡':'🔴';
+    const stLine = (st) => st ? `${st.n} trade · WR ${st.wr}% · PF ${st.pf} · <b style="color:${st.pnl>=0?'#22c55e':'#ef4444'}">€${st.pnl}</b>` : '<span style="color:#64748b">nessun trade</span>';
+
+    let html = `<div class="card" style="border:2px solid ${col}66;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="color:#3b82f6;font-weight:800;font-size:15px">🛡️ Sanity Check Anti-Overfitting</div>
+        <div style="background:${col}20;border:1px solid ${col}55;border-radius:8px;padding:5px 12px;color:${col};font-weight:900;font-size:14px">${emoji} ${label}</div>
+      </div>
+      <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">Config live corrente (parametri + pesi) · ${((Date.now()-t0)/1000).toFixed(0)}s · Riferimento tutto il periodo: ${stLine(fullSt)}</div>
+
+      <div style="background:#141920;border-radius:8px;padding:10px;margin-bottom:8px">
+        <div style="color:#f0f4fa;font-size:13px;font-weight:700;margin-bottom:6px">${vIcon(oosVerdict)} 1. Out-of-Sample (ultimo 30% MAI visto dagli ottimizzatori... se hai ottimizzato su tutto, questo test è indicativo)</div>
+        <div style="color:#c0cce0;font-size:12px;line-height:1.7">
+          In-Sample (70%): ${stLine(isSt)}<br>
+          Out-of-Sample (30%): ${stLine(oosSt)}<br>
+          <span style="color:#94a3b8;font-size:11px">Il sistema deve restare profittevole su dati "nuovi". PF OOS crollato sotto il 60% dell'IS = segnale d'allarme.</span>
+        </div>
+      </div>
+
+      <div style="background:#141920;border-radius:8px;padding:10px;margin-bottom:8px">
+        <div style="color:#f0f4fa;font-size:13px;font-weight:700;margin-bottom:6px">${vIcon(wfVerdict)} 2. Walk-forward — ${profFolds}/4 finestre profittevoli</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+          ${folds.map((f,k)=>`<div style="background:#0d1117;border-radius:6px;padding:7px"><div style="color:#94a3b8;font-size:10px">Finestra ${k+1} (${k*25}–${(k+1)*25}%)</div><div style="color:#c0cce0;font-size:11px;margin-top:2px">${stLine(f)}</div></div>`).join('')}
+        </div>
+        <div style="color:#94a3b8;font-size:11px;margin-top:6px">Un sistema robusto guadagna nella maggioranza dei sotto-periodi, non solo nel totale.</div>
+      </div>
+
+      <div style="background:#141920;border-radius:8px;padding:10px;margin-bottom:8px">
+        <div style="color:#f0f4fa;font-size:13px;font-weight:700;margin-bottom:6px">${vIcon(robVerdict)} 3. Robustezza ai parametri (±1 passo, ${N_PERTURB} varianti)</div>
+        <div style="color:#c0cce0;font-size:12px;line-height:1.7">
+          P&L config attuale: <b style="color:${curPnl>=0?'#22c55e':'#ef4444'}">€${curPnl}</b> ·
+          Mediana perturbato: <b style="color:${medianP>=0?'#22c55e':'#ef4444'}">€${Math.round(medianP)}</b> ·
+          Range: €${Math.round(pPnls[0])} → €${Math.round(pPnls[pPnls.length-1])}
+          ${knifeEdge?'<br><span style="color:#ef4444;font-weight:700">⚠️ Knife-edge: nessuna variante vicina regge — i parametri attuali sono un picco isolato.</span>':''}
+        </div>
+        <div style="color:#94a3b8;font-size:11px;margin-top:4px">Se spostando i parametri di un passo il P&L crolla, l'ottimo è un artefatto del passato, non una proprietà del mercato.</div>
+      </div>
+
+      ${scalpVerdict!=='skip' ? `<div style="background:#141920;border-radius:8px;padding:10px;margin-bottom:8px">
+        <div style="color:#f0f4fa;font-size:13px;font-weight:700;margin-bottom:6px">${vIcon(scalpVerdict)} 4. Gamba Scalp 1M (modello complessivo)</div>
+        <div style="color:#c0cce0;font-size:12px;line-height:1.7">
+          Periodo intero: ${stLine(scalpFull)}<br>
+          Out-of-Sample (30%): ${stLine(scalpOos)}
+        </div>
+        <div style="color:#94a3b8;font-size:11px;margin-top:4px">Il modello completo comprende anche lo Scalp: se qui perde, il sistema complessivo è più debole di quanto dicano i test 1H.</div>
+      </div>` : `<div style="background:#141920;border-radius:8px;padding:10px;margin-bottom:8px;color:#94a3b8;font-size:11px">⚪ 4. Gamba Scalp 1M saltata — scarica il "1M profondo" per includere lo Scalp nel test complessivo.</div>`}
+
+      <div style="color:#94a3b8;font-size:10px">Interpretazione: 🟢 tutte le prove superate · 🟡 almeno un avviso · 🔴 almeno un fallimento. Questo test NON modifica nulla — è pura diagnostica.</div>
+    </div>`;
+    resEl.innerHTML = html;
+    progText.textContent = 'Sanity check completato.';
+  } catch(e) {
+    progText.textContent = '❌ ' + e.message;
+  }
+  btn.disabled=false; btn.style.opacity='1'; btn.textContent='🛡️ Avvia sanity check';
+  btRunning = false;
+}
+
 // ── OTTIMIZZAZIONE PESI INTERNI dello scoring, per scenario ──
 const WEIGHT_GROUPS = ['macro','mtf','adx','rsi','pivot','pullback','specific','sess'];
 const WEIGHT_VALUES = [0, 0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -3790,9 +3993,10 @@ async function runWeightOptimization() {
 
   const scen = document.getElementById('wopt-target').value;
   const maxBars = 5000;
+  const btMode = scen === 'scalp' ? '1m' : '1h';
   const useScen = { swing:false, trend:false, bias:false, scalp:false };
   useScen[scen] = true;
-  const scenNames = { swing:'📊 Swing', trend:'📈 Trend' };
+  const scenNames = { swing:'📊 Swing', trend:'📈 Trend', scalp:'⚡ Scalp (1M)' };
 
   const totalRuns = 1 + WEIGHT_GROUPS.length * WEIGHT_VALUES.length + 1;
   let runCount = 0;
@@ -3813,7 +4017,7 @@ async function runWeightOptimization() {
   try {
     // Baseline: pesi live correnti
     await tick('baseline');
-    const baseRes = await btRun('1h', maxBars, useScen, { ...baseP(), weights: mkWeights({}) }, null);
+    const baseRes = await btRun(btMode, maxBars, useScen, { ...baseP(), weights: mkWeights({}) }, null);
     const baseSt  = btStats(baseRes.trades, baseRes.startCap);
 
     // Coordinate descent: per ogni gruppo, prova tutti i valori, fissa il migliore
@@ -3824,7 +4028,7 @@ async function runWeightOptimization() {
       let bestV = current[g] ?? 1, bestPnl = -Infinity, rows = [];
       for (const v of WEIGHT_VALUES) {
         await tick(`${g} = ${v}`);
-        const res = await btRun('1h', maxBars, useScen,
+        const res = await btRun(btMode, maxBars, useScen,
           { ...baseP(), weights: mkWeights({ ...current, [g]: v }) }, null);
         const st = btStats(res.trades, res.startCap);
         rows.push({ v, st });
@@ -3838,7 +4042,7 @@ async function runWeightOptimization() {
 
     // Run finale combinato
     await tick('finale');
-    const finalRes = await btRun('1h', maxBars, useScen, { ...baseP(), weights: mkWeights(current) }, null);
+    const finalRes = await btRun(btMode, maxBars, useScen, { ...baseP(), weights: mkWeights(current) }, null);
     const finalSt  = btStats(finalRes.trades, finalRes.startCap);
     progBar.style.width='100%';
 
