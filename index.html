@@ -345,6 +345,71 @@ button{cursor:pointer}
   </div>
 </div>
 
+<!-- ══ HIST SCREEN — Download storico per backtest ══════════ -->
+<div id="hist-screen" style="display:none;max-width:480px;margin:0 auto;padding-bottom:36px">
+  <div class="card" style="border:2px solid #3b82f644;margin-bottom:10px">
+    <div style="color:#3b82f6;font-size:20px;font-weight:900;margin-bottom:4px">📥 Storico per Backtest</div>
+    <div style="color:#c0cce0;font-size:13px;line-height:1.5">
+      Scarica <b>una tantum</b> le serie storiche XAU/USD, EUR/USD e TNX da Twelve Data.
+      Vengono salvate qui sul telefono (localStorage) — il backtest futuro le userà
+      senza richiamare più l'API.
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:10px">
+    <div style="color:#f0f4fa;font-weight:700;font-size:14px;margin-bottom:8px">⚙️ Configurazione</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+      <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px">
+        <span style="color:#c0cce0;font-size:13px">Barre per serie</span>
+        <select id="hist-outputsize" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
+          <option value="1000">1.000 (rapido)</option>
+          <option value="3000">3.000</option>
+          <option value="5000" selected>5.000 (consigliato)</option>
+        </select>
+      </label>
+      <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px">
+        <span style="color:#c0cce0;font-size:13px">Pausa tra chiamate</span>
+        <select id="hist-delay" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
+          <option value="2000">2s (piano a pagamento)</option>
+          <option value="8000" selected>8s (prudente)</option>
+          <option value="15000">15s (piano free)</option>
+        </select>
+      </label>
+    </div>
+    <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">
+      Serie scaricate: XAU/USD (1M·5M·1H·4H·Daily) · EUR/USD (5M·1H) · TNX (5M·1H) — 9 chiamate totali
+    </div>
+    <button id="hist-download-btn" onclick="startHistDownload()" style="width:100%;background:#3b82f6;color:#fff;border-radius:8px;padding:11px 0;font-size:14px;font-weight:800;border:none">
+      ⬇️ Avvia download storico
+    </button>
+  </div>
+
+  <div id="hist-progress-card" class="card" style="display:none;margin-bottom:10px">
+    <div style="color:#f0b429;font-weight:700;font-size:13px;margin-bottom:8px">⏳ Download in corso...</div>
+    <div style="background:#0d1117;border-radius:99px;height:8px;overflow:hidden;margin-bottom:8px">
+      <div id="hist-progress-bar" style="width:0%;height:100%;background:#3b82f6;border-radius:99px;transition:width .3s"></div>
+    </div>
+    <div id="hist-progress-text" style="color:#c0cce0;font-size:12px">In attesa...</div>
+    <div id="hist-progress-log" style="margin-top:8px;background:#0d1117;border-radius:8px;padding:8px;font-family:monospace;font-size:11px;color:#22c55e;max-height:160px;overflow-y:auto"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="color:#f0f4fa;font-weight:700;font-size:14px">💾 Dati salvati</div>
+      <button onclick="renderHistScreen()" style="background:#1e2740;border:1px solid #2a3550;color:#c0cce0;border-radius:6px;padding:4px 10px;font-size:11px">🔄</button>
+    </div>
+    <div id="hist-saved-list"><div style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">Caricamento...</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:10px">
+    <div style="color:#f0f4fa;font-weight:700;font-size:14px;margin-bottom:8px">📤 Esporta / Pulisci</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button onclick="exportHistData()" style="flex:1;min-width:130px;background:#22c55e20;border:1px solid #22c55e44;color:#22c55e;border-radius:7px;padding:9px 0;font-size:12px;font-weight:700">📤 Esporta tutto (JSON)</button>
+      <button onclick="clearHistData()" style="flex:1;min-width:130px;background:#ef444420;border:1px solid #ef444444;color:#ef4444;border-radius:7px;padding:9px 0;font-size:12px;font-weight:700">🗑 Elimina tutto</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ SW DIAGNOSTICS PANEL ═════════════════════════════════ -->
 <div id="sw-diag-panel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#080b10;z-index:999;overflow-y:auto;padding:16px;max-width:480px;margin:0 auto">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -2971,6 +3036,194 @@ function handleSwMessageCore(e) {
   }
 }
 
+// ══ STORICO PER BACKTEST — download, salvataggio locale, export ═
+const HIST_JOBS = [
+  { symbol:'XAU/USD', interval:'1min', key:'xauusd_1m' },
+  { symbol:'XAU/USD', interval:'5min', key:'xauusd_5m' },
+  { symbol:'XAU/USD', interval:'1h',   key:'xauusd_1h' },
+  { symbol:'XAU/USD', interval:'4h',   key:'xauusd_4h' },
+  { symbol:'XAU/USD', interval:'1day', key:'xauusd_1d' },
+  { symbol:'EUR/USD', interval:'5min', key:'eurusd_5m' },
+  { symbol:'EUR/USD', interval:'1h',   key:'eurusd_1h' },
+  { symbol:'TNX',     interval:'5min', key:'tnx_5m'    },
+  { symbol:'TNX',     interval:'1h',   key:'tnx_1h'    },
+];
+const HIST_PREFIX = 'xauapp_hist_';
+let histDownloading = false;
+
+function histLog(msg, color='#94a3b8') {
+  const el = document.getElementById('hist-progress-log');
+  if (!el) return;
+  const ts = new Date().toLocaleTimeString('it-IT');
+  el.innerHTML = `<div style="color:${color};padding:1px 0">[${ts}] ${msg}</div>` + el.innerHTML;
+}
+
+function histNormalize(rawValues) {
+  return [...rawValues].reverse().map(v => ({
+    t: v.datetime,
+    o: parseFloat(v.open), h: parseFloat(v.high),
+    l: parseFloat(v.low),  c: parseFloat(v.close),
+    vol: v.volume ? parseFloat(v.volume) : null,
+  }));
+}
+
+async function histFetchSeries(symbol, interval, outputsize) {
+  const url = `${TD}/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${outputsize}&apikey=${state.tdKey}`;
+  const res = await fetch(url, { cache:'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.status === 'error') throw new Error(data.message || 'Errore API');
+  if (!data.values || !data.values.length) throw new Error('Nessun dato ricevuto');
+  return data;
+}
+
+function histSave(key, payload) {
+  try {
+    localStorage.setItem(HIST_PREFIX + key, JSON.stringify(payload));
+    return true;
+  } catch(e) {
+    // Quota localStorage superata (di solito ~5-10MB su mobile)
+    histLog(`❌ Storage pieno — impossibile salvare ${key}. Elimina dati vecchi o esporta e pulisci.`, '#ef4444');
+    return false;
+  }
+}
+
+function histLoad(key) {
+  try {
+    const raw = localStorage.getItem(HIST_PREFIX + key);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function histGetAllSaved() {
+  return HIST_JOBS.map(j => ({ ...j, data: histLoad(j.key) })).filter(j => j.data);
+}
+
+async function startHistDownload() {
+  if (histDownloading) return;
+  histDownloading = true;
+
+  const outputsize = parseInt(document.getElementById('hist-outputsize').value, 10);
+  const delayMs     = parseInt(document.getElementById('hist-delay').value, 10);
+  const btn = document.getElementById('hist-download-btn');
+  const progressCard = document.getElementById('hist-progress-card');
+  const progressBar  = document.getElementById('hist-progress-bar');
+  const progressText = document.getElementById('hist-progress-text');
+  const logEl = document.getElementById('hist-progress-log');
+
+  btn.disabled = true; btn.style.opacity = '0.5'; btn.textContent = '⏳ Download in corso...';
+  progressCard.style.display = 'block';
+  logEl.innerHTML = '';
+  histLog(`🚀 Avvio download — ${HIST_JOBS.length} serie, ${outputsize} barre ciascuna`, '#3b82f6');
+
+  let ok = 0, fail = 0;
+
+  for (let i = 0; i < HIST_JOBS.length; i++) {
+    const job = HIST_JOBS[i];
+    const pct = Math.round((i / HIST_JOBS.length) * 100);
+    progressBar.style.width = pct + '%';
+    progressText.textContent = `[${i+1}/${HIST_JOBS.length}] ${job.symbol} ${job.interval}...`;
+    histLog(`⏳ Scarico ${job.symbol} ${job.interval}...`, '#94a3b8');
+
+    try {
+      const raw = await histFetchSeries(job.symbol, job.interval, outputsize);
+      const candles = histNormalize(raw.values);
+      const payload = {
+        symbol: job.symbol, interval: job.interval, count: candles.length,
+        firstDate: candles[0]?.t, lastDate: candles[candles.length-1]?.t,
+        downloadedAt: new Date().toISOString(), candles,
+      };
+      const saved = histSave(job.key, payload);
+      if (saved) {
+        ok++;
+        histLog(`✅ ${job.symbol} ${job.interval}: ${candles.length} candele (${payload.firstDate} → ${payload.lastDate})`, '#22c55e');
+      } else {
+        fail++;
+      }
+    } catch(e) {
+      fail++;
+      histLog(`❌ ${job.symbol} ${job.interval}: ${e.message}`, '#ef4444');
+    }
+
+    if (i < HIST_JOBS.length - 1) await new Promise(r => setTimeout(r, delayMs));
+  }
+
+  progressBar.style.width = '100%';
+  progressText.textContent = `Completato: ${ok}/${HIST_JOBS.length} serie scaricate` + (fail ? ` · ${fail} errori` : '');
+  histLog(`🏁 Fine: ${ok} ok, ${fail} falliti`, fail ? '#f0b429' : '#22c55e');
+
+  btn.disabled = false; btn.style.opacity = '1'; btn.textContent = '⬇️ Avvia download storico';
+  histDownloading = false;
+  renderHistSavedList();
+}
+
+function histFmtBytes(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+  return (n/1024/1024).toFixed(2) + ' MB';
+}
+
+function renderHistSavedList() {
+  const el = document.getElementById('hist-saved-list');
+  if (!el) return;
+  const saved = histGetAllSaved();
+
+  if (!saved.length) {
+    el.innerHTML = '<div style="color:#94a3b8;font-size:12px;text-align:center;padding:14px">Nessun dato salvato — avvia il download sopra.</div>';
+    return;
+  }
+
+  let totalBytes = 0;
+  const rows = saved.map(j => {
+    const raw = localStorage.getItem(HIST_PREFIX + j.key) || '';
+    const bytes = raw.length;
+    totalBytes += bytes;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e2535">
+      <div>
+        <div style="color:#f0f4fa;font-size:12px;font-weight:700">${j.symbol} · ${j.interval}</div>
+        <div style="color:#94a3b8;font-size:10px">${j.data.count} candele · ${histFmtBytes(bytes)}</div>
+      </div>
+      <div style="color:#c0cce0;font-size:10px;text-align:right">${j.data.firstDate?.slice(0,10)||'–'}<br>→ ${j.data.lastDate?.slice(0,10)||'–'}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="color:#3b82f6;font-size:11px;font-weight:700;margin-bottom:6px">Totale: ${histFmtBytes(totalBytes)} · ${saved.length}/${HIST_JOBS.length} serie</div>
+    ${rows}
+  `;
+}
+
+function exportHistData() {
+  const saved = histGetAllSaved();
+  if (!saved.length) { alert('Nessun dato da esportare — scarica prima lo storico.'); return; }
+
+  const bundle = {
+    exportedAt: new Date().toISOString(),
+    series: saved.map(j => ({ symbol: j.symbol, interval: j.interval, ...j.data })),
+  };
+
+  const blob = new Blob([JSON.stringify(bundle)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `xau_historical_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function clearHistData() {
+  if (!confirm('Eliminare tutti i dati storici salvati? Non è reversibile — esporta prima se vuoi conservarli.')) return;
+  HIST_JOBS.forEach(j => localStorage.removeItem(HIST_PREFIX + j.key));
+  renderHistSavedList();
+  histLog('🗑 Dati storici eliminati', '#ef4444');
+}
+
+function renderHistScreen() {
+  renderHistSavedList();
+}
+
 function closeTradeById(id){
   state.trades=state.trades.map(t=>{
     if(t.id!==id)return t;
@@ -5221,6 +5474,10 @@ function setMode(mode) {
       renderRecapScreen();
       if (!state.paper.openTrade) evaluateAutoEntry();
     }, 60000);
+  } else if (mode === 'hist') {
+    tfBar.style.display='none';
+    if(screens.hist) screens.hist.style.display='block';
+    renderHistScreen();
   }
 }
 
