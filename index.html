@@ -3208,7 +3208,7 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
   const isScalp = mode === '5m' || mode === '1m';
   const is1m = mode === '1m';
   const seriesKey = is1m ? 'xauusd_1m' : isScalp ? 'xauusd_5m' : 'xauusd_1h';
-  const raw = histLoad(seriesKey);
+  const raw = await histLoad(seriesKey);
   if (!raw?.candles?.length) throw new Error(`Serve lo storico ${is1m?'XAU 1M (usa "1M profondo")':isScalp?'XAU 5M':'XAU 1H'} — scaricalo prima.`);
 
   const src = raw.candles.slice(-maxBars);
@@ -3245,7 +3245,7 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
   }
   const corrKey = isScalp ? 'eurusd_5m' : 'eurusd_1h';  // per 1m: le 5m sono il meglio disponibile
   const tnxKey  = isScalp ? 'tnx_5m'    : 'tnx_1h';
-  const eurRaw = histLoad(corrKey), tnxRaw = histLoad(tnxKey);
+  const eurRaw = await histLoad(corrKey), tnxRaw = await histLoad(tnxKey);
   const fullEur = eurRaw?.candles?.length ? btEnrich(eurRaw.candles.slice(-maxBars)) : [];
   const fullTnx = tnxRaw?.candles?.length ? btEnrich(tnxRaw.candles.slice(-maxBars)) : [];
 
@@ -3653,26 +3653,88 @@ async function histFetchSeries(symbol, interval, outputsize, endDate) {
   return data;
 }
 
-function histSave(key, payload) {
+// ── IndexedDB: storage grande (centinaia di MB) per le serie ──
+let _histDb = null;
+function histDbOpen() {
+  return new Promise((resolve) => {
+    if (_histDb) return resolve(_histDb);
+    if (!('indexedDB' in (typeof window!=='undefined'?window:{}))) return resolve(null);
+    const req = indexedDB.open('xauapp_hist', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('series');
+    req.onsuccess = () => { _histDb = req.result; resolve(_histDb); };
+    req.onerror   = () => resolve(null);
+  });
+}
+function idbReq(mode, fn) {
+  return histDbOpen().then(db => {
+    if (!db) return null;
+    return new Promise((resolve) => {
+      const tx = db.transaction('series', mode);
+      const st = tx.objectStore('series');
+      const r  = fn(st);
+      r.onsuccess = () => resolve(r.result ?? true);
+      r.onerror   = () => resolve(null);
+    });
+  });
+}
+
+async function histSave(key, payload) {
+  const raw = JSON.stringify(payload);
+  // Prova prima IndexedDB (spazio grande)
+  const ok = await idbReq('readwrite', st => st.put(raw, key));
+  if (ok) {
+    // Libera l'eventuale copia vecchia in localStorage
+    try { localStorage.removeItem(HIST_PREFIX + key); } catch(e) {}
+    return true;
+  }
+  // Fallback localStorage
   try {
-    localStorage.setItem(HIST_PREFIX + key, JSON.stringify(payload));
+    localStorage.setItem(HIST_PREFIX + key, raw);
     return true;
   } catch(e) {
-    // Quota localStorage superata (di solito ~5-10MB su mobile)
-    histLog(`❌ Storage pieno — impossibile salvare ${key}. Elimina dati vecchi o esporta e pulisci.`, '#ef4444');
+    histLog(`❌ Storage pieno — impossibile salvare ${key}. Elimina serie inutilizzate.`, '#ef4444');
     return false;
   }
 }
 
-function histLoad(key) {
+async function histLoad(key) {
+  const fromIdb = await idbReq('readonly', st => st.get(key));
+  if (fromIdb && typeof fromIdb === 'string') {
+    try { return JSON.parse(fromIdb); } catch(e) {}
+  }
   try {
     const raw = localStorage.getItem(HIST_PREFIX + key);
     return raw ? JSON.parse(raw) : null;
   } catch(e) { return null; }
 }
 
-function histGetAllSaved() {
-  return HIST_JOBS.map(j => ({ ...j, data: histLoad(j.key) })).filter(j => j.data);
+async function histDelete(key) {
+  await idbReq('readwrite', st => st.delete(key));
+  try { localStorage.removeItem(HIST_PREFIX + key); } catch(e) {}
+}
+
+async function histGetAllSaved() {
+  const out = [];
+  for (const j of HIST_JOBS) {
+    const data = await histLoad(j.key);
+    if (data) out.push({ ...j, data });
+  }
+  return out;
+}
+
+// Migrazione una tantum: sposta dati esistenti da localStorage a IndexedDB
+async function histMigrateToIdb() {
+  const db = await histDbOpen();
+  if (!db) return;
+  for (const j of HIST_JOBS) {
+    try {
+      const raw = localStorage.getItem(HIST_PREFIX + j.key);
+      if (raw) {
+        const ok = await idbReq('readwrite', st => st.put(raw, j.key));
+        if (ok) localStorage.removeItem(HIST_PREFIX + j.key);
+      }
+    } catch(e) {}
+  }
 }
 
 async function startHistDownload() {
@@ -3709,7 +3771,7 @@ async function startHistDownload() {
         firstDate: candles[0]?.t, lastDate: candles[candles.length-1]?.t,
         downloadedAt: new Date().toISOString(), candles,
       };
-      const saved = histSave(job.key, payload);
+      const saved = await histSave(job.key, payload);
       if (saved) {
         ok++;
         histLog(`✅ ${job.symbol} ${job.interval}: ${candles.length} candele (${payload.firstDate} → ${payload.lastDate})`, '#22c55e');
@@ -3765,7 +3827,7 @@ async function startDeepDownload() {
       firstDate: all[0]?.t, lastDate: all[all.length-1]?.t,
       downloadedAt: new Date().toISOString(), candles: all,
     };
-    const ok = histSave('xauusd_1m', payload);
+    const ok = await histSave('xauusd_1m', payload);
     if (ok) histLog(`🏁 Salvate ${all.length} barre 1M (${payload.firstDate} → ${payload.lastDate})`, '#22c55e');
   } catch(e) {
     histLog('❌ ' + e.message, '#ef4444');
@@ -3781,10 +3843,13 @@ function histFmtBytes(n) {
   return (n/1024/1024).toFixed(2) + ' MB';
 }
 
-function renderHistSavedList() {
+async function renderHistSavedList() {
   const el = document.getElementById('hist-saved-list');
   if (!el) return;
-  const saved = histGetAllSaved();
+  el.innerHTML = '<div style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">Caricamento...</div>';
+
+  await histMigrateToIdb(); // migrazione automatica silente da localStorage
+  const saved = await histGetAllSaved();
 
   if (!saved.length) {
     el.innerHTML = '<div style="color:#94a3b8;font-size:12px;text-align:center;padding:14px">Nessun dato salvato — avvia il download sopra.</div>';
@@ -3793,26 +3858,43 @@ function renderHistSavedList() {
 
   let totalBytes = 0;
   const rows = saved.map(j => {
-    const raw = localStorage.getItem(HIST_PREFIX + j.key) || '';
-    const bytes = raw.length;
+    const bytes = JSON.stringify(j.data).length;
     totalBytes += bytes;
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e2535">
-      <div>
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e2535;gap:6px">
+      <div style="flex:1">
         <div style="color:#f0f4fa;font-size:12px;font-weight:700">${j.symbol} · ${j.interval}</div>
         <div style="color:#94a3b8;font-size:10px">${j.data.count} candele · ${histFmtBytes(bytes)}</div>
       </div>
       <div style="color:#c0cce0;font-size:10px;text-align:right">${j.data.firstDate?.slice(0,10)||'–'}<br>→ ${j.data.lastDate?.slice(0,10)||'–'}</div>
+      <button onclick="deleteHistSeries('${j.key}')" style="background:#ef444415;border:1px solid #ef444433;color:#ef4444;border-radius:6px;padding:6px 8px;font-size:12px;flex-shrink:0">🗑</button>
     </div>`;
   }).join('');
 
+  // Stima spazio disponibile del browser (se supportato)
+  let quotaLine = '';
+  try {
+    if (navigator.storage?.estimate) {
+      const est = await navigator.storage.estimate();
+      if (est.quota) quotaLine = ` · Spazio browser: ${histFmtBytes(est.usage||0)} / ${histFmtBytes(est.quota)}`;
+    }
+  } catch(e) {}
+
   el.innerHTML = `
-    <div style="color:#3b82f6;font-size:11px;font-weight:700;margin-bottom:6px">Totale: ${histFmtBytes(totalBytes)} · ${saved.length}/${HIST_JOBS.length} serie</div>
+    <div style="color:#3b82f6;font-size:11px;font-weight:700;margin-bottom:6px">Totale serie: ${histFmtBytes(totalBytes)} · ${saved.length}/${HIST_JOBS.length}${quotaLine}</div>
     ${rows}
   `;
 }
 
-function exportHistData() {
-  const saved = histGetAllSaved();
+async function deleteHistSeries(key) {
+  const job = HIST_JOBS.find(j => j.key === key);
+  if (!confirm(`Eliminare ${job?.symbol||key} ${job?.interval||''}? L'operazione non è reversibile.`)) return;
+  await histDelete(key);
+  histLog(`🗑 Eliminata serie ${key}`, '#ef4444');
+  renderHistSavedList();
+}
+
+async function exportHistData() {
+  const saved = await histGetAllSaved();
   if (!saved.length) { alert('Nessun dato da esportare — scarica prima lo storico.'); return; }
 
   const bundle = {
@@ -3831,9 +3913,9 @@ function exportHistData() {
   URL.revokeObjectURL(url);
 }
 
-function clearHistData() {
+async function clearHistData() {
   if (!confirm('Eliminare tutti i dati storici salvati? Non è reversibile — esporta prima se vuoi conservarli.')) return;
-  HIST_JOBS.forEach(j => localStorage.removeItem(HIST_PREFIX + j.key));
+  for (const j of HIST_JOBS) await histDelete(j.key);
   renderHistSavedList();
   histLog('🗑 Dati storici eliminati', '#ef4444');
 }
