@@ -402,6 +402,51 @@ button{cursor:pointer}
     <div id="hist-saved-list"><div style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">Caricamento...</div></div>
   </div>
 
+  <div class="card" style="border:2px solid #22c55e44;margin-bottom:10px">
+    <div style="color:#22c55e;font-size:16px;font-weight:900;margin-bottom:4px">🧪 Backtest</div>
+    <div style="color:#c0cce0;font-size:12px;line-height:1.5;margin-bottom:10px">
+      Simula il paper trading sul passato usando <b>lo stesso identico scoring e le stesse regole di gestione</b>
+      (soglie, spread, rischio 1%, TP1 parziale 50%, breakeven, trailing per scenario, exit a orario).
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+      <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px">
+        <span style="color:#c0cce0;font-size:13px">Barre 1H da testare</span>
+        <select id="bt-bars" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
+          <option value="500">500 (~1 mese)</option>
+          <option value="1500" selected>1.500 (~3 mesi)</option>
+          <option value="3000">3.000 (~6 mesi)</option>
+          <option value="5000">5.000 (tutto)</option>
+        </select>
+      </label>
+      <div style="display:flex;gap:6px">
+        <label style="flex:1;display:flex;align-items:center;gap:6px;background:#141920;border-radius:7px;padding:8px 10px;cursor:pointer">
+          <input type="checkbox" id="bt-scen-swing" checked style="width:16px;height:16px;accent-color:#f0b429"/><span style="color:#f0b429;font-size:12px;font-weight:700">📊 Swing</span>
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:6px;background:#141920;border-radius:7px;padding:8px 10px;cursor:pointer">
+          <input type="checkbox" id="bt-scen-trend" checked style="width:16px;height:16px;accent-color:#22c55e"/><span style="color:#22c55e;font-size:12px;font-weight:700">📈 Trend</span>
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:6px;background:#141920;border-radius:7px;padding:8px 10px;cursor:pointer">
+          <input type="checkbox" id="bt-scen-bias" checked style="width:16px;height:16px;accent-color:#a855f7"/><span style="color:#a855f7;font-size:12px;font-weight:700">⏰ Bias</span>
+        </label>
+      </div>
+    </div>
+    <div style="color:#94a3b8;font-size:10px;margin-bottom:8px">
+      ⚠️ Scalp escluso: richiede candele 1M/5M live, non simulabile fedelmente su barre 1H.
+      La gestione PA-exit e l'estensione TP2 non sono simulate (regole troppo dipendenti dal tick-by-tick):
+      il risultato è quindi leggermente <b>conservativo</b>.
+    </div>
+    <button id="bt-run-btn" onclick="runBacktest()" style="width:100%;background:#22c55e;color:#000;border-radius:8px;padding:11px 0;font-size:14px;font-weight:800;border:none">🧪 Avvia backtest</button>
+  </div>
+
+  <div id="bt-progress-card" class="card" style="display:none;margin-bottom:10px">
+    <div style="background:#0d1117;border-radius:99px;height:8px;overflow:hidden;margin-bottom:8px">
+      <div id="bt-progress-bar" style="width:0%;height:100%;background:#22c55e;border-radius:99px;transition:width .3s"></div>
+    </div>
+    <div id="bt-progress-text" style="color:#c0cce0;font-size:12px">In attesa...</div>
+  </div>
+
+  <div id="bt-results" style="margin-bottom:10px"></div>
+
   <div class="card" style="margin-bottom:10px">
     <div style="color:#f0f4fa;font-weight:700;font-size:14px;margin-bottom:8px">📤 Esporta / Pulisci</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -2033,7 +2078,7 @@ function getSessionFromHour(h) {
 
 // ── Session clock: ora corrente + volatilità attesa ───────────
 function getSessionStatus() {
-  const now = new Date();
+  const now = nowRef();
   const h = now.getHours(), m = now.getMinutes();
   const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
   const sess = getSessionFromHour(h);
@@ -3035,6 +3080,372 @@ function handleSwMessageCore(e) {
   } else if (d.type !== 'BG_UPDATE') {
     logDiag(`SW → ${d.type}${d.trade?' ['+d.trade.direction+']':''}${d.price?' $'+d.price.toFixed(2):''}`, col);
   }
+}
+
+// ══ BACKTEST ENGINE — stesso scoring, stessi parametri del paper ═
+let btRunning = false;
+
+// Arricchisce candele storiche con gli STESSI indicatori dell'app
+function btEnrich(candles) {
+  const closes = candles.map(cd => cd.c);
+  const rsiA  = calcRSI(closes);
+  const macdA = calcMACD(closes);
+  const base = candles.map((cd, i) => ({
+    t: new Date(cd.t), o: cd.o, h: cd.h, l: cd.l, c: cd.c,
+    vol: cd.vol || 0,
+    rsi: +rsiA[i].toFixed(1), macd: macdA[i],
+    momentum: +(closes[i] - (closes[i-12] ?? closes[0])).toFixed(2),
+    atr: 0,
+  }));
+  const atrA = calcATR(base);
+  base.forEach((cd, i) => cd.atr = atrA[i]);
+  return base;
+}
+
+// Aggrega candele 1H in timeframe superiori (4H o 1D)
+function btAggregate(cc1h, hours) {
+  const out = [];
+  let bucket = null, bucketKey = null;
+  for (const cd of cc1h) {
+    const d = new Date(cd.t);
+    const key = hours === 24
+      ? d.toISOString().slice(0,10)
+      : d.toISOString().slice(0,10) + '_' + Math.floor(d.getUTCHours()/hours);
+    if (key !== bucketKey) {
+      if (bucket) out.push(bucket);
+      bucket = { t: cd.t, o: cd.o, h: cd.h, l: cd.l, c: cd.c, vol: cd.vol||0 };
+      bucketKey = key;
+    } else {
+      bucket.h = Math.max(bucket.h, cd.h);
+      bucket.l = Math.min(bucket.l, cd.l);
+      bucket.c = cd.c;
+      bucket.vol += cd.vol||0;
+    }
+  }
+  if (bucket) out.push(bucket);
+  return out;
+}
+
+function btSliceByTime(candles, t) {
+  // Ritorna solo le candele con timestamp <= t
+  let hi = candles.length;
+  for (let i = candles.length-1; i >= 0; i--) {
+    if (new Date(candles[i].t) <= t) { hi = i+1; break; }
+    if (i === 0) hi = 0;
+  }
+  return candles.slice(0, hi);
+}
+
+async function runBacktest() {
+  if (btRunning) return;
+
+  // ── Carica dati storici ─────────────────────────────────────
+  const h1raw = histLoad('xauusd_1h');
+  if (!h1raw || !h1raw.candles?.length) {
+    alert('Serve prima lo storico XAU/USD 1H — scaricalo dalla sezione sopra.');
+    return;
+  }
+  btRunning = true;
+
+  const btBtn = document.getElementById('bt-run-btn');
+  const progCard = document.getElementById('bt-progress-card');
+  const progBar  = document.getElementById('bt-progress-bar');
+  const progText = document.getElementById('bt-progress-text');
+  const resEl    = document.getElementById('bt-results');
+  btBtn.disabled = true; btBtn.style.opacity='0.5'; btBtn.textContent='⏳ Backtest in corso...';
+  progCard.style.display='block'; resEl.innerHTML='';
+
+  const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
+  const useScen = {
+    swing: document.getElementById('bt-scen-swing').checked,
+    trend: document.getElementById('bt-scen-trend').checked,
+    bias:  document.getElementById('bt-scen-bias').checked,
+  };
+
+  // ── Prepara dati (arricchiti UNA volta su serie complete) ──
+  progText.textContent = 'Preparazione dati e indicatori...';
+  await new Promise(r => setTimeout(r, 30));
+
+  const full1h = btEnrich(h1raw.candles.slice(-maxBars));
+  const full4h = btEnrich(btAggregate(h1raw.candles.slice(-maxBars), 4));
+  const full1d = btEnrich(btAggregate(h1raw.candles.slice(-maxBars), 24));
+  const eurRaw = histLoad('eurusd_1h');
+  const tnxRaw = histLoad('tnx_1h');
+  const fullEur = eurRaw?.candles?.length ? btEnrich(eurRaw.candles.slice(-maxBars)) : [];
+  const fullTnx = tnxRaw?.candles?.length ? btEnrich(tnxRaw.candles.slice(-maxBars)) : [];
+
+  // ── Backup dello stato live ─────────────────────────────────
+  const backup = {
+    candles: state.candles, candles4h: state.candles4h,
+    pivots: state.pivots, corrData: state.corrData, btNow: state.btNow,
+  };
+
+  // ── Parametri di simulazione — IDENTICI al paper ────────────
+  const START_CAP = 10000;
+  let capital = START_CAP;
+  let equity  = [capital];
+  let openT   = null;
+  let lastCloseIdx = -999;
+  const COOLDOWN_BARS = 3;
+  const trades = [];
+
+  const warmup = 60; // barre minime per indicatori affidabili
+  const total  = full1h.length - warmup;
+
+  try {
+    for (let i = warmup; i < full1h.length; i++) {
+      const cd  = full1h[i];
+      const t   = new Date(cd.t);
+
+      // ── 1. Gestione trade aperto sulla candela corrente ─────
+      if (openT) {
+        const tr = openT;
+        const dir = tr.direction, isBuy = dir === 'BUY';
+        let closed = false, exitPrice = 0, exitReason = '';
+
+        // Timed exit (a inizio candela, come farebbe il check ogni 30s)
+        if (tr.timedExitUTC != null) {
+          const hNow = t.getUTCHours();
+          const shouldClose = tr.timedExitUTC >= 12 ? hNow >= tr.timedExitUTC
+                             : (hNow >= tr.timedExitUTC && hNow < 12);
+          if (shouldClose) { closed = true; exitReason = 'TIMED_EXIT'; exitPrice = cd.o; }
+        }
+
+        // SL first (conservativo: se la candela tocca SL e TP, assume SL)
+        if (!closed && ((isBuy && cd.l <= tr.sl) || (!isBuy && cd.h >= tr.sl))) {
+          closed = true; exitReason = tr.breakEvenSet ? 'SL_BE' : 'SL'; exitPrice = tr.sl;
+        }
+        // TP2
+        if (!closed && ((isBuy && cd.h >= tr.tp2) || (!isBuy && cd.l <= tr.tp2))) {
+          closed = true; exitReason = 'TP2'; exitPrice = tr.tp2;
+        }
+        // TP1 parziale 50% (stessa regola del paper: incassa metà, SL→BE)
+        if (!closed && !tr.partialDone && ((isBuy && cd.h >= tr.tp1) || (!isBuy && cd.l <= tr.tp1))) {
+          const halfLots = tr.lots / 2;
+          const exitHalf = isBuy ? tr.tp1 - SPREAD/2 : tr.tp1 + SPREAD/2;
+          const pnlHalf  = (isBuy ? exitHalf - tr.entry : tr.entry - exitHalf) * halfLots * 100;
+          capital += pnlHalf;
+          tr.lots = halfLots;
+          tr.partialDone = true;
+          tr.partialPnl = +pnlHalf.toFixed(2);
+          const beSL = isBuy ? tr.entry + SPREAD : tr.entry - SPREAD;
+          if ((isBuy && beSL > tr.sl) || (!isBuy && beSL < tr.sl)) tr.sl = beSL;
+          tr.breakEvenSet = true;
+        }
+
+        if (!closed) {
+          // Aggiorna max favorevole con l'estremo della candela
+          if (isBuy)  tr.maxFavorable = Math.max(tr.maxFavorable, cd.h);
+          else        tr.maxFavorable = Math.min(tr.maxFavorable, cd.l);
+          const slDist  = Math.abs(tr.entry - tr.slOrig);
+          const profPts = isBuy ? cd.c - tr.entry : tr.entry - cd.c;
+          const profRR  = slDist > 0 ? profPts / slDist : 0;
+          const atr     = tr.atrAtEntry || 15;
+
+          // Breakeven +0.5 ATR a 0.7R (stessa regola)
+          if (!tr.breakEvenSet && profRR >= 0.7) {
+            const newSL = isBuy ? tr.entry + atr*0.5 : tr.entry - atr*0.5;
+            if ((isBuy && newSL > tr.sl) || (!isBuy && newSL < tr.sl)) { tr.sl = newSL; tr.breakEvenSet = true; }
+          }
+          // Trailing a 1R con moltiplicatore per scenario (stessa regola)
+          if (profRR >= 1.0) {
+            const trailDist = atr * tr.trailMult;
+            const trailSL = isBuy ? tr.maxFavorable - trailDist : tr.maxFavorable + trailDist;
+            if ((isBuy && trailSL > tr.sl) || (!isBuy && trailSL < tr.sl)) tr.sl = trailSL;
+          }
+        } else {
+          // Chiusura con spread (stessa regola)
+          const exitSpread = isBuy ? exitPrice - SPREAD/2 : exitPrice + SPREAD/2;
+          const pnlPts = isBuy ? exitSpread - tr.entry : tr.entry - exitSpread;
+          const pnlEur = +(pnlPts * tr.lots * 100).toFixed(2);
+          capital = +(capital + pnlEur).toFixed(2);
+          equity.push(capital);
+          trades.push({
+            ...tr, exitPrice: +exitSpread.toFixed(2), exitReason,
+            pnlEur, pnlTotal: +(pnlEur + (tr.partialPnl||0)).toFixed(2),
+            isWin: (pnlEur + (tr.partialPnl||0)) > 0,
+            closedAt: cd.t, capitalAfter: capital,
+            rr: +(pnlPts / Math.abs(tr.entry - tr.slOrig || 1)).toFixed(2),
+          });
+          openT = null;
+          lastCloseIdx = i;
+        }
+      }
+
+      // ── 2. Entry: STESSO scoring dell'app ───────────────────
+      if (!openT && (i - lastCloseIdx) >= COOLDOWN_BARS) {
+        // Prepara lo stato come se fossimo in quel momento
+        state.btNow = cd.t;
+        const s1h = full1h.slice(Math.max(0, i-119), i+1);
+        state.candles = { '1h': s1h, '5m': [], '1m': [], '1d': btSliceByTime(full1d, t).slice(-35) };
+        state.candles4h = btSliceByTime(full4h, t).slice(-60);
+        state.pivots = calcPivots(state.candles['1d']);
+        state.corrData = {
+          dxy: btSliceByTime(fullEur, t).slice(-60), dxyInverted: true,
+          us10y: btSliceByTime(fullTnx, t).slice(-60),
+        };
+
+        let recap = null;
+        try { recap = computeAllScenarios(); } catch(e) { /* dati insufficienti a inizio serie */ }
+
+        if (recap?.best && recap.best.bestDir !== 'WAIT' && recap.best.setup) {
+          const best = recap.best;
+          const allowed = useScen[best.id];
+          const setup = best.setup;
+          if (allowed && !setup.chasing) {
+            const es = best.bestDir === 'BUY' ? best.buy : best.sell;
+            const lots = (() => {
+              const riskEur = capital * 0.01;
+              const slDist  = Math.abs(setup.entry - setup.sl);
+              if (!slDist) return 0.01;
+              const byRisk   = riskEur / (slDist * 100);
+              const byMargin = (capital * 0.05) / ((setup.entry / 100) * 100);
+              return Math.max(0.01, +Math.min(byRisk, byMargin).toFixed(2));
+            })();
+            openT = {
+              direction: best.bestDir,
+              entry: best.bestDir==='BUY' ? setup.entry + SPREAD/2 : setup.entry - SPREAD/2,
+              sl: setup.sl, slOrig: setup.sl, tp1: setup.tp1, tp2: setup.tp2,
+              lots, scenario: best.id, confidence: best.bestScore,
+              openedAt: cd.t, atrAtEntry: s1h[s1h.length-1]?.atr || 15,
+              trailMult: getTrailMult(best.id), warnThresh: getWarnThreshold(best.id),
+              timedExitUTC: setup.timedExitUTC ?? null, bias: setup.bias ?? null,
+              maxFavorable: setup.entry, partialDone: false, breakEvenSet: false, partialPnl: 0,
+            };
+          }
+        }
+      }
+
+      // ── Progress UI (ogni 50 barre) ──────────────────────────
+      if ((i - warmup) % 50 === 0) {
+        const pct = Math.round(((i - warmup) / total) * 100);
+        progBar.style.width = pct + '%';
+        progText.textContent = `Simulazione: barra ${i-warmup}/${total} · ${trades.length} trade · Cap €${capital.toFixed(0)}`;
+        await new Promise(r => setTimeout(r, 0)); // yield al browser
+      }
+    }
+  } finally {
+    // ── Ripristina SEMPRE lo stato live ─────────────────────
+    state.candles  = backup.candles;
+    state.candles4h= backup.candles4h;
+    state.pivots   = backup.pivots;
+    state.corrData = backup.corrData;
+    state.btNow    = backup.btNow || null;
+  }
+
+  progBar.style.width = '100%';
+  progText.textContent = `Completato: ${trades.length} trade simulati`;
+  btBtn.disabled = false; btBtn.style.opacity='1'; btBtn.textContent='🧪 Avvia backtest';
+  btRunning = false;
+
+  // Salva risultati per export
+  state.btResults = { trades, equity, startCap: START_CAP, endCap: capital,
+                      period: { from: full1h[warmup]?.t, to: full1h[full1h.length-1]?.t } };
+  renderBtResults();
+}
+
+function btStats(trades, startCap) {
+  if (!trades.length) return null;
+  const wins   = trades.filter(t => t.isWin);
+  const losses = trades.filter(t => !t.isWin);
+  const grossW = wins.reduce((s,t) => s + t.pnlTotal, 0);
+  const grossL = Math.abs(losses.reduce((s,t) => s + t.pnlTotal, 0));
+  const pf     = grossL > 0 ? grossW / grossL : (grossW > 0 ? Infinity : 0);
+  // Max drawdown sulla equity dei trade
+  let peak = startCap, maxDD = 0, cap = startCap;
+  trades.forEach(t => {
+    cap += t.pnlTotal;
+    peak = Math.max(peak, cap);
+    maxDD = Math.max(maxDD, (peak - cap) / peak * 100);
+  });
+  return {
+    n: trades.length,
+    wr: Math.round(wins.length / trades.length * 100),
+    pnl: +trades.reduce((s,t) => s + t.pnlTotal, 0).toFixed(2),
+    pf: pf === Infinity ? '∞' : pf.toFixed(2),
+    avgR: +(trades.reduce((s,t) => s + (t.rr||0), 0) / trades.length).toFixed(2),
+    maxDD: +maxDD.toFixed(1),
+  };
+}
+
+function renderBtResults() {
+  const el = document.getElementById('bt-results');
+  if (!el || !state.btResults) return;
+  const { trades, startCap, endCap, period } = state.btResults;
+
+  if (!trades.length) {
+    el.innerHTML = '<div class="card" style="color:#f0b429;font-size:13px;text-align:center;padding:16px">Nessun trade generato nel periodo — soglie mai superate. Prova con più barre o verifica gli scenari selezionati.</div>';
+    return;
+  }
+
+  const tot = btStats(trades, startCap);
+  const byScen = {};
+  trades.forEach(t => { (byScen[t.scenario] = byScen[t.scenario] || []).push(t); });
+  const scenNames = { swing:'📊 Swing', trend:'📈 Trend', bias:'⏰ Bias', scalp:'⚡ Scalp' };
+
+  const pnlCol = tot.pnl >= 0 ? '#22c55e' : '#ef4444';
+  const retPct = ((endCap - startCap) / startCap * 100).toFixed(1);
+
+  let html = `<div class="card" style="border:2px solid ${pnlCol}44;margin-bottom:10px">
+    <div style="color:#3b82f6;font-weight:800;font-size:15px;margin-bottom:2px">🧪 Risultato Backtest</div>
+    <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">${new Date(period.from).toLocaleDateString('it-IT')} → ${new Date(period.to).toLocaleDateString('it-IT')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:6px">
+      <div style="background:#141920;border-radius:7px;padding:8px;text-align:center"><div style="color:#94a3b8;font-size:10px">P&L</div><div style="color:${pnlCol};font-size:16px;font-weight:900">${tot.pnl>=0?'+':''}€${tot.pnl}</div><div style="color:#94a3b8;font-size:9px">${retPct}%</div></div>
+      <div style="background:#141920;border-radius:7px;padding:8px;text-align:center"><div style="color:#94a3b8;font-size:10px">Win Rate</div><div style="color:${tot.wr>=50?'#22c55e':'#f0b429'};font-size:16px;font-weight:900">${tot.wr}%</div><div style="color:#94a3b8;font-size:9px">${tot.n} trade</div></div>
+      <div style="background:#141920;border-radius:7px;padding:8px;text-align:center"><div style="color:#94a3b8;font-size:10px">Profit Factor</div><div style="color:${parseFloat(tot.pf)>=1.5?'#22c55e':parseFloat(tot.pf)>=1?'#f0b429':'#ef4444'};font-size:16px;font-weight:900">${tot.pf}</div><div style="color:#94a3b8;font-size:9px">DD max ${tot.maxDD}%</div></div>
+    </div>
+  </div>`;
+
+  // Per scenario
+  html += '<div class="card" style="margin-bottom:10px"><div style="color:#f0f4fa;font-weight:700;font-size:13px;margin-bottom:8px">Per scenario</div>';
+  Object.entries(byScen).forEach(([id, ts]) => {
+    const s = btStats(ts, startCap);
+    const col = s.pnl >= 0 ? '#22c55e' : '#ef4444';
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e2535">
+      <div><span style="color:#f0f4fa;font-size:13px;font-weight:700">${scenNames[id]||id}</span>
+        <span style="color:#94a3b8;font-size:11px;margin-left:6px">${s.n} trade · WR ${s.wr}% · PF ${s.pf}</span></div>
+      <span style="color:${col};font-weight:800;font-size:13px">${s.pnl>=0?'+':''}€${s.pnl}</span>
+    </div>`;
+  });
+  html += '</div>';
+
+  // Distribuzione exit reasons
+  const byExit = {};
+  trades.forEach(t => byExit[t.exitReason] = (byExit[t.exitReason]||0)+1);
+  html += `<div class="card" style="margin-bottom:10px"><div style="color:#f0f4fa;font-weight:700;font-size:13px;margin-bottom:6px">Uscite</div>
+    <div style="color:#c0cce0;font-size:12px;line-height:1.7">${Object.entries(byExit).map(([k,v])=>`${k}: <b>${v}</b>`).join(' · ')}</div>
+  </div>`;
+
+  // Ultimi 10 trade
+  html += '<div class="card" style="margin-bottom:10px"><div style="color:#f0f4fa;font-weight:700;font-size:13px;margin-bottom:8px">Ultimi trade</div>';
+  trades.slice(-10).reverse().forEach(t => {
+    const col = t.isWin ? '#22c55e' : '#ef4444';
+    html += `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1e2535;font-size:12px">
+      <div><span style="color:${t.direction==='BUY'?'#22c55e':'#ef4444'};font-weight:700">${t.direction}</span>
+        <span style="color:#94a3b8;margin-left:5px">${scenNames[t.scenario]||t.scenario} · ${t.exitReason}</span>
+        <span style="color:#c0cce0;margin-left:5px;font-size:10px">${new Date(t.openedAt).toLocaleDateString('it-IT')}</span></div>
+      <span style="color:${col};font-weight:700">${t.pnlTotal>=0?'+':''}€${t.pnlTotal}</span>
+    </div>`;
+  });
+  html += '</div>';
+
+  html += `<button onclick="exportBtCsv()" style="width:100%;background:#22c55e20;border:1px solid #22c55e44;color:#22c55e;border-radius:8px;padding:10px 0;font-size:13px;font-weight:700">📤 Esporta trade CSV</button>`;
+
+  el.innerHTML = html;
+}
+
+function exportBtCsv() {
+  const r = state.btResults;
+  if (!r?.trades?.length) { alert('Nessun risultato da esportare.'); return; }
+  const head = ['openedAt','closedAt','scenario','bias','direction','entry','sl','tp1','tp2','lots','exitReason','exitPrice','partialPnl','pnlEur','pnlTotal','rr','confidence','capitalAfter'];
+  const rows = r.trades.map(t => head.map(k => t[k] ?? '').join(','));
+  const csv = head.join(',') + String.fromCharCode(10) + rows.join(String.fromCharCode(10));
+  const blob = new Blob([csv], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `backtest_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ══ STORICO PER BACKTEST — download, salvataggio locale, export ═
@@ -4525,6 +4936,8 @@ function renderPaperWidgetIn(el) {
 
 
 // ── Helper functions per scoring (globali) ──────────────────
+// nowRef: in backtest restituisce l'ora storica simulata, altrimenti l'ora reale
+function nowRef() { return state.btNow ? new Date(state.btNow) : new Date(); }
 function distAbs(price, level) { return Math.abs(price - (level||0)); }
 // SL strutturale: oltre l'ultimo swing (min/max ultime N candele) + buffer
 function structuralSL(candles, dir, atr, nBars=8) {
@@ -4545,7 +4958,7 @@ function isChasing(price, ema20, atr) {
 }
 // Weekend guard: no entry da venerdì 20:00 UTC a domenica 22:00 UTC
 function isWeekendRisk() {
-  const d = new Date(), day = d.getUTCDay(), h = d.getUTCHours();
+  const d = nowRef(), day = d.getUTCDay(), h = d.getUTCHours();
   return (day === 5 && h >= 20) || day === 6 || (day === 0 && h < 22);
 }
 function distPct(price, level) { return level ? Math.abs(price-level)/level*100 : 999; }
@@ -4679,7 +5092,7 @@ function computeBiasScenario(cc1h, last1h, atr1h, dailyTrend, adx, regime) {
   if (!cc1h || cc1h.length < 24 || !last1h) return empty("Dati insufficienti");
   if (isWeekendRisk()) return empty("Weekend gap risk");
 
-  const now = new Date();
+  const now = nowRef();
   const h   = now.getUTCHours() + now.getUTCMinutes()/60;
   const price = last1h.c;
   const atr = atr1h || 15;
