@@ -383,6 +383,16 @@ button{cursor:pointer}
     <button id="hist-download-btn" onclick="startHistDownload()" style="width:100%;background:#3b82f6;color:#fff;border-radius:8px;padding:11px 0;font-size:14px;font-weight:800;border:none">
       ⬇️ Avvia download storico
     </button>
+    <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
+      <select id="hist-deep-pages" style="flex:1;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:8px;font-size:13px">
+        <option value="2">2 pagine (~1 settimana 1M)</option>
+        <option value="3" selected>3 pagine (~10 giorni 1M)</option>
+        <option value="4">4 pagine (~2 settimane 1M)</option>
+        <option value="6">6 pagine (~3 settimane 1M)</option>
+      </select>
+      <button id="hist-deep-btn" onclick="startDeepDownload()" style="flex:1;background:#f0b429;color:#000;border-radius:8px;padding:9px 0;font-size:13px;font-weight:800;border:none">⬇️ 1M profondo</button>
+    </div>
+    <div style="color:#94a3b8;font-size:10px;margin-top:4px">Scarica pagine multiple di XAU 1M andando indietro nel tempo (5000 barre/pagina). Attenzione allo spazio: ~0.5MB/pagina, limite localStorage ~10MB.</div>
   </div>
 
   <div id="hist-progress-card" class="card" style="display:none;margin-bottom:10px">
@@ -430,10 +440,48 @@ button{cursor:pointer}
         </label>
       </div>
     </div>
+    <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:6px">
+      <span style="color:#c0cce0;font-size:13px">Modalità</span>
+      <select id="bt-mode" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
+        <option value="1h" selected>1H — Swing/Trend/Bias</option>
+        <option value="5m">5M — Scalp (approssimato)</option>
+        <option value="1m">1M — Scalp (reale, richiede 1M profondo)</option>
+      </select>
+    </label>
+
+    <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
+      <summary style="color:#f0b429;font-size:13px;font-weight:700;cursor:pointer">⚙️ Parametri (default = valori live)</summary>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Rischio %</div><input type="number" id="btp-risk" value="1.0" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min confidence</div><input type="number" id="btp-minconf" value="0" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Swing</div><input type="number" id="btp-thr-swing" value="58" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Trend</div><input type="number" id="btp-thr-trend" value="58" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Scalp</div><input type="number" id="btp-thr-scalp" value="62" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Bias</div><input type="number" id="btp-thr-bias" value="50" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">BE trigger (R)</div><input type="number" id="btp-berr" value="0.7" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail trigger (R)</div><input type="number" id="btp-trailrr" value="1.0" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Swing ×ATR</div><input type="number" id="btp-trail-swing" value="1.5" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Trend ×ATR</div><input type="number" id="btp-trail-trend" value="2.0" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Scalp ×ATR</div><input type="number" id="btp-trail-scalp" value="0.8" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parziale TP1 %</div><input type="number" id="btp-partial" value="50" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div></div>
+    </details>
+
+    <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
+      <summary style="color:#a855f7;font-size:13px;font-weight:700;cursor:pointer">🔁 Sweep — testa un range di valori</summary>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
+        <div style="grid-column:1/4"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parametro</div>
+          <select id="bt-sweep-param" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:6px;font-size:13px">
+            <option value="minConf" selected>Min confidence</option>
+            <option value="thrSwing">Soglia Swing</option>
+            <option value="thrTrend">Soglia Trend</option>
+            <option value="thrScalp">Soglia Scalp</option>
+            <option value="thrBias">Soglia Bias</option>
+            <option value="riskPct">Rischio %</option>
+            <option value="beRR">BE trigger (R)</option>
+            <option value="trailRR">Trail trigger (R)</option>
+            <option value="trailTrend">Trail Trend ×ATR</option>
+            <option value="trailSwing">Trail Swing ×ATR</option>
+            <option value="trailScalp">Trail Scalp ×ATR</option>
+            <option value="partialPct">Parziale TP1 %</option>
+          </select></div>
+        <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Da</div><input type="number" id="bt-sweep-from" value="50" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div>
+        <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">A</div><input type="number" id="bt-sweep-to" value="75" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div>
+        <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Passo</div><input type="number" id="bt-sweep-step" value="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div>
+      </div>
+      <button id="bt-sweep-btn" onclick="runBtSweep()" style="width:100%;background:#a855f7;color:#fff;border-radius:7px;padding:9px 0;font-size:13px;font-weight:800;border:none;margin-top:8px">🔁 Avvia sweep</button>
+    </details>
+
     <div style="color:#94a3b8;font-size:10px;margin-bottom:8px">
-      ⚠️ Scalp escluso: richiede candele 1M/5M live, non simulabile fedelmente su barre 1H.
-      La gestione PA-exit e l'estensione TP2 non sono simulate (regole troppo dipendenti dal tick-by-tick):
-      il risultato è quindi leggermente <b>conservativo</b>.
+      ⚠️ Modalità 5M Scalp è <b>approssimata</b>: le candele 1M sono surrogate dalle 5M e il contesto Daily
+      deriva da soli ~17 giorni di dati. PA-exit e estensione TP2 non simulate: risultato <b>conservativo</b>.
     </div>
     <button id="bt-run-btn" onclick="runBacktest()" style="width:100%;background:#22c55e;color:#000;border-radius:8px;padding:11px 0;font-size:14px;font-weight:800;border:none">🧪 Avvia backtest</button>
   </div>
@@ -3082,10 +3130,9 @@ function handleSwMessageCore(e) {
   }
 }
 
-// ══ BACKTEST ENGINE — stesso scoring, stessi parametri del paper ═
+// ══ BACKTEST ENGINE — stesso scoring, parametri configurabili ═
 let btRunning = false;
 
-// Arricchisce candele storiche con gli STESSI indicatori dell'app
 function btEnrich(candles) {
   const closes = candles.map(cd => cd.c);
   const rsiA  = calcRSI(closes);
@@ -3102,11 +3149,10 @@ function btEnrich(candles) {
   return base;
 }
 
-// Aggrega candele 1H in timeframe superiori (4H o 1D)
-function btAggregate(cc1h, hours) {
+function btAggregate(cc, hours) {
   const out = [];
   let bucket = null, bucketKey = null;
-  for (const cd of cc1h) {
+  for (const cd of cc) {
     const d = new Date(cd.t);
     const key = hours === 24
       ? d.toISOString().slice(0,10)
@@ -3116,10 +3162,8 @@ function btAggregate(cc1h, hours) {
       bucket = { t: cd.t, o: cd.o, h: cd.h, l: cd.l, c: cd.c, vol: cd.vol||0 };
       bucketKey = key;
     } else {
-      bucket.h = Math.max(bucket.h, cd.h);
-      bucket.l = Math.min(bucket.l, cd.l);
-      bucket.c = cd.c;
-      bucket.vol += cd.vol||0;
+      bucket.h = Math.max(bucket.h, cd.h); bucket.l = Math.min(bucket.l, cd.l);
+      bucket.c = cd.c; bucket.vol += cd.vol||0;
     }
   }
   if (bucket) out.push(bucket);
@@ -3127,7 +3171,6 @@ function btAggregate(cc1h, hours) {
 }
 
 function btSliceByTime(candles, t) {
-  // Ritorna solo le candele con timestamp <= t
   let hi = candles.length;
   for (let i = candles.length-1; i >= 0; i--) {
     if (new Date(candles[i].t) <= t) { hi = i+1; break; }
@@ -3136,148 +3179,169 @@ function btSliceByTime(candles, t) {
   return candles.slice(0, hi);
 }
 
-async function runBacktest() {
-  if (btRunning) return;
-
-  // ── Carica dati storici ─────────────────────────────────────
-  const h1raw = histLoad('xauusd_1h');
-  if (!h1raw || !h1raw.candles?.length) {
-    alert('Serve prima lo storico XAU/USD 1H — scaricalo dalla sezione sopra.');
-    return;
-  }
-  btRunning = true;
-
-  const btBtn = document.getElementById('bt-run-btn');
-  const progCard = document.getElementById('bt-progress-card');
-  const progBar  = document.getElementById('bt-progress-bar');
-  const progText = document.getElementById('bt-progress-text');
-  const resEl    = document.getElementById('bt-results');
-  btBtn.disabled = true; btBtn.style.opacity='0.5'; btBtn.textContent='⏳ Backtest in corso...';
-  progCard.style.display='block'; resEl.innerHTML='';
-
-  const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
-  const useScen = {
-    swing: document.getElementById('bt-scen-swing').checked,
-    trend: document.getElementById('bt-scen-trend').checked,
-    bias:  document.getElementById('bt-scen-bias').checked,
+// Legge i parametri dalla UI (con default = valori live del paper)
+function btGetParams() {
+  const gv = (id, dflt) => {
+    const el = document.getElementById(id);
+    const v = el ? parseFloat(el.value) : NaN;
+    return isNaN(v) ? dflt : v;
   };
+  return {
+    riskPct:    gv('btp-risk', 1.0) / 100,
+    minConf:    gv('btp-minconf', 0),
+    thrSwing:   gv('btp-thr-swing', 58),
+    thrTrend:   gv('btp-thr-trend', 58),
+    thrScalp:   gv('btp-thr-scalp', 62),
+    thrBias:    gv('btp-thr-bias', 50),
+    beRR:       gv('btp-berr', 0.7),
+    trailRR:    gv('btp-trailrr', 1.0),
+    trailSwing: gv('btp-trail-swing', 1.5),
+    trailTrend: gv('btp-trail-trend', 2.0),
+    trailScalp: gv('btp-trail-scalp', 0.8),
+    trailBias:  gv('btp-trail-bias', 1.0),
+    partialPct: gv('btp-partial', 50) / 100,
+  };
+}
 
-  // ── Prepara dati (arricchiti UNA volta su serie complete) ──
-  progText.textContent = 'Preparazione dati e indicatori...';
-  await new Promise(r => setTimeout(r, 30));
+// ── Core: esegue un backtest e ritorna i risultati (no UI) ────
+async function btRun(mode, maxBars, useScen, P, onProgress) {
+  const isScalp = mode === '5m' || mode === '1m';
+  const is1m = mode === '1m';
+  const seriesKey = is1m ? 'xauusd_1m' : isScalp ? 'xauusd_5m' : 'xauusd_1h';
+  const raw = histLoad(seriesKey);
+  if (!raw?.candles?.length) throw new Error(`Serve lo storico ${is1m?'XAU 1M (usa "1M profondo")':isScalp?'XAU 5M':'XAU 1H'} — scaricalo prima.`);
 
-  const full1h = btEnrich(h1raw.candles.slice(-maxBars));
-  const full4h = btEnrich(btAggregate(h1raw.candles.slice(-maxBars), 4));
-  const full1d = btEnrich(btAggregate(h1raw.candles.slice(-maxBars), 24));
-  const eurRaw = histLoad('eurusd_1h');
-  const tnxRaw = histLoad('tnx_1h');
+  const src = raw.candles.slice(-maxBars);
+  const fullBase = btEnrich(src);
+
+  // Contesto TF superiori
+  let full1h, full4h, full1d, full5m, full1mArr = [];
+  if (is1m) {
+    full1mArr = fullBase;
+    // Aggrega 5M reali dalle 1M
+    const agg5 = [];
+    let b=null,bk=null;
+    for (const cd of src) {
+      const d=new Date(cd.t);
+      const k=d.toISOString().slice(0,13)+'_'+Math.floor(d.getUTCMinutes()/5);
+      if(k!==bk){if(b)agg5.push(b);b={t:cd.t,o:cd.o,h:cd.h,l:cd.l,c:cd.c,vol:cd.vol||0};bk=k;}
+      else{b.h=Math.max(b.h,cd.h);b.l=Math.min(b.l,cd.l);b.c=cd.c;b.vol+=cd.vol||0;}
+    }
+    if(b)agg5.push(b);
+    full5m = btEnrich(agg5);
+    full1h = btEnrich(btAggregate(src, 1));
+    full4h = btEnrich(btAggregate(src, 4));
+    full1d = btEnrich(btAggregate(src, 24));
+  } else if (isScalp) {
+    full5m = fullBase;
+    full1h = btEnrich(btAggregate(src, 1));
+    full4h = btEnrich(btAggregate(src, 4));
+    full1d = btEnrich(btAggregate(src, 24));
+  } else {
+    full1h = fullBase;
+    full5m = [];
+    full4h = btEnrich(btAggregate(src, 4));
+    full1d = btEnrich(btAggregate(src, 24));
+  }
+  const corrKey = isScalp ? 'eurusd_5m' : 'eurusd_1h';  // per 1m: le 5m sono il meglio disponibile
+  const tnxKey  = isScalp ? 'tnx_5m'    : 'tnx_1h';
+  const eurRaw = histLoad(corrKey), tnxRaw = histLoad(tnxKey);
   const fullEur = eurRaw?.candles?.length ? btEnrich(eurRaw.candles.slice(-maxBars)) : [];
   const fullTnx = tnxRaw?.candles?.length ? btEnrich(tnxRaw.candles.slice(-maxBars)) : [];
 
-  // ── Backup dello stato live ─────────────────────────────────
   const backup = {
     candles: state.candles, candles4h: state.candles4h,
     pivots: state.pivots, corrData: state.corrData, btNow: state.btNow,
   };
 
-  // ── Parametri di simulazione — IDENTICI al paper ────────────
   const START_CAP = 10000;
-  let capital = START_CAP;
-  let equity  = [capital];
-  let openT   = null;
-  let lastCloseIdx = -999;
-  const COOLDOWN_BARS = 3;
+  let capital = START_CAP, openT = null, lastCloseIdx = -999;
   const trades = [];
+  const COOLDOWN_BARS = 3;
+  const warmup = 60;
+  const total = fullBase.length - warmup;
 
-  const warmup = 60; // barre minime per indicatori affidabili
-  const total  = full1h.length - warmup;
+  const thrMap = { swing:P.thrSwing, trend:P.thrTrend, scalp:P.thrScalp, bias:P.thrBias };
+  const trailMap = { swing:P.trailSwing, trend:P.trailTrend, scalp:P.trailScalp, bias:P.trailBias };
 
   try {
-    for (let i = warmup; i < full1h.length; i++) {
-      const cd  = full1h[i];
-      const t   = new Date(cd.t);
+    for (let i = warmup; i < fullBase.length; i++) {
+      const cd = fullBase[i];
+      const t  = new Date(cd.t);
 
-      // ── 1. Gestione trade aperto sulla candela corrente ─────
+      // ── Gestione trade aperto ─────────────────────────────
       if (openT) {
-        const tr = openT;
-        const dir = tr.direction, isBuy = dir === 'BUY';
+        const tr = openT, dir = tr.direction, isBuy = dir === 'BUY';
         let closed = false, exitPrice = 0, exitReason = '';
 
-        // Timed exit (a inizio candela, come farebbe il check ogni 30s)
         if (tr.timedExitUTC != null) {
           const hNow = t.getUTCHours();
           const shouldClose = tr.timedExitUTC >= 12 ? hNow >= tr.timedExitUTC
                              : (hNow >= tr.timedExitUTC && hNow < 12);
           if (shouldClose) { closed = true; exitReason = 'TIMED_EXIT'; exitPrice = cd.o; }
         }
-
-        // SL first (conservativo: se la candela tocca SL e TP, assume SL)
         if (!closed && ((isBuy && cd.l <= tr.sl) || (!isBuy && cd.h >= tr.sl))) {
           closed = true; exitReason = tr.breakEvenSet ? 'SL_BE' : 'SL'; exitPrice = tr.sl;
         }
-        // TP2
         if (!closed && ((isBuy && cd.h >= tr.tp2) || (!isBuy && cd.l <= tr.tp2))) {
           closed = true; exitReason = 'TP2'; exitPrice = tr.tp2;
         }
-        // TP1 parziale 50% (stessa regola del paper: incassa metà, SL→BE)
         if (!closed && !tr.partialDone && ((isBuy && cd.h >= tr.tp1) || (!isBuy && cd.l <= tr.tp1))) {
-          const halfLots = tr.lots / 2;
+          const partLots = tr.lots * P.partialPct;
           const exitHalf = isBuy ? tr.tp1 - SPREAD/2 : tr.tp1 + SPREAD/2;
-          const pnlHalf  = (isBuy ? exitHalf - tr.entry : tr.entry - exitHalf) * halfLots * 100;
+          const pnlHalf  = (isBuy ? exitHalf - tr.entry : tr.entry - exitHalf) * partLots * 100;
           capital += pnlHalf;
-          tr.lots = halfLots;
-          tr.partialDone = true;
-          tr.partialPnl = +pnlHalf.toFixed(2);
+          tr.lots = tr.lots - partLots;
+          tr.partialDone = true; tr.partialPnl = +pnlHalf.toFixed(2);
           const beSL = isBuy ? tr.entry + SPREAD : tr.entry - SPREAD;
           if ((isBuy && beSL > tr.sl) || (!isBuy && beSL < tr.sl)) tr.sl = beSL;
           tr.breakEvenSet = true;
         }
 
         if (!closed) {
-          // Aggiorna max favorevole con l'estremo della candela
-          if (isBuy)  tr.maxFavorable = Math.max(tr.maxFavorable, cd.h);
-          else        tr.maxFavorable = Math.min(tr.maxFavorable, cd.l);
+          if (isBuy) tr.maxFavorable = Math.max(tr.maxFavorable, cd.h);
+          else       tr.maxFavorable = Math.min(tr.maxFavorable, cd.l);
           const slDist  = Math.abs(tr.entry - tr.slOrig);
           const profPts = isBuy ? cd.c - tr.entry : tr.entry - cd.c;
           const profRR  = slDist > 0 ? profPts / slDist : 0;
           const atr     = tr.atrAtEntry || 15;
-
-          // Breakeven +0.5 ATR a 0.7R (stessa regola)
-          if (!tr.breakEvenSet && profRR >= 0.7) {
+          if (!tr.breakEvenSet && profRR >= P.beRR) {
             const newSL = isBuy ? tr.entry + atr*0.5 : tr.entry - atr*0.5;
             if ((isBuy && newSL > tr.sl) || (!isBuy && newSL < tr.sl)) { tr.sl = newSL; tr.breakEvenSet = true; }
           }
-          // Trailing a 1R con moltiplicatore per scenario (stessa regola)
-          if (profRR >= 1.0) {
+          if (profRR >= P.trailRR) {
             const trailDist = atr * tr.trailMult;
             const trailSL = isBuy ? tr.maxFavorable - trailDist : tr.maxFavorable + trailDist;
             if ((isBuy && trailSL > tr.sl) || (!isBuy && trailSL < tr.sl)) tr.sl = trailSL;
           }
         } else {
-          // Chiusura con spread (stessa regola)
           const exitSpread = isBuy ? exitPrice - SPREAD/2 : exitPrice + SPREAD/2;
           const pnlPts = isBuy ? exitSpread - tr.entry : tr.entry - exitSpread;
           const pnlEur = +(pnlPts * tr.lots * 100).toFixed(2);
           capital = +(capital + pnlEur).toFixed(2);
-          equity.push(capital);
           trades.push({
-            ...tr, exitPrice: +exitSpread.toFixed(2), exitReason,
-            pnlEur, pnlTotal: +(pnlEur + (tr.partialPnl||0)).toFixed(2),
+            ...tr, exitPrice: +exitSpread.toFixed(2), exitReason, pnlEur,
+            pnlTotal: +(pnlEur + (tr.partialPnl||0)).toFixed(2),
             isWin: (pnlEur + (tr.partialPnl||0)) > 0,
             closedAt: cd.t, capitalAfter: capital,
             rr: +(pnlPts / Math.abs(tr.entry - tr.slOrig || 1)).toFixed(2),
           });
-          openT = null;
-          lastCloseIdx = i;
+          openT = null; lastCloseIdx = i;
         }
       }
 
-      // ── 2. Entry: STESSO scoring dell'app ───────────────────
+      // ── Entry con STESSO scoring ───────────────────────────
       if (!openT && (i - lastCloseIdx) >= COOLDOWN_BARS) {
-        // Prepara lo stato come se fossimo in quel momento
         state.btNow = cd.t;
-        const s1h = full1h.slice(Math.max(0, i-119), i+1);
-        state.candles = { '1h': s1h, '5m': [], '1m': [], '1d': btSliceByTime(full1d, t).slice(-35) };
+        if (is1m) {
+          const s1m = full1mArr.slice(Math.max(0, i-119), i+1);
+          state.candles = { '1m': s1m, '5m': btSliceByTime(full5m, t).slice(-60), '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
+        } else if (isScalp) {
+          const s5m = full5m.slice(Math.max(0, i-119), i+1);
+          state.candles = { '5m': s5m, '1m': s5m.slice(-30), '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
+        } else {
+          state.candles = { '1h': fullBase.slice(Math.max(0, i-119), i+1), '5m': [], '1m': [], '1d': btSliceByTime(full1d, t).slice(-35) };
+        }
         state.candles4h = btSliceByTime(full4h, t).slice(-60);
         state.pivots = calcPivots(state.candles['1d']);
         state.corrData = {
@@ -3286,29 +3350,35 @@ async function runBacktest() {
         };
 
         let recap = null;
-        try { recap = computeAllScenarios(); } catch(e) { /* dati insufficienti a inizio serie */ }
+        try { recap = computeAllScenarios(); } catch(e) {}
 
-        if (recap?.best && recap.best.bestDir !== 'WAIT' && recap.best.setup) {
-          const best = recap.best;
-          const allowed = useScen[best.id];
-          const setup = best.setup;
-          if (allowed && !setup.chasing) {
-            const es = best.bestDir === 'BUY' ? best.buy : best.sell;
-            const lots = (() => {
-              const riskEur = capital * 0.01;
-              const slDist  = Math.abs(setup.entry - setup.sl);
-              if (!slDist) return 0.01;
-              const byRisk   = riskEur / (slDist * 100);
-              const byMargin = (capital * 0.05) / ((setup.entry / 100) * 100);
-              return Math.max(0.01, +Math.min(byRisk, byMargin).toFixed(2));
-            })();
+        if (recap?.scores) {
+          // Ricalcola eligibility con le soglie UTENTE (parametriche)
+          let best = null;
+          for (const s of recap.scores) {
+            if (!useScen[s.id]) continue;
+            const thr = thrMap[s.id] ?? s.threshold;
+            const bDir = s.buy?.score >= thr && s.buy?.score >= (s.sell?.score||0) && s.buy?.setup ? 'BUY'
+                       : s.sell?.score >= thr && s.sell?.setup ? 'SELL' : 'WAIT';
+            if (bDir === 'WAIT') continue;
+            const es = bDir === 'BUY' ? s.buy : s.sell;
+            if (es.score < P.minConf) continue;
+            if (es.setup?.chasing) continue;
+            if (!best || es.score > best.score) best = { scen:s.id, dir:bDir, score:es.score, setup:es.setup };
+          }
+          if (best) {
+            const setup = best.setup;
+            const riskEur = capital * P.riskPct;
+            const slDist  = Math.abs(setup.entry - setup.sl);
+            const lots = slDist ? Math.max(0.01, +Math.min(riskEur/(slDist*100), (capital*0.05)/((setup.entry/100)*100)).toFixed(2)) : 0.01;
+            const atrNow = (isScalp ? full5m : fullBase)[i]?.atr || 15;
             openT = {
-              direction: best.bestDir,
-              entry: best.bestDir==='BUY' ? setup.entry + SPREAD/2 : setup.entry - SPREAD/2,
+              direction: best.dir,
+              entry: best.dir==='BUY' ? setup.entry + SPREAD/2 : setup.entry - SPREAD/2,
               sl: setup.sl, slOrig: setup.sl, tp1: setup.tp1, tp2: setup.tp2,
-              lots, scenario: best.id, confidence: best.bestScore,
-              openedAt: cd.t, atrAtEntry: s1h[s1h.length-1]?.atr || 15,
-              trailMult: getTrailMult(best.id), warnThresh: getWarnThreshold(best.id),
+              lots, scenario: best.scen, confidence: best.score,
+              openedAt: cd.t, atrAtEntry: atrNow,
+              trailMult: trailMap[best.scen] ?? 1.5,
               timedExitUTC: setup.timedExitUTC ?? null, bias: setup.bias ?? null,
               maxFavorable: setup.entry, partialDone: false, breakEvenSet: false, partialPnl: 0,
             };
@@ -3316,42 +3386,141 @@ async function runBacktest() {
         }
       }
 
-      // ── Progress UI (ogni 50 barre) ──────────────────────────
-      if ((i - warmup) % 50 === 0) {
-        const pct = Math.round(((i - warmup) / total) * 100);
-        progBar.style.width = pct + '%';
-        progText.textContent = `Simulazione: barra ${i-warmup}/${total} · ${trades.length} trade · Cap €${capital.toFixed(0)}`;
-        await new Promise(r => setTimeout(r, 0)); // yield al browser
+      if (onProgress && (i - warmup) % 50 === 0) {
+        onProgress(Math.round(((i-warmup)/total)*100), trades.length, capital);
+        await new Promise(r => setTimeout(r, 0));
       }
     }
   } finally {
-    // ── Ripristina SEMPRE lo stato live ─────────────────────
-    state.candles  = backup.candles;
-    state.candles4h= backup.candles4h;
-    state.pivots   = backup.pivots;
-    state.corrData = backup.corrData;
-    state.btNow    = backup.btNow || null;
+    state.candles = backup.candles; state.candles4h = backup.candles4h;
+    state.pivots = backup.pivots; state.corrData = backup.corrData;
+    state.btNow = backup.btNow || null;
   }
 
-  progBar.style.width = '100%';
-  progText.textContent = `Completato: ${trades.length} trade simulati`;
-  btBtn.disabled = false; btBtn.style.opacity='1'; btBtn.textContent='🧪 Avvia backtest';
-  btRunning = false;
+  return { trades, startCap: START_CAP, endCap: capital,
+           period: { from: fullBase[warmup]?.t, to: fullBase[fullBase.length-1]?.t }, mode };
+}
 
-  // Salva risultati per export
-  state.btResults = { trades, equity, startCap: START_CAP, endCap: capital,
-                      period: { from: full1h[warmup]?.t, to: full1h[full1h.length-1]?.t } };
-  renderBtResults();
+// ── Run singolo con UI ─────────────────────────────────────────
+async function runBacktest() {
+  if (btRunning) return;
+  btRunning = true;
+  const btn = document.getElementById('bt-run-btn');
+  const progCard = document.getElementById('bt-progress-card');
+  const progBar  = document.getElementById('bt-progress-bar');
+  const progText = document.getElementById('bt-progress-text');
+  const resEl    = document.getElementById('bt-results');
+  btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Backtest...';
+  progCard.style.display='block'; resEl.innerHTML='';
+
+  const mode = document.getElementById('bt-mode').value;
+  const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
+  const useScen = (mode === '5m' || mode === '1m')
+    ? { scalp:true, swing:false, trend:false, bias:false }
+    : {
+        swing: document.getElementById('bt-scen-swing').checked,
+        trend: document.getElementById('bt-scen-trend').checked,
+        bias:  document.getElementById('bt-scen-bias').checked,
+        scalp: false,
+      };
+  const P = btGetParams();
+
+  try {
+    const res = await btRun(mode, maxBars, useScen, P, (pct, n, cap) => {
+      progBar.style.width = pct + '%';
+      progText.textContent = `Simulazione ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
+    });
+    state.btResults = res;
+    progBar.style.width='100%';
+    progText.textContent = `Completato: ${res.trades.length} trade`;
+    renderBtResults();
+  } catch(e) {
+    progText.textContent = '❌ ' + e.message;
+  }
+  btn.disabled=false; btn.style.opacity='1'; btn.textContent='🧪 Avvia backtest';
+  btRunning = false;
+}
+
+// ── Sweep: testa un range di valori per un parametro ──────────
+async function runBtSweep() {
+  if (btRunning) return;
+  btRunning = true;
+  const btn = document.getElementById('bt-sweep-btn');
+  const progCard = document.getElementById('bt-progress-card');
+  const progBar  = document.getElementById('bt-progress-bar');
+  const progText = document.getElementById('bt-progress-text');
+  const resEl    = document.getElementById('bt-results');
+  btn.disabled = true; btn.style.opacity='0.5';
+  progCard.style.display='block'; resEl.innerHTML='';
+
+  const param = document.getElementById('bt-sweep-param').value;
+  const vFrom = parseFloat(document.getElementById('bt-sweep-from').value);
+  const vTo   = parseFloat(document.getElementById('bt-sweep-to').value);
+  const vStep = parseFloat(document.getElementById('bt-sweep-step').value);
+  if (isNaN(vFrom)||isNaN(vTo)||isNaN(vStep)||vStep<=0||vTo<vFrom) {
+    progText.textContent='❌ Range non valido'; btn.disabled=false; btn.style.opacity='1'; btRunning=false; return;
+  }
+
+  const mode = document.getElementById('bt-mode').value;
+  const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
+  const useScen = (mode === '5m' || mode === '1m')
+    ? { scalp:true, swing:false, trend:false, bias:false }
+    : { swing: document.getElementById('bt-scen-swing').checked,
+        trend: document.getElementById('bt-scen-trend').checked,
+        bias:  document.getElementById('bt-scen-bias').checked, scalp:false };
+
+  const values = [];
+  for (let v = vFrom; v <= vTo + 1e-9; v += vStep) values.push(+v.toFixed(3));
+
+  const rows = [];
+  try {
+    for (let k = 0; k < values.length; k++) {
+      const P = btGetParams();
+      P[param] = param==='riskPct'||param==='partialPct' ? values[k]/100 : values[k];
+      progText.textContent = `Sweep ${param}=${values[k]} (${k+1}/${values.length})...`;
+      progBar.style.width = Math.round(k/values.length*100)+'%';
+      const res = await btRun(mode, maxBars, useScen, P, null);
+      const st = btStats(res.trades, res.startCap);
+      rows.push({ v: values[k], st, n: res.trades.length });
+    }
+    progBar.style.width='100%';
+    progText.textContent = `Sweep completato: ${values.length} configurazioni`;
+
+    // Render tabella comparativa
+    const paramNames = { minConf:'Min confidence', thrSwing:'Soglia Swing', thrTrend:'Soglia Trend', thrScalp:'Soglia Scalp', thrBias:'Soglia Bias', riskPct:'Rischio %', beRR:'BE trigger (R)', trailRR:'Trail trigger (R)', trailTrend:'Trail Trend ×ATR', trailSwing:'Trail Swing ×ATR', trailScalp:'Trail Scalp ×ATR', partialPct:'Parziale TP1 %' };
+    let bestIdx = 0;
+    rows.forEach((r,idx) => { if (r.st && rows[bestIdx].st && parseFloat(r.st.pnl) > parseFloat(rows[bestIdx].st.pnl)) bestIdx = idx; });
+    let html = `<div class="card"><div style="color:#3b82f6;font-weight:800;font-size:14px;margin-bottom:8px">🔁 Sweep: ${paramNames[param]||param}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:2px;font-size:11px;font-weight:700;color:#94a3b8;padding:4px 0;border-bottom:1px solid #2a3550">
+        <div>Valore</div><div>Trade</div><div>WR</div><div>PF</div><div>P&L</div>
+      </div>`;
+    rows.forEach((r, idx) => {
+      const st = r.st || { wr:'–', pf:'–', pnl:0 };
+      const col = (st.pnl||0) >= 0 ? '#22c55e' : '#ef4444';
+      const hl = idx===bestIdx ? 'background:#22c55e15;' : '';
+      html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:2px;font-size:12px;padding:5px 0;border-bottom:1px solid #1e2535;${hl}">
+        <div style="color:#f0f4fa;font-weight:700">${r.v}${idx===bestIdx?' 🥇':''}</div>
+        <div style="color:#c0cce0">${r.n}</div>
+        <div style="color:#c0cce0">${st.wr}%</div>
+        <div style="color:#c0cce0">${st.pf}</div>
+        <div style="color:${col};font-weight:700">${(st.pnl||0)>=0?'+':''}€${st.pnl||0}</div>
+      </div>`;
+    });
+    html += `<div style="color:#94a3b8;font-size:10px;margin-top:8px">⚠️ Attenzione all'overfitting: il valore migliore sul passato non è garanzia per il futuro. Preferisci zone di valori stabilmente buoni a picchi isolati.</div></div>`;
+    resEl.innerHTML = html;
+  } catch(e) {
+    progText.textContent = '❌ ' + e.message;
+  }
+  btn.disabled=false; btn.style.opacity='1';
+  btRunning = false;
 }
 
 function btStats(trades, startCap) {
   if (!trades.length) return null;
   const wins   = trades.filter(t => t.isWin);
-  const losses = trades.filter(t => !t.isWin);
   const grossW = wins.reduce((s,t) => s + t.pnlTotal, 0);
-  const grossL = Math.abs(losses.reduce((s,t) => s + t.pnlTotal, 0));
+  const grossL = Math.abs(trades.filter(t => !t.isWin).reduce((s,t) => s + t.pnlTotal, 0));
   const pf     = grossL > 0 ? grossW / grossL : (grossW > 0 ? Infinity : 0);
-  // Max drawdown sulla equity dei trade
   let peak = startCap, maxDD = 0, cap = startCap;
   trades.forEach(t => {
     cap += t.pnlTotal;
@@ -3371,10 +3540,10 @@ function btStats(trades, startCap) {
 function renderBtResults() {
   const el = document.getElementById('bt-results');
   if (!el || !state.btResults) return;
-  const { trades, startCap, endCap, period } = state.btResults;
+  const { trades, startCap, endCap, period, mode } = state.btResults;
 
   if (!trades.length) {
-    el.innerHTML = '<div class="card" style="color:#f0b429;font-size:13px;text-align:center;padding:16px">Nessun trade generato nel periodo — soglie mai superate. Prova con più barre o verifica gli scenari selezionati.</div>';
+    el.innerHTML = '<div class="card" style="color:#f0b429;font-size:13px;text-align:center;padding:16px">Nessun trade generato — soglie mai superate nel periodo. Prova ad abbassare le soglie nei Parametri o allargare il periodo.</div>';
     return;
   }
 
@@ -3382,12 +3551,11 @@ function renderBtResults() {
   const byScen = {};
   trades.forEach(t => { (byScen[t.scenario] = byScen[t.scenario] || []).push(t); });
   const scenNames = { swing:'📊 Swing', trend:'📈 Trend', bias:'⏰ Bias', scalp:'⚡ Scalp' };
-
   const pnlCol = tot.pnl >= 0 ? '#22c55e' : '#ef4444';
   const retPct = ((endCap - startCap) / startCap * 100).toFixed(1);
 
   let html = `<div class="card" style="border:2px solid ${pnlCol}44;margin-bottom:10px">
-    <div style="color:#3b82f6;font-weight:800;font-size:15px;margin-bottom:2px">🧪 Risultato Backtest</div>
+    <div style="color:#3b82f6;font-weight:800;font-size:15px;margin-bottom:2px">🧪 Risultato Backtest ${mode==='5m'?'· ⚡ 5M Scalp':''}</div>
     <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">${new Date(period.from).toLocaleDateString('it-IT')} → ${new Date(period.to).toLocaleDateString('it-IT')}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:6px">
       <div style="background:#141920;border-radius:7px;padding:8px;text-align:center"><div style="color:#94a3b8;font-size:10px">P&L</div><div style="color:${pnlCol};font-size:16px;font-weight:900">${tot.pnl>=0?'+':''}€${tot.pnl}</div><div style="color:#94a3b8;font-size:9px">${retPct}%</div></div>
@@ -3396,7 +3564,6 @@ function renderBtResults() {
     </div>
   </div>`;
 
-  // Per scenario
   html += '<div class="card" style="margin-bottom:10px"><div style="color:#f0f4fa;font-weight:700;font-size:13px;margin-bottom:8px">Per scenario</div>';
   Object.entries(byScen).forEach(([id, ts]) => {
     const s = btStats(ts, startCap);
@@ -3409,14 +3576,12 @@ function renderBtResults() {
   });
   html += '</div>';
 
-  // Distribuzione exit reasons
   const byExit = {};
   trades.forEach(t => byExit[t.exitReason] = (byExit[t.exitReason]||0)+1);
   html += `<div class="card" style="margin-bottom:10px"><div style="color:#f0f4fa;font-weight:700;font-size:13px;margin-bottom:6px">Uscite</div>
     <div style="color:#c0cce0;font-size:12px;line-height:1.7">${Object.entries(byExit).map(([k,v])=>`${k}: <b>${v}</b>`).join(' · ')}</div>
   </div>`;
 
-  // Ultimi 10 trade
   html += '<div class="card" style="margin-bottom:10px"><div style="color:#f0f4fa;font-weight:700;font-size:13px;margin-bottom:8px">Ultimi trade</div>';
   trades.slice(-10).reverse().forEach(t => {
     const col = t.isWin ? '#22c55e' : '#ef4444';
@@ -3428,9 +3593,7 @@ function renderBtResults() {
     </div>`;
   });
   html += '</div>';
-
   html += `<button onclick="exportBtCsv()" style="width:100%;background:#22c55e20;border:1px solid #22c55e44;color:#22c55e;border-radius:8px;padding:10px 0;font-size:13px;font-weight:700">📤 Esporta trade CSV</button>`;
-
   el.innerHTML = html;
 }
 
@@ -3479,8 +3642,9 @@ function histNormalize(rawValues) {
   }));
 }
 
-async function histFetchSeries(symbol, interval, outputsize) {
-  const url = `${TD}/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${outputsize}&apikey=${state.tdKey}`;
+async function histFetchSeries(symbol, interval, outputsize, endDate) {
+  const ed = endDate ? `&end_date=${encodeURIComponent(endDate)}` : '';
+  const url = `${TD}/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${outputsize}${ed}&apikey=${state.tdKey}`;
   const res = await fetch(url, { cache:'no-store' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
@@ -3565,6 +3729,48 @@ async function startHistDownload() {
   histLog(`🏁 Fine: ${ok} ok, ${fail} falliti`, fail ? '#f0b429' : '#22c55e');
 
   btn.disabled = false; btn.style.opacity = '1'; btn.textContent = '⬇️ Avvia download storico';
+  histDownloading = false;
+  renderHistSavedList();
+}
+
+// ── Download 1M profondo: più pagine da 5000 con end_date ────
+async function startDeepDownload() {
+  if (histDownloading) return;
+  histDownloading = true;
+  const pages = parseInt(document.getElementById('hist-deep-pages').value, 10);
+  const delayMs = parseInt(document.getElementById('hist-delay').value, 10);
+  const btn = document.getElementById('hist-deep-btn');
+  btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Download profondo...';
+  document.getElementById('hist-progress-card').style.display='block';
+  histLog(`🚀 Download 1M profondo: ${pages} pagine × 5000 barre`, '#3b82f6');
+
+  let all = [];
+  let endDate = null;
+  try {
+    for (let p = 0; p < pages; p++) {
+      histLog(`⏳ Pagina ${p+1}/${pages}${endDate ? ' (fino a '+endDate+')' : ''}...`, '#94a3b8');
+      const raw = await histFetchSeries('XAU/USD', '1min', 5000, endDate);
+      const candles = histNormalize(raw.values);
+      if (!candles.length) { histLog('⚪ Nessun altro dato disponibile', '#f0b429'); break; }
+      // Prepend (le pagine vanno indietro nel tempo); dedup sul timestamp
+      const existing = new Set(all.map(cd => cd.t));
+      const fresh = candles.filter(cd => !existing.has(cd.t));
+      all = [...fresh, ...all];
+      endDate = candles[0].t; // il più vecchio della pagina appena scaricata
+      histLog(`✅ Pagina ${p+1}: ${fresh.length} barre nuove (totale ${all.length})`, '#22c55e');
+      if (p < pages-1) await new Promise(r => setTimeout(r, delayMs));
+    }
+    const payload = {
+      symbol:'XAU/USD', interval:'1min', count: all.length,
+      firstDate: all[0]?.t, lastDate: all[all.length-1]?.t,
+      downloadedAt: new Date().toISOString(), candles: all,
+    };
+    const ok = histSave('xauusd_1m', payload);
+    if (ok) histLog(`🏁 Salvate ${all.length} barre 1M (${payload.firstDate} → ${payload.lastDate})`, '#22c55e');
+  } catch(e) {
+    histLog('❌ ' + e.message, '#ef4444');
+  }
+  btn.disabled=false; btn.style.opacity='1'; btn.textContent='⬇️ 1M profondo';
   histDownloading = false;
   renderHistSavedList();
 }
