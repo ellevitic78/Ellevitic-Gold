@@ -469,6 +469,24 @@ button{cursor:pointer}
     </details>
 
     <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
+      <summary style="color:#3b82f6;font-size:13px;font-weight:700;cursor:pointer">🎯 Ottimizzazione per scenario (un parametro alla volta)</summary>
+      <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
+        Ottimizza i parametri del singolo scenario in isolamento (soglia, poi trailing) con
+        ricerca completa su ogni parametro. Stessa logica dell'Annealing: se il risultato
+        combinato batte la baseline, <b style="color:#22c55e">i parametri live dello scenario vengono aggiornati</b>.
+      </div>
+      <div style="display:flex;gap:6px;align-items:flex-end">
+        <div style="flex:1"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Scenario</div>
+          <select id="scen-opt-target" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:8px;font-size:13px">
+            <option value="trend" selected>📈 Trend</option>
+            <option value="swing">📊 Swing</option>
+            <option value="bias">⏰ Bias</option>
+          </select></div>
+        <button id="scen-opt-btn" onclick="runScenOptimization()" style="flex:1;background:#3b82f6;color:#fff;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🎯 Ottimizza scenario</button>
+      </div>
+    </details>
+
+    <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
       <summary style="color:#f97316;font-size:13px;font-weight:700;cursor:pointer">🔁 Sweep — testa un range su UN parametro</summary>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
         <div style="grid-column:1/4"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parametro</div>
@@ -3599,6 +3617,138 @@ async function runSaOptimization() {
     progText.textContent = '❌ ' + e.message;
   }
   btn.disabled=false; btn.style.opacity='1'; btn.textContent='🔥 Avvia ottimizzazione';
+  btRunning = false;
+}
+
+// ── OTTIMIZZAZIONE PER SCENARIO: coordinate descent, un parametro alla volta ──
+const SCEN_OPT_SPACE = {
+  swing: [ { key:'thrSwing',  label:'Soglia',      min:50,  max:75,  step:2   },
+           { key:'trailSwing',label:'Trail ×ATR',  min:0.8, max:3.0, step:0.2 } ],
+  trend: [ { key:'thrTrend',  label:'Soglia',      min:50,  max:75,  step:2   },
+           { key:'trailTrend',label:'Trail ×ATR',  min:1.0, max:3.0, step:0.2 } ],
+  bias:  [ { key:'thrBias',   label:'Soglia',      min:50,  max:80,  step:3   },
+           { key:'trailBias', label:'Trail ×ATR',  min:0.6, max:2.0, step:0.2 } ],
+};
+
+async function runScenOptimization() {
+  if (btRunning) return;
+  btRunning = true;
+  const btn = document.getElementById('scen-opt-btn');
+  const progCard = document.getElementById('bt-progress-card');
+  const progBar  = document.getElementById('bt-progress-bar');
+  const progText = document.getElementById('bt-progress-text');
+  const resEl    = document.getElementById('bt-results');
+  btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Ottimizzazione...';
+  progCard.style.display='block'; resEl.innerHTML='';
+
+  const scen = document.getElementById('scen-opt-target').value;
+  const space = SCEN_OPT_SPACE[scen];
+  const maxBars = 5000;
+  // Scenario ISOLATO: attribuzione pulita dei risultati al solo scenario in esame
+  const useScen = { swing:false, trend:false, bias:false, scalp:false };
+  useScen[scen] = true;
+
+  const scenNames = { swing:'📊 Swing', trend:'📈 Trend', bias:'⏰ Bias' };
+  const totalRuns = 1 + space.reduce((s,p) => s + Math.round((p.max-p.min)/p.step) + 1, 0);
+  let runCount = 0;
+  const t0 = Date.now();
+
+  const paramsFor = (overrides) => {
+    const base = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
+    const merged = { ...base, ...overrides };
+    return { ...merged, riskPct: merged.riskPct/100, partialPct: merged.partialPct/100 };
+  };
+  const tick = async (label) => {
+    runCount++;
+    const pct = Math.round(runCount/totalRuns*100);
+    progBar.style.width = pct + '%';
+    const elapsed=(Date.now()-t0)/1000;
+    const eta = Math.round(elapsed/runCount*(totalRuns-runCount));
+    progText.textContent = `${scenNames[scen]} · ${label} · run ${runCount}/${totalRuns} · ETA ${eta}s`;
+    await new Promise(r=>setTimeout(r,0));
+  };
+
+  try {
+    // ── Baseline: parametri live, scenario isolato ─────────
+    await tick('baseline');
+    const baseRes = await btRun('1h', maxBars, useScen, paramsFor({}), null);
+    const baseSt  = btStats(baseRes.trades, baseRes.startCap);
+
+    // ── Coordinate descent: line search per parametro ──────
+    let current = {}; // override correnti (partono dai live)
+    const perParam = []; // per il report: righe di ogni line search
+    for (const p of space) {
+      let bestV = PAPER_PARAMS[p.key], bestSt = null, bestPnl = -Infinity;
+      const rows = [];
+      for (let v = p.min; v <= p.max + 1e-9; v += p.step) {
+        const vv = +v.toFixed(3);
+        await tick(`${p.label} = ${vv}`);
+        const res = await btRun('1h', maxBars, useScen, paramsFor({ ...current, [p.key]: vv }), null);
+        const st = btStats(res.trades, res.startCap);
+        rows.push({ v: vv, st });
+        const pnl = st ? st.pnl : -Infinity;
+        const pfN = st ? (st.pf==='∞'?10:parseFloat(st.pf)) : 0;
+        // vincoli minimi anche nella scelta locale
+        if (pnl > bestPnl && (st?.n||0) >= 5 && pfN >= 0.9) { bestPnl = pnl; bestV = vv; bestSt = st; }
+      }
+      current[p.key] = bestV; // fissa e passa al parametro successivo
+      perParam.push({ p, rows, bestV });
+    }
+
+    // ── Valutazione finale combinata ───────────────────────
+    const finalRes = await btRun('1h', maxBars, useScen, paramsFor(current), null);
+    const finalSt  = btStats(finalRes.trades, finalRes.startCap);
+    progBar.style.width='100%';
+
+    const basePnl = baseSt ? baseSt.pnl : -1e9;
+    const finPnl  = finalSt ? finalSt.pnl : -1e9;
+    const finPf   = finalSt ? (finalSt.pf==='∞'?10:parseFloat(finalSt.pf)) : 0;
+    const improved = finPnl > basePnl && finPf >= 1.05 && (finalSt?.n||0) >= 10;
+
+    // ── Report ─────────────────────────────────────────────
+    let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55;margin-bottom:10px">
+      <div style="color:#3b82f6;font-weight:800;font-size:15px;margin-bottom:8px">🎯 Ottimizzazione ${scenNames[scen]} — ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live)</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${baseSt?baseSt.n:0} trade · WR ${baseSt?baseSt.wr:'–'}%<br>PF ${baseSt?baseSt.pf:'–'} · DD ${baseSt?baseSt.maxDD:'–'}%</div>
+          <div style="color:${(baseSt?.pnl||0)>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900;margin-top:3px">€${baseSt?baseSt.pnl:0}</div></div>
+        <div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${improved?'#22c55e44':'#2a3550'}"><div style="color:#22c55e;font-size:10px;font-weight:700">OTTIMIZZATO</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${finalSt?finalSt.n:0} trade · WR ${finalSt?finalSt.wr:'–'}%<br>PF ${finalSt?finalSt.pf:'–'} · DD ${finalSt?finalSt.maxDD:'–'}%</div>
+          <div style="color:${finPnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900;margin-top:3px">€${finalSt?finalSt.pnl:0}</div></div>
+      </div>`;
+
+    // Line search per parametro (mini-tabelle)
+    perParam.forEach(({ p, rows, bestV }) => {
+      html += `<div style="color:#f0f4fa;font-size:12px;font-weight:700;margin:8px 0 4px">${p.label} (${p.key}) — migliore: <span style="color:#f0b429">${bestV}</span></div>
+        <div style="display:flex;gap:2px;flex-wrap:wrap">`;
+      rows.forEach(r => {
+        const pnl = r.st ? r.st.pnl : null;
+        const isBest = r.v === bestV;
+        const col = pnl===null?'#475569':pnl>=0?'#22c55e':'#ef4444';
+        html += `<div style="background:${isBest?'#f0b42920':'#0d1117'};border:1px solid ${isBest?'#f0b42955':'#1e2535'};border-radius:5px;padding:4px 6px;text-align:center;min-width:52px">
+          <div style="color:#94a3b8;font-size:9px">${r.v}</div>
+          <div style="color:${col};font-size:10px;font-weight:700">${pnl===null?'–':(pnl>=0?'+':'')+Math.round(pnl)}</div>
+          <div style="color:#64748b;font-size:8px">${r.st?r.st.n+'t·PF'+r.st.pf:''}</div></div>`;
+      });
+      html += `</div>`;
+    });
+
+    if (improved) {
+      savePaperParams(current);
+      if (typeof syncParamInputs === 'function') syncParamInputs();
+      html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:10px;color:#22c55e;font-size:12px;font-weight:700">
+        ✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)} vs baseline) — PARAMETRI LIVE DI ${scenNames[scen].toUpperCase()} AGGIORNATI: ${Object.entries(current).map(([k,v])=>k+'='+v).join(' · ')}</div>`;
+    } else {
+      html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:10px;color:#f0b429;font-size:12px">
+        ⚪ Nessun miglioramento affidabile (serve: P&L > baseline, PF ≥ 1.05, ≥ 10 trade). Parametri live invariati.</div>`;
+    }
+    html += `<div style="color:#94a3b8;font-size:10px;margin-top:8px">⚠️ Il coordinate descent ottimizza un parametro alla volta: non esplora tutte le combinazioni (per quello c'è l'Annealing), ma è trasparente e veloce. Attenzione all'overfitting.</div></div>`;
+    resEl.innerHTML = html;
+    progText.textContent = 'Ottimizzazione per scenario completata.';
+  } catch(e) {
+    progText.textContent = '❌ ' + e.message;
+  }
+  btn.disabled=false; btn.style.opacity='1'; btn.textContent='🎯 Ottimizza scenario';
   btRunning = false;
 }
 
