@@ -451,32 +451,21 @@ button{cursor:pointer}
 
     <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
       <summary style="color:#f0b429;font-size:13px;font-weight:700;cursor:pointer">⚙️ Parametri (default = valori live)</summary>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Rischio %</div><input type="number" id="btp-risk" value="1.0" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min confidence</div><input type="number" id="btp-minconf" value="0" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Swing</div><input type="number" id="btp-thr-swing" value="58" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Trend</div><input type="number" id="btp-thr-trend" value="58" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Scalp</div><input type="number" id="btp-thr-scalp" value="62" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Bias</div><input type="number" id="btp-thr-bias" value="50" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">BE trigger (R)</div><input type="number" id="btp-berr" value="0.7" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail trigger (R)</div><input type="number" id="btp-trailrr" value="1.0" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Swing ×ATR</div><input type="number" id="btp-trail-swing" value="1.5" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Trend ×ATR</div><input type="number" id="btp-trail-trend" value="2.0" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Scalp ×ATR</div><input type="number" id="btp-trail-scalp" value="0.8" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parziale TP1 %</div><input type="number" id="btp-partial" value="50" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Rischio %</div><input type="number" id="btp-risk" value="1.0" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min confidence</div><input type="number" id="btp-minconf" value="0" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Swing</div><input type="number" id="btp-thr-swing" value="58" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Trend</div><input type="number" id="btp-thr-trend" value="58" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Scalp</div><input type="number" id="btp-thr-scalp" value="62" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Bias</div><input type="number" id="btp-thr-bias" value="72" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">BE trigger (R)</div><input type="number" id="btp-berr" value="0.7" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail trigger (R)</div><input type="number" id="btp-trailrr" value="1.0" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Swing ×ATR</div><input type="number" id="btp-trail-swing" value="1.5" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Trend ×ATR</div><input type="number" id="btp-trail-trend" value="2.0" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Scalp ×ATR</div><input type="number" id="btp-trail-scalp" value="0.8" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parziale TP1 %</div><input type="number" id="btp-partial" value="50" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div></div>
     </details>
 
-    <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
-      <summary style="color:#a855f7;font-size:13px;font-weight:700;cursor:pointer">🔁 Sweep — testa un range di valori</summary>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
-        <div style="grid-column:1/4"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parametro</div>
-          <select id="bt-sweep-param" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:6px;font-size:13px">
-            <option value="minConf" selected>Min confidence</option>
-            <option value="thrSwing">Soglia Swing</option>
-            <option value="thrTrend">Soglia Trend</option>
-            <option value="thrScalp">Soglia Scalp</option>
-            <option value="thrBias">Soglia Bias</option>
-            <option value="riskPct">Rischio %</option>
-            <option value="beRR">BE trigger (R)</option>
-            <option value="trailRR">Trail trigger (R)</option>
-            <option value="trailTrend">Trail Trend ×ATR</option>
-            <option value="trailSwing">Trail Swing ×ATR</option>
-            <option value="trailScalp">Trail Scalp ×ATR</option>
-            <option value="partialPct">Parziale TP1 %</option>
-          </select></div>
-        <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Da</div><input type="number" id="bt-sweep-from" value="50" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div>
-        <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">A</div><input type="number" id="bt-sweep-to" value="75" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div>
-        <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Passo</div><input type="number" id="bt-sweep-step" value="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div>
+    <details open style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
+      <summary style="color:#a855f7;font-size:13px;font-weight:700;cursor:pointer">🔥 Ottimizzazione (Simulated Annealing)</summary>
+      <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
+        Cerca i parametri migliori su 5000 barre 1H partendo dai valori live.
+        Se il risultato batte la baseline (P&L superiore, PF ≥ 1.05, ≥ 10 trade),
+        <b style="color:#22c55e">i parametri live vengono sostituiti automaticamente</b>.
       </div>
-      <button id="bt-sweep-btn" onclick="runBtSweep()" style="width:100%;background:#a855f7;color:#fff;border-radius:7px;padding:9px 0;font-size:13px;font-weight:800;border:none;margin-top:8px">🔁 Avvia sweep</button>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+        <div style="flex:1"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Iterazioni (≈3-6s l'una)</div>
+        <input type="number" id="sa-iters" value="40" min="5" max="300" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+        <button id="sa-run-btn" onclick="runSaOptimization()" style="flex:1;background:#a855f7;color:#fff;border-radius:7px;padding:11px 0;font-size:13px;font-weight:800;border:none;margin-top:14px">🔥 Avvia ottimizzazione</button>
+      </div>
     </details>
 
     <div style="color:#94a3b8;font-size:10px;margin-bottom:8px">
@@ -2179,7 +2168,7 @@ const MAX_DD      = 0.10;   // max drawdown 10% prima di stop
 // P&L per punto = lots * 100 oz * $0.01 ... semplificato: 1 lot = $1 per $0.01 mossa
 // In pratica: 1 lotto = $100 per $1 di mossa, 0.01 lotto = $1 per $1 di mossa
 function calcLotSize(capital, entry, sl) {
-  const riskEur    = capital * RISK_PCT;             // es. €100 su €10k
+  const riskEur    = capital * (PAPER_PARAMS.riskPct/100);
   const slDist     = Math.abs(entry - sl);
   if (!slDist) return 0.01;
 
@@ -2222,6 +2211,7 @@ function evaluateAutoEntry() {
   const best = recap.best;
   if (!best.setup || best.bestDir === 'WAIT') return;
   if (isWeekendRisk()) { console.log('[PAPER] Skip: weekend gap risk'); return; }
+  if (best.bestScore < PAPER_PARAMS.minConf) { console.log('[PAPER] Skip: sotto minConf', best.bestScore); return; }
   if (best.setup.chasing) { console.log('[PAPER] Skip: prezzo esteso (chasing)'); return; }
 
   // Usa bestDir e bestScore dal nuovo scoring duale
@@ -2354,7 +2344,7 @@ function getWarnThreshold(scenario) {
 
 // Moltiplicatore ATR per trailing stop per scenario
 function getTrailMult(scenario) {
-  return scenario === "scalp" ? 0.8 : scenario === "swing" ? 1.5 : scenario === "bias" ? 1.0 : 2.0;
+  return scenario === "scalp" ? PAPER_PARAMS.trailScalp : scenario === "swing" ? PAPER_PARAMS.trailSwing : scenario === "bias" ? PAPER_PARAMS.trailBias : PAPER_PARAMS.trailTrend;
 }
 
 function analyzePriceAction(candles, direction) {
@@ -2496,7 +2486,7 @@ function evaluateAutoExit(currentPrice) {
 
   if (!closed) {
     // ── 3. BREAKEVEN: entry + 0.5x ATR (non solo spread) ──
-    if (!t.breakEvenSet && profRR >= 0.7) {
+    if (!t.breakEvenSet && profRR >= PAPER_PARAMS.beRR) {
       const bePad = atr * 0.5; // margine di sicurezza
       const newSL = dir === 'BUY'
         ? +(t.entry + bePad).toFixed(2)
@@ -2510,7 +2500,7 @@ function evaluateAutoExit(currentPrice) {
     }
 
     // ── 4. TRAILING STOP con moltiplicatore per scenario ──
-    if (profRR >= 1.0) {
+    if (profRR >= PAPER_PARAMS.trailRR) {
       t.trailingActive = true;
       const trailDist = atr * trailMult;
       const trailSL   = dir === 'BUY'
@@ -2546,7 +2536,7 @@ function evaluateAutoExit(currentPrice) {
     if (!closed && !t.partialDone) {
       const hitTp1 = (dir === 'BUY' && currentPrice >= t.tp1) || (dir === 'SELL' && currentPrice <= t.tp1);
       if (hitTp1) {
-        const halfLots = +(t.lots / 2).toFixed(2);
+        const halfLots = +(t.lots * PAPER_PARAMS.partialPct/100).toFixed(2);
         const exitHalf = dir === 'BUY' ? +(t.tp1 - SPREAD/2).toFixed(2) : +(t.tp1 + SPREAD/2).toFixed(2);
         const pnlHalf  = +((dir==='BUY' ? exitHalf - t.entry : t.entry - exitHalf) * halfLots * 100).toFixed(2);
         p.capital = +(p.capital + pnlHalf).toFixed(2);
@@ -2568,7 +2558,7 @@ function evaluateAutoExit(currentPrice) {
     }
 
     // ── 8. Estensione TP2 su momentum forte ─────────────
-    if (!closed && profRR >= 1.0 && pa && pa.strScore >= 5 && pa.warnScore === 0) {
+    if (!closed && profRR >= PAPER_PARAMS.trailRR && pa && pa.strScore >= 5 && pa.warnScore === 0) {
       const extraPts = atr * 1.5;
       const newTP2   = dir === 'BUY'
         ? +(t.tp2 + extraPts).toFixed(2)
@@ -3186,20 +3176,21 @@ function btGetParams() {
     const v = el ? parseFloat(el.value) : NaN;
     return isNaN(v) ? dflt : v;
   };
+  const D = PAPER_PARAMS;
   return {
-    riskPct:    gv('btp-risk', 1.0) / 100,
-    minConf:    gv('btp-minconf', 0),
-    thrSwing:   gv('btp-thr-swing', 58),
-    thrTrend:   gv('btp-thr-trend', 58),
-    thrScalp:   gv('btp-thr-scalp', 62),
-    thrBias:    gv('btp-thr-bias', 50),
-    beRR:       gv('btp-berr', 0.7),
-    trailRR:    gv('btp-trailrr', 1.0),
-    trailSwing: gv('btp-trail-swing', 1.5),
-    trailTrend: gv('btp-trail-trend', 2.0),
-    trailScalp: gv('btp-trail-scalp', 0.8),
-    trailBias:  gv('btp-trail-bias', 1.0),
-    partialPct: gv('btp-partial', 50) / 100,
+    riskPct:    gv('btp-risk', D.riskPct) / 100,
+    minConf:    gv('btp-minconf', D.minConf),
+    thrSwing:   gv('btp-thr-swing', D.thrSwing),
+    thrTrend:   gv('btp-thr-trend', D.thrTrend),
+    thrScalp:   gv('btp-thr-scalp', D.thrScalp),
+    thrBias:    gv('btp-thr-bias', D.thrBias),
+    beRR:       gv('btp-berr', D.beRR),
+    trailRR:    gv('btp-trailrr', D.trailRR),
+    trailSwing: gv('btp-trail-swing', D.trailSwing),
+    trailTrend: gv('btp-trail-trend', D.trailTrend),
+    trailScalp: gv('btp-trail-scalp', D.trailScalp),
+    trailBias:  gv('btp-trail-bias', D.trailBias),
+    partialPct: gv('btp-partial', D.partialPct) / 100,
   };
 }
 
@@ -3441,77 +3432,148 @@ async function runBacktest() {
   btRunning = false;
 }
 
-// ── Sweep: testa un range di valori per un parametro ──────────
-async function runBtSweep() {
+// ── OTTIMIZZAZIONE Simulated Annealing sui parametri ──────────
+const SA_SPACE = {
+  thrSwing:   { min:50, max:75, step:2 },
+  thrTrend:   { min:50, max:75, step:2 },
+  thrBias:    { min:50, max:80, step:3 },
+  minConf:    { min:0,  max:75, step:5 },
+  beRR:       { min:0.4, max:1.3, step:0.1 },
+  trailRR:    { min:0.6, max:1.6, step:0.1 },
+  trailSwing: { min:0.8, max:2.5, step:0.2 },
+  trailTrend: { min:1.0, max:3.0, step:0.2 },
+  partialPct: { min:30, max:70, step:5 },
+};
+// riskPct escluso di proposito: col compounding ottimizzarlo significa solo alzarlo — non è un'ottimizzazione, è leva.
+
+function saObjective(st) {
+  // Obiettivo robusto: P&L pesato dalla qualità. Penalizza campioni piccoli e PF<1.
+  if (!st) return -1e9;
+  const pfNum = st.pf === '∞' ? 10 : parseFloat(st.pf);
+  let obj = st.pnl;
+  if (st.n < 15)    obj -= (15 - st.n) * 800;    // pochi trade = statistica debole
+  if (pfNum < 1.05) obj -= 5000;                  // sistema in perdita/pareggio
+  obj += Math.min(pfNum, 3) * 1500;               // premia la qualità, cap a 3
+  obj -= st.maxDD * 200;                          // penalizza il drawdown
+  return obj;
+}
+
+function saNeighbor(p, temp) {
+  const q = { ...p };
+  const keys = Object.keys(SA_SPACE);
+  // Perturba 1-2 parametri, ampiezza proporzionale alla temperatura
+  const nMut = Math.random() < 0.5 ? 1 : 2;
+  for (let m = 0; m < nMut; m++) {
+    const k = keys[Math.floor(Math.random() * keys.length)];
+    const sp = SA_SPACE[k];
+    const range = (sp.max - sp.min);
+    const delta = (Math.random() * 2 - 1) * range * Math.max(0.15, temp) ;
+    let v = (q[k] ?? PAPER_PARAMS[k]) + delta;
+    v = Math.round(v / sp.step) * sp.step;
+    q[k] = +Math.min(sp.max, Math.max(sp.min, v)).toFixed(3);
+  }
+  return q;
+}
+
+async function runSaOptimization() {
   if (btRunning) return;
   btRunning = true;
-  const btn = document.getElementById('bt-sweep-btn');
+  const btn = document.getElementById('sa-run-btn');
   const progCard = document.getElementById('bt-progress-card');
   const progBar  = document.getElementById('bt-progress-bar');
   const progText = document.getElementById('bt-progress-text');
   const resEl    = document.getElementById('bt-results');
-  btn.disabled = true; btn.style.opacity='0.5';
+  btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Ottimizzazione...';
   progCard.style.display='block'; resEl.innerHTML='';
 
-  const param = document.getElementById('bt-sweep-param').value;
-  const vFrom = parseFloat(document.getElementById('bt-sweep-from').value);
-  const vTo   = parseFloat(document.getElementById('bt-sweep-to').value);
-  const vStep = parseFloat(document.getElementById('bt-sweep-step').value);
-  if (isNaN(vFrom)||isNaN(vTo)||isNaN(vStep)||vStep<=0||vTo<vFrom) {
-    progText.textContent='❌ Range non valido'; btn.disabled=false; btn.style.opacity='1'; btRunning=false; return;
-  }
+  const iters = Math.max(5, Math.min(300, parseInt(document.getElementById('sa-iters').value, 10) || 40));
+  const maxBars = 5000;
+  const useScen = {
+    swing: document.getElementById('bt-scen-swing').checked,
+    trend: document.getElementById('bt-scen-trend').checked,
+    bias:  document.getElementById('bt-scen-bias').checked, scalp:false,
+  };
 
-  const mode = document.getElementById('bt-mode').value;
-  const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
-  const useScen = (mode === '5m' || mode === '1m')
-    ? { scalp:true, swing:false, trend:false, bias:false }
-    : { swing: document.getElementById('bt-scen-swing').checked,
-        trend: document.getElementById('bt-scen-trend').checked,
-        bias:  document.getElementById('bt-scen-bias').checked, scalp:false };
+  const t0 = Date.now();
+  const fullP = (base) => ({ riskPct: PAPER_PARAMS.riskPct/100, thrScalp: PAPER_PARAMS.thrScalp,
+    trailScalp: PAPER_PARAMS.trailScalp, trailBias: PAPER_PARAMS.trailBias,
+    ...Object.fromEntries(Object.keys(SA_SPACE).map(k => [k, base[k]])),
+    partialPct: (base.partialPct ?? PAPER_PARAMS.partialPct)/100 });
 
-  const values = [];
-  for (let v = vFrom; v <= vTo + 1e-9; v += vStep) values.push(+v.toFixed(3));
+  const log = (msg) => { progText.innerHTML = msg; };
 
-  const rows = [];
   try {
-    for (let k = 0; k < values.length; k++) {
-      const P = btGetParams();
-      P[param] = param==='riskPct'||param==='partialPct' ? values[k]/100 : values[k];
-      progText.textContent = `Sweep ${param}=${values[k]} (${k+1}/${values.length})...`;
-      progBar.style.width = Math.round(k/values.length*100)+'%';
-      const res = await btRun(mode, maxBars, useScen, P, null);
-      const st = btStats(res.trades, res.startCap);
-      rows.push({ v: values[k], st, n: res.trades.length });
-    }
-    progBar.style.width='100%';
-    progText.textContent = `Sweep completato: ${values.length} configurazioni`;
+    // ── Baseline: parametri live attuali ──────────────────
+    log('Baseline con parametri live attuali...');
+    const baseParams = Object.fromEntries(Object.keys(SA_SPACE).map(k => [k, PAPER_PARAMS[k]]));
+    const baseRes = await btRun('1h', maxBars, useScen, fullP(baseParams), null);
+    const baseSt  = btStats(baseRes.trades, baseRes.startCap);
+    let current = { ...baseParams };
+    let currentObj = saObjective(baseSt);
+    let best = { ...current }, bestObj = currentObj, bestSt = baseSt;
 
-    // Render tabella comparativa
-    const paramNames = { minConf:'Min confidence', thrSwing:'Soglia Swing', thrTrend:'Soglia Trend', thrScalp:'Soglia Scalp', thrBias:'Soglia Bias', riskPct:'Rischio %', beRR:'BE trigger (R)', trailRR:'Trail trigger (R)', trailTrend:'Trail Trend ×ATR', trailSwing:'Trail Swing ×ATR', trailScalp:'Trail Scalp ×ATR', partialPct:'Parziale TP1 %' };
-    let bestIdx = 0;
-    rows.forEach((r,idx) => { if (r.st && rows[bestIdx].st && parseFloat(r.st.pnl) > parseFloat(rows[bestIdx].st.pnl)) bestIdx = idx; });
-    let html = `<div class="card"><div style="color:#3b82f6;font-weight:800;font-size:14px;margin-bottom:8px">🔁 Sweep: ${paramNames[param]||param}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:2px;font-size:11px;font-weight:700;color:#94a3b8;padding:4px 0;border-bottom:1px solid #2a3550">
-        <div>Valore</div><div>Trade</div><div>WR</div><div>PF</div><div>P&L</div>
+    log(`Baseline: ${baseSt?baseSt.n:0} trade · P&L €${baseSt?baseSt.pnl:0} · PF ${baseSt?baseSt.pf:'–'}`);
+    await new Promise(r => setTimeout(r, 400));
+
+    // ── Loop SA ───────────────────────────────────────────
+    for (let k = 0; k < iters; k++) {
+      const temp = 1 - k / iters;             // temperatura lineare 1 → 0
+      const cand = saNeighbor(current, temp);
+      const res  = await btRun('1h', maxBars, useScen, fullP(cand), null);
+      const st   = btStats(res.trades, res.startCap);
+      const obj  = saObjective(st);
+
+      const accept = obj > currentObj ||
+        Math.random() < Math.exp((obj - currentObj) / (Math.max(temp, 0.02) * 3000));
+      if (accept) { current = cand; currentObj = obj; }
+      if (obj > bestObj) { best = { ...cand }; bestObj = obj; bestSt = st; }
+
+      const pct = Math.round(((k+1)/iters)*100);
+      progBar.style.width = pct + '%';
+      const elapsed = (Date.now()-t0)/1000;
+      const eta = Math.round(elapsed/(k+1)*(iters-k-1));
+      log(`Iter ${k+1}/${iters} · T=${temp.toFixed(2)} · best: €${bestSt?bestSt.pnl:0} (PF ${bestSt?bestSt.pf:'–'}, ${bestSt?bestSt.n:0} trade) · ETA ${eta}s`);
+      await new Promise(r => setTimeout(r, 0));
+    }
+
+    // ── Confronto e (eventuale) applicazione ai LIVE ──────
+    const basePnl = baseSt ? baseSt.pnl : -1e9;
+    const bestPnl = bestSt ? bestSt.pnl : -1e9;
+    const bestPf  = bestSt ? (bestSt.pf==='∞'?10:parseFloat(bestSt.pf)) : 0;
+    const improved = bestObj > currentObj*0 && bestPnl > basePnl && bestPf >= 1.05 && (bestSt?.n||0) >= 10;
+
+    let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55;margin-bottom:10px">
+      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live attuali)</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${baseSt?baseSt.n:0} trade · WR ${baseSt?baseSt.wr:'–'}%<br>PF ${baseSt?baseSt.pf:'–'} · DD ${baseSt?baseSt.maxDD:'–'}%</div>
+          <div style="color:${(baseSt?.pnl||0)>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900;margin-top:3px">€${baseSt?baseSt.pnl:0}</div></div>
+        <div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${improved?'#22c55e44':'#2a3550'}"><div style="color:#22c55e;font-size:10px;font-weight:700">MIGLIORE TROVATO</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${bestSt?bestSt.n:0} trade · WR ${bestSt?bestSt.wr:'–'}%<br>PF ${bestSt?bestSt.pf:'–'} · DD ${bestSt?bestSt.maxDD:'–'}%</div>
+          <div style="color:${bestPnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900;margin-top:3px">€${bestSt?bestSt.pnl:0}</div></div>
+      </div>
+      <div style="color:#f0f4fa;font-size:12px;font-weight:700;margin-bottom:4px">Parametri migliori:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-bottom:10px">
+        ${Object.entries(best).map(([k,v])=>`<div style="background:#0d1117;border-radius:5px;padding:5px;text-align:center"><div style="color:#94a3b8;font-size:9px">${k}</div><div style="color:${v!==baseParams[k]?'#f0b429':'#c0cce0'};font-size:12px;font-weight:700">${v}</div></div>`).join('')}
       </div>`;
-    rows.forEach((r, idx) => {
-      const st = r.st || { wr:'–', pf:'–', pnl:0 };
-      const col = (st.pnl||0) >= 0 ? '#22c55e' : '#ef4444';
-      const hl = idx===bestIdx ? 'background:#22c55e15;' : '';
-      html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:2px;font-size:12px;padding:5px 0;border-bottom:1px solid #1e2535;${hl}">
-        <div style="color:#f0f4fa;font-weight:700">${r.v}${idx===bestIdx?' 🥇':''}</div>
-        <div style="color:#c0cce0">${r.n}</div>
-        <div style="color:#c0cce0">${st.wr}%</div>
-        <div style="color:#c0cce0">${st.pf}</div>
-        <div style="color:${col};font-weight:700">${(st.pnl||0)>=0?'+':''}€${st.pnl||0}</div>
-      </div>`;
-    });
-    html += `<div style="color:#94a3b8;font-size:10px;margin-top:8px">⚠️ Attenzione all'overfitting: il valore migliore sul passato non è garanzia per il futuro. Preferisci zone di valori stabilmente buoni a picchi isolati.</div></div>`;
+
+    if (improved) {
+      savePaperParams(best);
+      syncParamInputs();
+      html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;color:#22c55e;font-size:12px;font-weight:700">
+        ✅ Migliorativo (+€${(bestPnl-basePnl).toFixed(0)} vs baseline) — PARAMETRI LIVE AGGIORNATI.<br>
+        <span style="color:#c0cce0;font-weight:400;font-size:11px">Il paper trading userà questi valori da subito. I valori in giallo sono quelli cambiati.</span></div>`;
+    } else {
+      html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;color:#f0b429;font-size:12px">
+        ⚪ Nessun miglioramento affidabile trovato (serve: P&L > baseline, PF ≥ 1.05, ≥ 10 trade). Parametri live invariati.</div>`;
+    }
+    html += `<div style="color:#94a3b8;font-size:10px;margin-top:8px">⚠️ Ottimizzato sul passato: rischio overfitting. Rilancia periodicamente con dati nuovi e diffida di P&L troppo belli con pochi trade.</div></div>`;
     resEl.innerHTML = html;
+    progText.textContent = 'Ottimizzazione completata.';
   } catch(e) {
     progText.textContent = '❌ ' + e.message;
   }
-  btn.disabled=false; btn.style.opacity='1';
+  btn.disabled=false; btn.style.opacity='1'; btn.textContent='🔥 Avvia ottimizzazione';
   btRunning = false;
 }
 
@@ -3920,7 +3982,16 @@ async function clearHistData() {
   histLog('🗑 Dati storici eliminati', '#ef4444');
 }
 
+function syncParamInputs() {
+  const map = { 'btp-risk':'riskPct','btp-minconf':'minConf','btp-thr-swing':'thrSwing','btp-thr-trend':'thrTrend','btp-thr-scalp':'thrScalp','btp-thr-bias':'thrBias','btp-berr':'beRR','btp-trailrr':'trailRR','btp-trail-swing':'trailSwing','btp-trail-trend':'trailTrend','btp-trail-scalp':'trailScalp','btp-partial':'partialPct' };
+  Object.entries(map).forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = PAPER_PARAMS[key];
+  });
+}
+
 function renderHistScreen() {
+  syncParamInputs();
   renderHistSavedList();
 }
 
@@ -5224,6 +5295,24 @@ function renderPaperWidgetIn(el) {
 
 
 // ── Helper functions per scoring (globali) ──────────────────
+// ── Parametri LIVE del paper trading (persistenti, ottimizzabili) ──
+const PAPER_PARAMS_DEFAULTS = {
+  thrSwing: 58, thrTrend: 58, thrScalp: 62, thrBias: 72, // bias alzato: Asia Fade tossico nel backtest
+  minConf: 0, riskPct: 1.0, beRR: 0.7, trailRR: 1.0,
+  trailSwing: 1.5, trailTrend: 2.0, trailScalp: 0.8, trailBias: 1.0,
+  partialPct: 50,
+};
+let PAPER_PARAMS = (() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('xauapp_live_params') || 'null');
+    return saved ? { ...PAPER_PARAMS_DEFAULTS, ...saved } : { ...PAPER_PARAMS_DEFAULTS };
+  } catch(e) { return { ...PAPER_PARAMS_DEFAULTS }; }
+})();
+function savePaperParams(p) {
+  PAPER_PARAMS = { ...PAPER_PARAMS, ...p };
+  try { localStorage.setItem('xauapp_live_params', JSON.stringify(PAPER_PARAMS)); } catch(e) {}
+}
+
 // nowRef: in backtest restituisce l'ora storica simulata, altrimenti l'ora reale
 function nowRef() { return state.btNow ? new Date(state.btNow) : new Date(); }
 function distAbs(price, level) { return Math.abs(price - (level||0)); }
@@ -5374,7 +5463,7 @@ function coherenceMultiplier(dir, checks) {
 function computeBiasScenario(cc1h, last1h, atr1h, dailyTrend, adx, regime) {
   const empty = (why) => {
     const s = {score:0, rawScore:0, cohRatio:null, R:[], P:[why?`⚪ ${why}`:"⚪ Fuori finestra bias"], reasons:[], setup:null};
-    return { id:"bias", label:"⏰ Bias", color:"#a855f7", tf:"Orario UTC", threshold:50,
+    return { id:"bias", label:"⏰ Bias", color:"#a855f7", tf:"Orario UTC", threshold:PAPER_PARAMS.thrBias,
              buy:{...s,dir:"BUY"}, sell:{...s,dir:"SELL"}, bestDir:"WAIT", bestScore:0, setup:null };
   };
   if (!cc1h || cc1h.length < 24 || !last1h) return empty("Dati insufficienti");
@@ -5493,7 +5582,7 @@ function computeBiasScenario(cc1h, last1h, atr1h, dailyTrend, adx, regime) {
 
   const buyS  = scoreDir2("BUY");
   const sellS = scoreDir2("SELL");
-  const threshold = 50;
+  const threshold = PAPER_PARAMS.thrBias;
   const bestDir   = buyS.score>=sellS.score && buyS.score>=threshold && buyS.setup ? "BUY"
                   : sellS.score>buyS.score && sellS.score>=threshold && sellS.setup ? "SELL" : "WAIT";
   const bestScore = Math.max(buyS.score, sellS.score);
@@ -5812,7 +5901,7 @@ function computeAllScenarios() {
   }
 
   // ── Calcola BUY e SELL score per ogni scenario ───────────
-  const THRESHOLDS={swing:58, scalp:62, trend:58};
+  const THRESHOLDS={swing:PAPER_PARAMS.thrSwing, scalp:PAPER_PARAMS.thrScalp, trend:PAPER_PARAMS.thrTrend};
 
   const makeScenario = (id, label, color, tf, threshold) => {
     const buyS  = scoreDirection("BUY",  id);
