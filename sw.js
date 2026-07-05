@@ -1,5 +1,5 @@
 // ── XAU/USD Analyzer — Service Worker v5 (Full Auto) ─────────
-const CACHE = 'xauapp-v6';
+const CACHE = 'xauapp-v7';
 const ASSETS = ['index.html', 'manifest.json', 'icon-192.png', 'icon-72.png'];
 
 self.addEventListener('install', e => {
@@ -38,6 +38,7 @@ let alertCfg     = {};
 let lastAlertTs  = {};
 let paperEnabled = false;
 let openTrade    = null;
+let openTrades = {};
 let paperCapital = 10000;
 let paperTrades  = [];
 let lastCheckTs  = 0;
@@ -63,6 +64,7 @@ self.addEventListener('message', async e => {
     paperCapital = d.paperCapital || 10000;
     paperTrades  = d.paperTrades  || [];
     openTrade    = d.openTrade    || null;
+    openTrades   = d.openTrades   || (d.openTrade ? {[(d.openTrade.scenario||'swing')]: d.openTrade} : {});
     if (bgInterval) clearInterval(bgInterval);
     if (tradeTimer) clearInterval(tradeTimer);
     setTimeout(() => runAll(), 2000);
@@ -83,6 +85,7 @@ self.addEventListener('message', async e => {
     if (d.tdKey) tdKey = d.tdKey;
     if (d.paperEnabled !== undefined) paperEnabled = d.paperEnabled;
     if (d.openTrade !== undefined)    openTrade    = d.openTrade;
+    if (d.openTrades !== undefined)   openTrades   = d.openTrades;
     if (d.paperCapital !== undefined) paperCapital = d.paperCapital;
   }
 
@@ -414,7 +417,7 @@ async function hasVisibleClient() {
 }
 
 async function monitorTrade() {
-  if (!openTrade) return;
+  const _slotList = Object.values(openTrades||{}).filter(Boolean); if (openTrade && !_slotList.length) _slotList.push(openTrade); if (!_slotList.length) return;
 
   const price = await fetchPrice();
   if (!price) return;
@@ -425,7 +428,7 @@ async function monitorTrade() {
   // Se l'app è visibile, gestisce lei il trade — evita azioni duplicate
   if (await hasVisibleClient()) return;
 
-  const t   = openTrade;
+  for (const t of _slotList) {
   const dir = t.direction;
   const slDist  = Math.abs(t.entry - t.sl);
   const atr     = t.atrAtEntry || 15;
@@ -534,10 +537,7 @@ async function monitorTrade() {
   });
   console.log('[SW] Trade chiuso:', exitReason, pnlEur);
 }
-
-// ═══════════════════════════════════════════════════════════════
-// RUN ALL — check principale ogni 5 min
-// ═══════════════════════════════════════════════════════════════
+}
 async function runAll() {
   if (!tdKey) return;
   console.log('[SW] runAll at', new Date().toLocaleTimeString());

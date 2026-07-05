@@ -385,14 +385,15 @@ button{cursor:pointer}
     </button>
     <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
       <select id="hist-deep-pages" style="flex:1;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:8px;font-size:13px">
-        <option value="2">2 pagine (~1 settimana 1M)</option>
-        <option value="3" selected>3 pagine (~10 giorni 1M)</option>
-        <option value="4">4 pagine (~2 settimane 1M)</option>
+        <option value="3">3 pagine (~10 giorni 1M)</option>
         <option value="6">6 pagine (~3 settimane 1M)</option>
+        <option value="12">12 pagine (~1,5 mesi 1M)</option>
+        <option value="24">24 pagine (~3 mesi 1M)</option>
+        <option value="36" selected>36 pagine (~6 mesi 1M)</option>
       </select>
       <button id="hist-deep-btn" onclick="startDeepDownload()" style="flex:1;background:#f0b429;color:#000;border-radius:8px;padding:9px 0;font-size:13px;font-weight:800;border:none">⬇️ 1M profondo</button>
     </div>
-    <div style="color:#94a3b8;font-size:10px;margin-top:4px">Scarica pagine multiple di XAU 1M andando indietro nel tempo (5000 barre/pagina). Attenzione allo spazio: ~0.5MB/pagina, limite localStorage ~10MB.</div>
+    <div style="color:#94a3b8;font-size:10px;margin-top:4px">Scarica pagine multiple di XAU 1M a ritroso (5000 barre/pagina). 36 pagine ≈ 6 mesi ≈ 18MB (ok per IndexedDB) e ~5-8 min di download con pausa 8s. Il download si ferma da solo quando il provider non ha più dati.</div>
   </div>
 
   <div id="hist-progress-card" class="card" style="display:none;margin-bottom:10px">
@@ -422,10 +423,13 @@ button{cursor:pointer}
       <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px">
         <span style="color:#c0cce0;font-size:13px">Barre 1H da testare</span>
         <select id="bt-bars" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
-          <option value="500">500 (~1 mese)</option>
-          <option value="1500" selected>1.500 (~3 mesi)</option>
-          <option value="3000">3.000 (~6 mesi)</option>
-          <option value="5000">5.000 (tutto)</option>
+          <option value="500">500</option>
+          <option value="1500">1.500</option>
+          <option value="3000">3.000</option>
+          <option value="5000" selected>5.000 (max 1H)</option>
+          <option value="20000">20.000 (1M ~3 sett)</option>
+          <option value="60000">60.000 (1M ~2 mesi)</option>
+          <option value="200000">200.000 (1M tutto ~6 mesi)</option>
         </select>
       </label>
       <div style="display:flex;gap:6px">
@@ -2314,9 +2318,9 @@ function evaluateAutoEntry() {
   // Salva snapshot completo dello score al momento dell'entry
   const scoreSnapshot = {
     scenario:   best.id,
-    label:      best.label,
+    label:      best.id,
     totalScore: es.score,
-    threshold:  best.threshold,
+    threshold:  null,
     direction:  es.dir,
     reasons:    es.reasons,
     // Dati di mercato al momento dell'entry
@@ -2330,15 +2334,7 @@ function evaluateAutoEntry() {
       session:  getSessionStatus().sess,
       ts:       new Date().toISOString(),
     },
-    // Score breakdown per tutti gli scenari al momento dell'entry
-    allScores: recap.scores.map(s => ({
-      id:       s.id,
-      label:    s.label,
-      buyScore: s.buy?.score ?? 0,
-      sellScore:s.sell?.score ?? 0,
-      dir:      s.bestDir,
-      eligible: s.bestDir !== 'WAIT',
-    })),
+    allScores: [],
   };
 
   const trade = {
@@ -2365,7 +2361,7 @@ function evaluateAutoEntry() {
     minAdverse:     es.setup.entry,
   };
 
-  p.openTrade    = trade;
+  p.openTrades[scenarioId] = trade;
   p.lastSignalTs = nowTs;
   savePaperState();
   if (state.mode === 'recap') renderRecapScreen();
@@ -3330,7 +3326,9 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
   if (P.weights) state.btWeights = P.weights;
 
   const START_CAP = 10000;
-  let capital = START_CAP, openT = null, lastCloseIdx = -999;
+  let capital = START_CAP;
+  const slots = {};              // scenario → trade aperto
+  const lastClose = {};          // scenario → indice ultima chiusura
   const trades = [];
   const COOLDOWN_BARS = 3;
   const warmup = 60;
@@ -3344,9 +3342,11 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
       const cd = fullBase[i];
       const t  = new Date(cd.t);
 
-      // ── Gestione trade aperto ─────────────────────────────
-      if (openT) {
-        const tr = openT, dir = tr.direction, isBuy = dir === 'BUY';
+      // ── Gestione trade aperti (uno slot per scenario) ─────
+      for (const scenKey of Object.keys(slots)) {
+        const tr = slots[scenKey];
+        if (!tr) continue;
+        const dir = tr.direction, isBuy = dir === 'BUY';
         let closed = false, exitPrice = 0, exitReason = '';
 
         if (tr.timedExitUTC != null) {
@@ -3401,12 +3401,12 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
             closedAt: cd.t, capitalAfter: capital,
             rr: +(pnlPts / Math.abs(tr.entry - tr.slOrig || 1)).toFixed(2),
           });
-          openT = null; lastCloseIdx = i;
+          delete slots[scenKey]; lastClose[scenKey] = i;
         }
       }
 
-      // ── Entry con STESSO scoring ───────────────────────────
-      if (!openT && (i - lastCloseIdx) >= COOLDOWN_BARS) {
+      // ── Entry con STESSO scoring: ogni scenario sul suo slot ──
+      {
         state.btNow = cd.t;
         if (is1m) {
           const s1m = full1mArr.slice(Math.max(0, i-119), i+1);
@@ -3428,10 +3428,11 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
         try { recap = computeAllScenarios(); } catch(e) {}
 
         if (recap?.scores) {
-          // Ricalcola eligibility con le soglie UTENTE (parametriche)
-          let best = null;
+          // Ogni scenario eleggibile apre nel PROPRIO slot (operano in parallelo)
           for (const s of recap.scores) {
             if (!useScen[s.id]) continue;
+            if (slots[s.id]) continue;                                  // slot occupato
+            if (i - (lastClose[s.id] ?? -999) < COOLDOWN_BARS) continue; // cooldown per scenario
             const thr = thrMap[s.id] ?? s.threshold;
             const bDir = s.buy?.score >= thr && s.buy?.score >= (s.sell?.score||0) && s.buy?.setup ? 'BUY'
                        : s.sell?.score >= thr && s.sell?.setup ? 'SELL' : 'WAIT';
@@ -3439,15 +3440,14 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
             const es = bDir === 'BUY' ? s.buy : s.sell;
             if (es.score < P.minConf) continue;
             if (es.setup?.chasing) continue;
-            if (!best || es.score > best.score) best = { scen:s.id, dir:bDir, score:es.score, setup:es.setup };
-          }
-          if (best) {
+            const best = { scen:s.id, dir:bDir, score:es.score, setup:es.setup };
+            {
             const setup = best.setup;
             const riskEur = capital * P.riskPct;
             const slDist  = Math.abs(setup.entry - setup.sl);
             const lots = slDist ? Math.max(0.01, +Math.min(riskEur/(slDist*100), (capital*0.05)/((setup.entry/100)*100)).toFixed(2)) : 0.01;
             const atrNow = (isScalp ? full5m : fullBase)[i]?.atr || 15;
-            openT = {
+            slots[best.scen] = {
               direction: best.dir,
               entry: best.dir==='BUY' ? setup.entry + SPREAD/2 : setup.entry - SPREAD/2,
               sl: setup.sl, slOrig: setup.sl, tp1: setup.tp1, tp2: setup.tp2,
@@ -3457,6 +3457,7 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
               timedExitUTC: setup.timedExitUTC ?? null, bias: setup.bias ?? null,
               maxFavorable: setup.entry, partialDone: false, breakEvenSet: false, partialPnl: 0,
             };
+            }
           }
         }
       }
@@ -4482,11 +4483,20 @@ async function startDeepDownload() {
 
   let all = [];
   let endDate = null;
+  const dpBar = document.getElementById('hist-progress-bar');
   try {
     for (let p = 0; p < pages; p++) {
+      if (dpBar) dpBar.style.width = Math.round(p/pages*100)+'%';
       histLog(`⏳ Pagina ${p+1}/${pages}${endDate ? ' (fino a '+endDate+')' : ''}...`, '#94a3b8');
-      const raw = await histFetchSeries('XAU/USD', '1min', 5000, endDate);
-      const candles = histNormalize(raw.values);
+      let candles;
+      try {
+        const raw = await histFetchSeries('XAU/USD', '1min', 5000, endDate);
+        candles = histNormalize(raw.values);
+      } catch(pageErr) {
+        // Storico esaurito o errore su questa pagina: fermati e SALVA ciò che hai
+        histLog(`⚪ Stop alla pagina ${p+1}: ${pageErr.message}. Salvo le ${all.length} barre già scaricate.`, '#f0b429');
+        break;
+      }
       if (!candles.length) { histLog('⚪ Nessun altro dato disponibile', '#f0b429'); break; }
       // Prepend (le pagine vanno indietro nel tempo); dedup sul timestamp
       const existing = new Set(all.map(cd => cd.t));
@@ -4496,11 +4506,13 @@ async function startDeepDownload() {
       histLog(`✅ Pagina ${p+1}: ${fresh.length} barre nuove (totale ${all.length})`, '#22c55e');
       if (p < pages-1) await new Promise(r => setTimeout(r, delayMs));
     }
+    if (!all.length) throw new Error('Nessuna barra scaricata');
     const payload = {
       symbol:'XAU/USD', interval:'1min', count: all.length,
       firstDate: all[0]?.t, lastDate: all[all.length-1]?.t,
       downloadedAt: new Date().toISOString(), candles: all,
     };
+    if (dpBar) dpBar.style.width = '100%';
     const ok = await histSave('xauusd_1m', payload);
     if (ok) histLog(`🏁 Salvate ${all.length} barre 1M (${payload.firstDate} → ${payload.lastDate})`, '#22c55e');
   } catch(e) {
