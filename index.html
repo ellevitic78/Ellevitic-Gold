@@ -659,7 +659,8 @@ let state = {
     enabled: false,
     capital: 10000,          // capitale attuale €
     initialCapital: 10000,
-    openTrade: null,         // trade aperto corrente
+    openTrade: null,         // LEGACY: primo trade aperto (per SW/UI)
+    openTrades: {},          // slot indipendenti per scenario
     trades: [],              // storico trade chiusi
     equity: [10000],         // curva equity nel tempo
     lastSignalTs: 0,         // timestamp ultimo segnale (evita doppi)
@@ -2275,7 +2276,6 @@ function calcLotSize(capital, entry, sl) {
 function evaluateAutoEntry() {
   const p = state.paper;
   if (!p.enabled) return;
-  if (p.openTrade) return;
 
   const dd = (p.initialCapital - p.capital) / p.initialCapital;
   if (dd >= MAX_DD) {
@@ -2290,26 +2290,38 @@ function evaluateAutoEntry() {
   const evalEl = document.getElementById('paper-last-eval');
   if (evalEl) evalEl.textContent = `Ultimo check: ${new Date().toLocaleTimeString('it-IT')}`;
   if (nowTs - p.lastSignalTs < p.cooldownMin * 60 * 1000) return;
-
-  // Usa il recap scoring per trovare il miglior scenario
-  const recap = computeAllScenarios();
-  if (!recap || !recap.best) return;
-
-  const best = recap.best;
-  if (!best.setup || best.bestDir === 'WAIT') return;
   if (isWeekendRisk()) { console.log('[PAPER] Skip: weekend gap risk'); return; }
-  if (best.bestScore < PAPER_PARAMS.minConf) { console.log('[PAPER] Skip: sotto minConf', best.bestScore); return; }
-  if (best.setup.chasing) { console.log('[PAPER] Skip: prezzo esteso (chasing)'); return; }
 
-  // Usa bestDir e bestScore dal nuovo scoring duale
-  const es = {
-    score: best.bestScore,
-    dir:   best.bestDir,
-    setup: best.setup,
-    reasons: best.bestDir==='BUY' ? best.buy.R : best.sell.R,
-  };
+  // MULTI-SLOT: ogni scenario eleggibile col proprio slot libero apre in parallelo
+  const recap = computeAllScenarios();
+  if (!recap || !recap.scores) return;
 
-  // Entry con spread
+  const slots = paperSlots();
+  let openedAny = false;
+  for (const s of recap.scores) {
+    if (slots[s.id]) continue; // slot già occupato da questo scenario
+    const bDir = s.bestDir || 'WAIT';
+    if (bDir === 'WAIT') continue;
+    const esc = bDir === 'BUY' ? s.buy : s.sell;
+    if (!esc || !esc.setup) continue; // bestDir ≠ WAIT già implica soglia superata
+    if (esc.score < PAPER_PARAMS.minConf) { console.log('[PAPER]', s.id, 'skip: sotto minConf', esc.score); continue; }
+    if (esc.setup.chasing) { console.log('[PAPER]', s.id, 'skip: chasing'); continue; }
+    openPaperTradeFor(s.id, bDir, esc);
+    openedAny = true;
+  }
+  if (openedAny) {
+    p.lastSignalTs = nowTs;
+    syncLegacyOpen();
+    savePaperState();
+    if (state.mode === 'recap') renderRecapScreen();
+  }
+}
+
+// Apre un trade nello slot del SUO scenario
+function openPaperTradeFor(scenarioId, dirIn, esIn) {
+  const p = state.paper;
+  const es = { score: esIn.score, dir: dirIn, setup: esIn.setup, reasons: esIn.R || [] };
+
   const rawEntry = es.setup.entry;
   const entry = es.dir === 'BUY'
     ? +(rawEntry + SPREAD / 2).toFixed(2)
@@ -2321,15 +2333,13 @@ function evaluateAutoEntry() {
   const lots = calcLotSize(p.capital, entry, sl);
   const riskEur = +(Math.abs(entry - sl) * lots * 100).toFixed(2);
 
-  // Salva snapshot completo dello score al momento dell'entry
   const scoreSnapshot = {
-    scenario:   best.id,
-    label:      best.id,
+    scenario:   scenarioId,
+    label:      scenarioId,
     totalScore: es.score,
     threshold:  null,
     direction:  es.dir,
     reasons:    es.reasons,
-    // Dati di mercato al momento dell'entry
     marketSnapshot: {
       price:    es.setup.entry,
       rsi1h:    (state.candles['1h']||[]).slice(-1)[0]?.rsi || null,
@@ -2344,17 +2354,17 @@ function evaluateAutoEntry() {
   };
 
   const trade = {
-    id:            Date.now(),
+    id:            Date.now() + Math.floor(Math.random()*1000),
     direction:     es.dir,
     entry, sl, tp1, tp2, lots, riskEur,
     confidence:    es.score,
     openedAt:      new Date().toISOString(),
     capitalAtOpen: p.capital,
     spread:        SPREAD,
-    pattern:       `Auto [${best.label}]`,
+    pattern:       `Auto [${scenarioId}]`,
     macroDir:      '–',
     atrAtEntry:    (state.candles['1h']||[]).slice(-1)[0]?.atr || 0,
-    scenario:      best.id,
+    scenario:      scenarioId,
     timedExitUTC:  es.setup.timedExitUTC ?? null,
     bias:          es.setup.bias ?? null,
     entryReasons:  es.reasons,
@@ -2368,12 +2378,8 @@ function evaluateAutoEntry() {
   };
 
   p.openTrades[scenarioId] = trade;
-  p.lastSignalTs = nowTs;
-  savePaperState();
-  if (state.mode === 'recap') renderRecapScreen();
-  console.log('[PAPER] Trade aperto via scoring:', trade);
+  console.log('[PAPER] Trade aperto:', scenarioId, trade.direction, '@', entry);
 
-  // Invia trade al SW per monitoraggio in background
   sendToSW({
     type: 'PAPER_TRADE_OPEN',
     trade: {
@@ -2389,9 +2395,9 @@ function evaluateAutoEntry() {
 
   if ('serviceWorker' in navigator && Notification.permission === 'granted') {
     navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification(`🤖 Paper Trade — ${trade.direction} [${best.label}]`, {
+      reg.showNotification(`🤖 Paper Trade — ${trade.direction} [${scenarioId}]`, {
         body: `${trade.direction} XAU @ $${fmtP(entry)} · Score ${es.score}/100 · SL $${fmtP(sl)} · TP $${fmtP(tp1)}`,
-        icon: '/icon-192.png', tag: 'paper-open', vibrate: [200,100,200,100,200],
+        icon: '/icon-192.png', tag: 'paper-open-'+scenarioId, vibrate: [200,100,200,100,200],
         requireInteraction: false,
       });
     }).catch(()=>{});
@@ -2515,9 +2521,16 @@ function checkConsensusReversal(tradeDir) {
 // ── Gestione intelligente trade aperto ────────────────────────
 function evaluateAutoExit(currentPrice) {
   const p = state.paper;
-  if (!p.enabled || !p.openTrade) return;
+  if (!p.enabled) return;
+  const slots = paperSlots();
+  for (const scen of Object.keys(slots)) {
+    if (slots[scen]) evaluateAutoExitCore(slots[scen], currentPrice);
+  }
+  syncLegacyOpen();
+}
 
-  const t        = p.openTrade;
+function evaluateAutoExitCore(t, currentPrice) {
+  const p = state.paper;
   const dir      = t.direction;
   const scenario = t.scenario || 'swing';
 
@@ -2701,7 +2714,8 @@ function evaluateAutoExit(currentPrice) {
 
   p.trades.unshift(closed_trade);
   if (p.trades.length > 100) p.trades.pop();
-  p.openTrade = null;
+  if (p.openTrades) delete p.openTrades[(closed_trade.scenario) || 'swing'];
+  syncLegacyOpen();
 
   savePaperState();
   if (state.mode === 'recap') renderRecapScreen();
@@ -2883,7 +2897,7 @@ function resetPaperTrading() {
   if (!confirm('Sei sicuro di voler azzerare il paper trading? Tutti i trade verranno cancellati.')) return;
   const p = state.paper;
   p.capital = p.initialCapital = 10000;
-  p.openTrade = null;
+  p.openTrade = null; p.openTrades = {};
   p.trades = [];
   p.equity = [10000];
   p.enabled = false;
@@ -3498,24 +3512,49 @@ async function runBacktest() {
 
   const mode = document.getElementById('bt-mode').value;
   const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
-  const useScen = (mode === '5m' || mode === '1m')
-    ? { scalp:true, swing:false, trend:false, bias:false }
-    : {
+  const scalpChecked = !!document.getElementById('bt-scen-scalp')?.checked;
+
+  try {
+    if (mode === '5m' || mode === '1m') {
+      // Modalità dedicata scalp: come prima
+      const res = await btRun(mode, maxBars, { scalp:true, swing:false, trend:false, bias:false }, btGetParams(), (pct, n, cap) => {
+        progBar.style.width = pct + '%';
+        progText.textContent = `Simulazione ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
+      });
+      state.btResults = res;
+    } else {
+      // COMPLESSIVO a doppia gamba: 1H (Swing/Trend/Bias) + gamba Scalp 1M se spuntata
+      const useScen = {
         swing: document.getElementById('bt-scen-swing').checked,
         trend: document.getElementById('bt-scen-trend').checked,
         bias:  document.getElementById('bt-scen-bias').checked,
         scalp: false,
       };
-  const P = btGetParams();
+      const any1h = useScen.swing || useScen.trend || useScen.bias;
+      const has1m = scalpChecked && !!(await histLoad('xauusd_1m'))?.candles?.length;
+      if (scalpChecked && !has1m) progText.textContent = '⚠️ Scalp richiesto ma 1M assente — procedo senza';
 
-  try {
-    const res = await btRun(mode, maxBars, useScen, P, (pct, n, cap) => {
-      progBar.style.width = pct + '%';
-      progText.textContent = `Simulazione ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
-    });
-    state.btResults = res;
+      let trades = [], startCap = 10000;
+      if (any1h) {
+        const r1 = await btRun('1h', Math.min(maxBars, 5000), useScen, btGetParams(), (pct, n, cap) => {
+          progBar.style.width = Math.round(pct*(has1m?0.5:1)) + '%';
+          progText.textContent = `Gamba 1H ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
+        });
+        trades = r1.trades; startCap = r1.startCap;
+      }
+      if (has1m) {
+        const r2 = await btRun('1m', 60000, { scalp:true, swing:false, trend:false, bias:false }, btGetParams(), (pct, n, cap) => {
+          progBar.style.width = Math.round((has1m&&any1h?50:0) + pct*(any1h?0.5:1)) + '%';
+          progText.textContent = `Gamba ⚡Scalp 1M ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
+        });
+        trades = [...trades, ...r2.trades].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
+      }
+      if (!any1h && !has1m) throw new Error('Nessuno scenario selezionato (o dati 1M assenti per Scalp)');
+      const st = btStats(trades, startCap);
+      state.btResults = { trades, startCap, endCap: startCap + (st?.pnl||0), mode: has1m && any1h ? '1h+1m' : (has1m ? '1m' : '1h') };
+    }
     progBar.style.width='100%';
-    progText.textContent = `Completato: ${res.trades.length} trade`;
+    progText.textContent = `Completato: ${state.btResults.trades.length} trade`;
     renderBtResults();
   } catch(e) {
     progText.textContent = '❌ ' + e.message;
@@ -3639,7 +3678,7 @@ async function runSaOptimization() {
       progBar.style.width = pct + '%';
       const elapsed = (Date.now()-t0)/1000;
       const eta = Math.round(elapsed/(k+1)*(iters-k-1));
-      log(`Iter ${k+1}/${iters} · T=${temp.toFixed(2)} · best: €${bestSt?bestSt.pnl:0} (PF ${bestSt?bestSt.pf:'–'}, ${bestSt?bestSt.n:0} trade) · ETA ${eta}s`);
+      log(`Iter ${k+1}/${iters} · T=${temp.toFixed(2)} · best: €${bestSt?bestSt.pnl:0} (PF ${bestSt?bestSt.pf:'–'}, ${bestSt?bestSt.n:0} trade) · fine ~${etaClock(eta)}`);
       await new Promise(r => setTimeout(r, 0));
     }
 
@@ -3685,7 +3724,138 @@ async function runSaOptimization() {
   btRunning = false;
 }
 
+// ── SIMULATED ANNEALING PER SCENARIO: parametri + pesi interni insieme ──
+const SCEN_SA_PARAM_SPACE = {
+  swing: { thr:{key:'thrSwing',min:50,max:78,step:2}, trail:{key:'trailSwing',min:0.8,max:3.0,step:0.2} },
+  trend: { thr:{key:'thrTrend',min:50,max:78,step:2}, trail:{key:'trailTrend',min:1.0,max:3.0,step:0.2} },
+  scalp: { thr:{key:'thrScalp',min:55,max:75,step:2}, trail:{key:'trailScalp',min:0.4,max:1.6,step:0.1} },
+  bias:  { thr:{key:'thrBias', min:50,max:80,step:3}, trail:{key:'trailBias', min:0.6,max:2.0,step:0.2} },
+};
+
+async function runScenSA(scen) {
+  if (btRunning) return;
+  btRunning = true;
+  const progCard = document.getElementById('bt-progress-card');
+  const progBar  = document.getElementById('bt-progress-bar');
+  const progText = document.getElementById('bt-progress-text');
+  const resEl    = document.getElementById('bt-results');
+  progCard.style.display='block'; resEl.innerHTML='';
+
+  const M = SCEN_META[scen];
+  const PS = SCEN_SA_PARAM_SPACE[scen];
+  const canWeights = scen !== 'bias'; // bias non ha pesi interni
+  const iters = scen === 'scalp' ? 40 : 60; // 1M più pesante
+  const maxBars = M.mode === '1m' ? 60000 : 5000;
+  const useScen = { swing:false, trend:false, bias:false, scalp:false }; useScen[scen] = true;
+  const t0 = Date.now();
+
+  // Stato = { thr, trail, w: {8 moltiplicatori} } — SOLO cose di questo scenario
+  const liveState = () => ({
+    thr: PAPER_PARAMS[PS.thr.key], trail: PAPER_PARAMS[PS.trail.key],
+    w: canWeights ? { ...SCORE_WEIGHTS[scen] } : null,
+  });
+  const snap = (v,s) => Math.round(v/s)*s;
+  const W_VALS = [0, 0.5, 0.75, 1, 1.25, 1.5, 2];
+  const neighbor = (st, temp) => {
+    const n = { thr: st.thr, trail: st.trail, w: st.w ? { ...st.w } : null };
+    const dims = ['thr','trail', ...(canWeights ? WEIGHT_GROUPS : [])];
+    const k = 1 + (Math.random() < temp ? 1 : 0);
+    for (let x=0; x<k; x++) {
+      const d = dims[Math.floor(Math.random()*dims.length)];
+      if (d === 'thr') {
+        const amp = Math.max(1, Math.round(3*temp)) * PS.thr.step;
+        n.thr = Math.min(PS.thr.max, Math.max(PS.thr.min, snap(n.thr + (Math.random()<0.5?-amp:amp), PS.thr.step)));
+      } else if (d === 'trail') {
+        const amp = Math.max(1, Math.round(3*temp)) * PS.trail.step;
+        n.trail = +Math.min(PS.trail.max, Math.max(PS.trail.min, snap(n.trail + (Math.random()<0.5?-amp:amp), PS.trail.step))).toFixed(2);
+      } else if (n.w) {
+        const cur = W_VALS.indexOf(n.w[d] ?? 1);
+        const idx = Math.min(W_VALS.length-1, Math.max(0, (cur<0?3:cur) + (Math.random()<0.5?-1:1)));
+        n.w[d] = W_VALS[idx];
+      }
+    }
+    return n;
+  };
+  const evalState = async (st) => {
+    const base = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
+    const P = { ...base, [PS.thr.key]: st.thr, [PS.trail.key]: st.trail,
+      riskPct: base.riskPct/100, partialPct: base.partialPct/100 };
+    if (st.w) P.weights = { [scen]: st.w };
+    const res = await btRun(M.mode, maxBars, useScen, P, null);
+    return btStats(res.trades, res.startCap);
+  };
+  const obj = (st) => {
+    if (!st) return -1e9;
+    const pf = st.pf==='∞' ? 10 : parseFloat(st.pf);
+    let o = st.pnl + Math.min(pf,3)*1500 - st.maxDD*200;
+    if (st.n < 15) o -= 800*(15-st.n);
+    if (pf < 1.05) o -= 5000;
+    return o;
+  };
+
+  try {
+    progText.textContent = `🔥 ${M.icon} ${M.label}: baseline...`;
+    await new Promise(r=>setTimeout(r,30));
+    let cur = liveState();
+    const baseSt = await evalState(cur);
+    let curObj = obj(baseSt);
+    let best = JSON.parse(JSON.stringify(cur)), bestSt = baseSt, bestObj = curObj;
+
+    for (let k = 0; k < iters; k++) {
+      const temp = 1 - k/iters;
+      const cand = neighbor(cur, temp);
+      const st = await evalState(cand);
+      const o = obj(st);
+      if (o > curObj || Math.random() < Math.exp((o-curObj)/(temp*3000+1))) { cur = cand; curObj = o; }
+      if (o > bestObj) { best = JSON.parse(JSON.stringify(cand)); bestSt = st; bestObj = o; }
+      const el = (Date.now()-t0)/1000;
+      const eta = el/(k+1)*(iters-k-1);
+      progBar.style.width = Math.round((k+1)/iters*100)+'%';
+      progText.textContent = `🔥 ${M.icon} ${M.label} · iter ${k+1}/${iters} · best €${bestSt?bestSt.pnl:0} (PF ${bestSt?bestSt.pf:'–'}) · fine ~${etaClock(eta)}`;
+      await new Promise(r=>setTimeout(r,0));
+    }
+
+    const basePnl = baseSt ? baseSt.pnl : -1e9;
+    const finPnl  = bestSt ? bestSt.pnl : -1e9;
+    const finPf   = bestSt ? (bestSt.pf==='∞'?10:parseFloat(bestSt.pf)) : 0;
+    const improved = finPnl > basePnl && finPf >= 1.05 && (bestSt?.n||0) >= 10;
+
+    saveOptResult(scen, 'sa', improved ? bestSt : baseSt);
+    const stLine = (st)=> st ? `${st.n} trade · WR ${st.wr}% · PF ${st.pf} · DD ${st.maxDD}%` : 'nessun trade';
+    let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55">
+      <div style="color:${M.color};font-weight:800;font-size:15px;margin-bottom:8px">🔥 Annealing ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato, solo parametri suoi)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live)</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(baseSt)}</div>
+          <div style="color:${basePnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${baseSt?baseSt.pnl:0}</div></div>
+        <div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${improved?'#22c55e44':'#2a3550'}"><div style="color:#22c55e;font-size:10px;font-weight:700">MIGLIORE</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(bestSt)}</div>
+          <div style="color:${finPnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${bestSt?bestSt.pnl:0}</div></div>
+      </div>
+      <div style="color:#c0cce0;font-size:12px;margin-bottom:4px">Soglia: <b style="color:${best.thr!==liveState().thr?'#f0b429':'#f0f4fa'}">${best.thr}</b> · Trail: <b style="color:#f0b429">${best.trail}×</b>
+        ${best.w?'<br>Pesi: '+WEIGHT_GROUPS.map(g=>`${g}×${best.w[g]??1}`).join(' · '):''}</div>`;
+    if (improved) {
+      savePaperParams({ [PS.thr.key]: best.thr, [PS.trail.key]: best.trail });
+      if (best.w) saveScoreWeights(scen, best.w);
+      if (typeof syncParamInputs === 'function') syncParamInputs();
+      html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:8px;color:#22c55e;font-size:12px;font-weight:700">✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)}) — parametri e pesi live di ${M.label} AGGIORNATI.</div>`;
+    } else {
+      html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:8px;color:#f0b429;font-size:12px">⚪ Nessun miglioramento affidabile (P&L > baseline, PF ≥ 1.05, ≥ 10 trade). Live invariato.</div>`;
+    }
+    html += `<div style="color:#94a3b8;font-size:10px;margin-top:6px">⚠️ Ottimizzato sul passato — valida col 🛡️ sanity check.</div></div>`;
+    resEl.innerHTML = html;
+    progText.textContent = `Annealing ${M.label} completato.`;
+    renderOptHub();
+  } catch(e) { progText.textContent = '❌ ' + e.message; }
+  btRunning = false;
+}
+
 // ── HUB OTTIMIZZAZIONE PER SCENARIO ───────────────────────────
+// ETA assoluto: ora locale di fine prevista
+function etaClock(secRemaining) {
+  return new Date(Date.now() + secRemaining*1000).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+}
+
 const SCEN_META = {
   swing: { icon:'📊', label:'Swing', color:'#f0b429', mode:'1h', thrKey:'thrSwing', trailKey:'trailSwing' },
   trend: { icon:'📈', label:'Trend', color:'#22c55e', mode:'1h', thrKey:'thrTrend', trailKey:'trailTrend' },
@@ -3751,7 +3921,7 @@ function renderOptHub() {
   const host = document.getElementById('opt-hub');
   if (!host) return;
   const results = loadOptResults();
-  const srcLabel = { backtest:'backtest', scenopt:'🎯 parametri', weights:'🧬 pesi', sa:'🔥 annealing' };
+  const srcLabel = { backtest:'🧪 backtest', scenopt:'🎯 parametri', weights:'🧬 pesi', sa:'🔥 annealing' };
   let html = '';
   for (const scen of ['swing','trend','scalp','bias']) {
     const M = SCEN_META[scen];
@@ -3762,19 +3932,26 @@ function renderOptHub() {
     html += `<div style="background:#141920;border:1px solid ${M.color}44;border-radius:9px;padding:10px;margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <div style="color:${M.color};font-weight:800;font-size:14px">${M.icon} ${M.label}</div>
-        <div style="color:#94a3b8;font-size:11px">soglia <b style="color:#f0f4fa">${PAPER_PARAMS[M.thrKey]}</b> · trail <b style="color:#f0f4fa">${PAPER_PARAMS[M.trailKey]}×</b></div>
+        <div style="color:#94a3b8;font-size:10px">${M.mode.toUpperCase()} · slot indipendente · rischio ${PAPER_PARAMS.riskPct}%</div>
       </div>
-      ${wMod ? `<div style="color:#e879f9;font-size:10px;margin-bottom:5px">pesi: ${wMod}</div>` : ''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px">
+        <div style="background:#0d1117;border-radius:6px;padding:5px 8px"><span style="color:#94a3b8;font-size:10px">Soglia score</span><br><b style="color:#f0f4fa;font-size:14px">${PAPER_PARAMS[M.thrKey]}</b></div>
+        <div style="background:#0d1117;border-radius:6px;padding:5px 8px"><span style="color:#94a3b8;font-size:10px">Trailing ×ATR</span><br><b style="color:#f0f4fa;font-size:14px">${PAPER_PARAMS[M.trailKey]}</b></div>
+      </div>
+      ${scen!=='bias' ? `<div style="background:#0d1117;border-radius:6px;padding:5px 8px;margin-bottom:6px">
+        <span style="color:#94a3b8;font-size:10px">Pesi interni scoring</span>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px">
+          ${WEIGHT_GROUPS.map(g=>{const v=(SCORE_WEIGHTS[scen]?.[g])??1;return `<span style="background:${v!==1?'#e879f920':'#141920'};border:1px solid ${v!==1?'#e879f955':'#1e2535'};border-radius:4px;padding:1px 5px;font-size:10px;color:${v!==1?'#e879f9':'#94a3b8'}">${g}×${v}</span>`;}).join('')}
+        </div></div>` : `<div style="color:#64748b;font-size:10px;margin-bottom:6px">Bias usa un motore di scoring dedicato (nessun peso interno).</div>`}
       ${r ? `<div style="background:#0d1117;border-radius:7px;padding:7px;margin-bottom:7px">
         <div style="color:#94a3b8;font-size:10px">ULTIMO RISULTATO (${srcLabel[r.source]||r.source} · ${when})</div>
         <div style="color:#c0cce0;font-size:12px;margin-top:2px">${r.n} trade · WR ${r.wr}% · PF ${r.pf} · DD ${r.dd}%
           <span style="color:${r.pnl>=0?'#22c55e':'#ef4444'};font-weight:800"> €${r.pnl}</span></div>
-      </div>` : `<div style="color:#64748b;font-size:11px;margin-bottom:7px">Nessun risultato registrato — lancia un backtest o un'ottimizzazione.</div>`}
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px">
-        <button onclick="scenQuickBacktest('${scen}')" style="background:#1a2332;color:#c0cce0;border:1px solid #2a3550;border-radius:6px;padding:7px 0;font-size:11px;font-weight:700">🧪 Backtest</button>
-        <button onclick="sweepFor('${scen}')" style="background:#1a2332;color:#f97316;border:1px solid #2a3550;border-radius:6px;padding:7px 0;font-size:11px;font-weight:700">🔁 Sweep</button>
-        <button onclick="scenOptFor('${scen}')" style="background:#1a2332;color:#3b82f6;border:1px solid #2a3550;border-radius:6px;padding:7px 0;font-size:11px;font-weight:700">🎯 Param</button>
-        <button onclick="weightsFor('${scen}')" ${scen==='bias'?'disabled style="background:#10151f;color:#475569;border:1px solid #1e2535;border-radius:6px;padding:7px 0;font-size:11px"':'style="background:#1a2332;color:#e879f9;border:1px solid #2a3550;border-radius:6px;padding:7px 0;font-size:11px;font-weight:700"'}>🧬 Pesi</button>
+      </div>` : `<div style="color:#64748b;font-size:11px;margin-bottom:7px">Nessun risultato registrato — lancia un backtest o l'annealing.</div>`}
+      <div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:5px">
+        <button onclick="scenQuickBacktest('${scen}')" style="background:#1a2332;color:#c0cce0;border:1px solid #2a3550;border-radius:6px;padding:8px 0;font-size:11px;font-weight:700">🧪 Backtest</button>
+        <button onclick="sweepFor('${scen}')" style="background:#1a2332;color:#f97316;border:1px solid #2a3550;border-radius:6px;padding:8px 0;font-size:11px;font-weight:700">🔁 Sweep</button>
+        <button onclick="runScenSA('${scen}')" style="background:#a855f7;color:#fff;border:none;border-radius:6px;padding:8px 0;font-size:11px;font-weight:800">🔥 Annealing</button>
       </div>
     </div>`;
   }
@@ -3828,7 +4005,7 @@ async function runScenOptimization() {
     progBar.style.width = pct + '%';
     const elapsed=(Date.now()-t0)/1000;
     const eta = Math.round(elapsed/runCount*(totalRuns-runCount));
-    progText.textContent = `${scenNames[scen]} · ${label} · run ${runCount}/${totalRuns} · ETA ${eta}s`;
+    progText.textContent = `${scenNames[scen]} · ${label} · run ${runCount}/${totalRuns} · fine ~${etaClock(eta)}`;
     await new Promise(r=>setTimeout(r,0));
   };
 
@@ -3950,7 +4127,7 @@ async function runSanityCheck() {
     runCount++;
     progBar.style.width = Math.round(runCount/totalRuns*100)+'%';
     const el=(Date.now()-t0)/1000;
-    progText.textContent = `🛡️ ${label} · run ${runCount}/${totalRuns} · ETA ${Math.round(el/runCount*(totalRuns-runCount))}s`;
+    progText.textContent = `🛡️ ${label} · run ${runCount}/${totalRuns} · fine ~${etaClock(el/runCount*(totalRuns-runCount))}`;
     await new Promise(r=>setTimeout(r,0));
   };
   const pfN = (st) => st ? (st.pf==='∞'?10:parseFloat(st.pf)) : 0;
@@ -4132,7 +4309,7 @@ async function runWeightOptimization() {
     runCount++;
     progBar.style.width = Math.round(runCount/totalRuns*100)+'%';
     const el=(Date.now()-t0)/1000;
-    progText.textContent = `${scenNames[scen]} pesi · ${label} · run ${runCount}/${totalRuns} · ETA ${Math.round(el/runCount*(totalRuns-runCount))}s`;
+    progText.textContent = `${scenNames[scen]} pesi · ${label} · run ${runCount}/${totalRuns} · fine ~${etaClock(el/runCount*(totalRuns-runCount))}`;
     await new Promise(r=>setTimeout(r,0));
   };
   const mkWeights = (w) => ({ [scen]: { ...SCORE_WEIGHTS[scen], ...w } });
@@ -4259,7 +4436,7 @@ async function runBtSweep() {
       P[param] = (param==='riskPct'||param==='partialPct') ? values[k]/100 : values[k];
       const elapsed=(Date.now()-t0)/1000;
       const eta = k>0 ? Math.round(elapsed/k*(values.length-k)) : '–';
-      progText.textContent = `Sweep ${param}=${values[k]} (${k+1}/${values.length}) · ETA ${eta}s`;
+      progText.textContent = `Sweep ${param}=${values[k]} (${k+1}/${values.length}) · fine ~${k>0?etaClock(eta):'…'}`;
       progBar.style.width = Math.round(k/values.length*100)+'%';
       await new Promise(r=>setTimeout(r,0));
       const res = await btRun(mode, maxBars, useScen, P, null);
@@ -6067,6 +6244,19 @@ function saveScoreWeights(scen, w) {
   try { localStorage.setItem('xauapp_score_weights', JSON.stringify(SCORE_WEIGHTS)); } catch(e) {}
 }
 
+function paperSlots() {
+  const p = state.paper;
+  if (!p.openTrades) p.openTrades = {};
+  if (p.openTrade && !p.openTrades[p.openTrade.scenario || 'swing']) {
+    p.openTrades[p.openTrade.scenario || 'swing'] = p.openTrade;
+  }
+  return p.openTrades;
+}
+function syncLegacyOpen() {
+  const p = state.paper, s = p.openTrades || {};
+  p.openTrade = s.swing || s.trend || s.scalp || s.bias || null;
+}
+
 function savePaperParams(p) {
   PAPER_PARAMS = { ...PAPER_PARAMS, ...p, _v: PAPER_PARAMS_DEFAULTS._v };
   try { localStorage.setItem('xauapp_live_params', JSON.stringify(PAPER_PARAMS)); } catch(e) {}
@@ -7185,7 +7375,8 @@ function handleSwMessage(e) {
 
   // Trade chiuso dal SW in background
   if (d.type === 'BG_TRADE_CLOSED' && d.trade) {
-    state.paper.openTrade = null;
+    if (state.paper.openTrades) delete state.paper.openTrades[(d.trade.scenario) || 'swing'];
+    syncLegacyOpen();
     if (d.capital !== undefined) state.paper.capital = d.capital;
     if (d.trades)  {
       state.paper.trades = d.trades;
