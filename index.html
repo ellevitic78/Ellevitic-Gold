@@ -438,6 +438,9 @@ button{cursor:pointer}
         <label style="flex:1;display:flex;align-items:center;gap:6px;background:#141920;border-radius:7px;padding:8px 10px;cursor:pointer">
           <input type="checkbox" id="bt-scen-bias" checked style="width:16px;height:16px;accent-color:#a855f7"/><span style="color:#a855f7;font-size:12px;font-weight:700">⏰ Bias</span>
         </label>
+        <label style="flex:1;display:flex;align-items:center;gap:6px;background:#141920;border-radius:7px;padding:8px 10px;cursor:pointer">
+          <input type="checkbox" id="bt-scen-scalp" style="width:16px;height:16px;accent-color:#f97316"/><span style="color:#f97316;font-size:12px;font-weight:700">⚡ Scalp 1M</span>
+        </label>
       </div>
     </div>
     <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:6px">
@@ -3525,6 +3528,8 @@ const SA_SPACE = {
   trailSwing: { min:0.8, max:2.5, step:0.2 },
   trailTrend: { min:1.0, max:3.0, step:0.2 },
   partialPct: { min:30, max:70, step:5 },
+  thrScalp:   { min:55, max:75, step:2 },
+  trailScalp: { min:0.4, max:1.6, step:0.1 },
 };
 // riskPct escluso di proposito: col compounding ottimizzarlo significa solo alzarlo — non è un'ottimizzazione, è leva.
 
@@ -3575,11 +3580,26 @@ async function runSaOptimization() {
     trend: document.getElementById('bt-scen-trend').checked,
     bias:  document.getElementById('bt-scen-bias').checked, scalp:false,
   };
+  // Gamba scalp 1M opzionale (checkbox ⚡ Scalp 1M + dati 1M presenti)
+  let includeScalp = !!document.getElementById('bt-scen-scalp')?.checked;
+  if (includeScalp && !(await histLoad('xauusd_1m'))?.candles?.length) {
+    includeScalp = false;
+    // proseguiamo senza scalp, lo segnaliamo nel report
+  }
+  const scalpSkipped = !!document.getElementById('bt-scen-scalp')?.checked && !includeScalp;
+  const evalCombined = async (P) => {
+    const r1 = await btRun('1h', maxBars, useScen, P, null);
+    let all = r1.trades;
+    if (includeScalp) {
+      const r2 = await btRun('1m', maxBars, { swing:false, trend:false, bias:false, scalp:true }, P, null);
+      all = [...r1.trades, ...r2.trades].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
+    }
+    return btStats(all, 10000);
+  };
 
   const t0 = Date.now();
-  const fullP = (base) => ({ riskPct: PAPER_PARAMS.riskPct/100, thrScalp: PAPER_PARAMS.thrScalp,
-    trailScalp: PAPER_PARAMS.trailScalp, trailBias: PAPER_PARAMS.trailBias,
-    ...Object.fromEntries(Object.keys(SA_SPACE).map(k => [k, base[k]])),
+  const fullP = (base) => ({ riskPct: PAPER_PARAMS.riskPct/100, trailBias: PAPER_PARAMS.trailBias,
+    ...Object.fromEntries(Object.keys(SA_SPACE).map(k => [k, base[k] ?? PAPER_PARAMS[k]])),
     partialPct: (base.partialPct ?? PAPER_PARAMS.partialPct)/100 });
 
   const log = (msg) => { progText.innerHTML = msg; };
@@ -3588,8 +3608,7 @@ async function runSaOptimization() {
     // ── Baseline: parametri live attuali ──────────────────
     log('Baseline con parametri live attuali...');
     const baseParams = Object.fromEntries(Object.keys(SA_SPACE).map(k => [k, PAPER_PARAMS[k]]));
-    const baseRes = await btRun('1h', maxBars, useScen, fullP(baseParams), null);
-    const baseSt  = btStats(baseRes.trades, baseRes.startCap);
+    const baseSt  = await evalCombined(fullP(baseParams));
     let current = { ...baseParams };
     let currentObj = saObjective(baseSt);
     let best = { ...current }, bestObj = currentObj, bestSt = baseSt;
@@ -3601,8 +3620,7 @@ async function runSaOptimization() {
     for (let k = 0; k < iters; k++) {
       const temp = 1 - k / iters;             // temperatura lineare 1 → 0
       const cand = saNeighbor(current, temp);
-      const res  = await btRun('1h', maxBars, useScen, fullP(cand), null);
-      const st   = btStats(res.trades, res.startCap);
+      const st   = await evalCombined(fullP(cand));
       const obj  = saObjective(st);
 
       const accept = obj > currentObj ||
@@ -3625,7 +3643,8 @@ async function runSaOptimization() {
     const improved = bestObj > currentObj*0 && bestPnl > basePnl && bestPf >= 1.05 && (bestSt?.n||0) >= 10;
 
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55;margin-bottom:10px">
-      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s</div>
+      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s${includeScalp?' · gamba ⚡Scalp 1M inclusa':''}</div>
+      ${scalpSkipped?`<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:7px;padding:7px;margin-bottom:8px;color:#f0b429;font-size:11px">⚠️ Scalp richiesto ma dati 1M assenti — ottimizzazione eseguita senza. Scarica il "1M profondo".</div>`:''}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
         <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live attuali)</div>
           <div style="color:#c0cce0;font-size:12px;margin-top:4px">${baseSt?baseSt.n:0} trade · WR ${baseSt?baseSt.wr:'–'}%<br>PF ${baseSt?baseSt.pf:'–'} · DD ${baseSt?baseSt.maxDD:'–'}%</div>
