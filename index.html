@@ -413,8 +413,14 @@ button{cursor:pointer}
     <div id="hist-saved-list"><div style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">Caricamento...</div></div>
   </div>
 
+  <div class="card" style="border:2px solid #3b82f644;margin-bottom:10px">
+    <div style="color:#3b82f6;font-size:16px;font-weight:800;margin-bottom:4px">🧰 Ottimizzazione per scenario</div>
+    <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">Ogni scenario opera su uno slot indipendente (rischio 2% ciascuno): qui lo testi, ottimizzi e monitori <b>da solo</b>. Parametri live e ultimo risultato sempre in vista.</div>
+    <div id="opt-hub"></div>
+  </div>
+
   <div class="card" style="border:2px solid #22c55e44;margin-bottom:10px">
-    <div style="color:#22c55e;font-size:16px;font-weight:900;margin-bottom:4px">🧪 Backtest</div>
+    <div style="color:#22c55e;font-size:16px;font-weight:900;margin-bottom:4px">🧪 Backtest COMPLESSIVO — tutti gli scenari insieme (multi-slot)</div>
     <div style="color:#c0cce0;font-size:12px;line-height:1.5;margin-bottom:10px">
       Simula il paper trading sul passato usando <b>lo stesso identico scoring e le stesse regole di gestione</b>
       (soglie, spread, rischio 1%, TP1 parziale 50%, breakeven, trailing per scenario, exit a orario).
@@ -3679,6 +3685,102 @@ async function runSaOptimization() {
   btRunning = false;
 }
 
+// ── HUB OTTIMIZZAZIONE PER SCENARIO ───────────────────────────
+const SCEN_META = {
+  swing: { icon:'📊', label:'Swing', color:'#f0b429', mode:'1h', thrKey:'thrSwing', trailKey:'trailSwing' },
+  trend: { icon:'📈', label:'Trend', color:'#22c55e', mode:'1h', thrKey:'thrTrend', trailKey:'trailTrend' },
+  scalp: { icon:'⚡', label:'Scalp 1M', color:'#f97316', mode:'1m', thrKey:'thrScalp', trailKey:'trailScalp' },
+  bias:  { icon:'⏰', label:'Bias', color:'#a855f7', mode:'1h', thrKey:'thrBias', trailKey:'trailBias' },
+};
+
+function loadOptResults() {
+  try { return JSON.parse(localStorage.getItem('xauapp_opt_results') || '{}'); } catch(e) { return {}; }
+}
+function saveOptResult(scen, source, st) {
+  if (!st) return;
+  const all = loadOptResults();
+  all[scen] = { ts: Date.now(), source, n: st.n, wr: st.wr, pf: st.pf, dd: st.maxDD, pnl: st.pnl };
+  try { localStorage.setItem('xauapp_opt_results', JSON.stringify(all)); } catch(e) {}
+  renderOptHub();
+}
+
+// Backtest rapido di UN solo scenario (parametri e pesi live correnti)
+async function scenQuickBacktest(scen) {
+  if (btRunning) return;
+  btRunning = true;
+  const progCard = document.getElementById('bt-progress-card');
+  const progText = document.getElementById('bt-progress-text');
+  const progBar  = document.getElementById('bt-progress-bar');
+  const resEl    = document.getElementById('bt-results');
+  progCard.style.display='block'; progBar.style.width='30%';
+  const M = SCEN_META[scen];
+  progText.textContent = `🧪 Backtest ${M.icon} ${M.label} (isolato)...`;
+  await new Promise(r=>setTimeout(r,30));
+  try {
+    const useScen = { swing:false, trend:false, bias:false, scalp:false }; useScen[scen] = true;
+    const P = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
+    const res = await btRun(M.mode, M.mode==='1m'?60000:5000, useScen,
+      { ...P, riskPct:P.riskPct/100, partialPct:P.partialPct/100 }, null);
+    const st = btStats(res.trades, res.startCap);
+    progBar.style.width='100%'; progText.textContent = `Backtest ${M.label} completato.`;
+    saveOptResult(scen, 'backtest', st);
+    const col = (st?.pnl||0)>=0 ? '#22c55e' : '#ef4444';
+    resEl.innerHTML = `<div class="card" style="border:1px solid ${M.color}55">
+      <div style="color:${M.color};font-weight:800;font-size:14px;margin-bottom:6px">${M.icon} Backtest ${M.label} — scenario isolato (${M.mode.toUpperCase()})</div>
+      ${st ? `<div style="color:#c0cce0;font-size:13px">${st.n} trade · WR ${st.wr}% · PF ${st.pf} · DD ${st.maxDD}%</div>
+      <div style="color:${col};font-size:18px;font-weight:900;margin-top:4px">€${st.pnl}</div>` : '<div style="color:#64748b">Nessun trade generato</div>'}
+    </div>`;
+  } catch(e) { progText.textContent = '❌ ' + e.message; }
+  btRunning = false;
+}
+
+// Launcher: preimpostano i selettori esistenti e avviano lo strumento giusto
+function scenOptFor(scen)   { document.getElementById('scen-opt-target').value = scen; runScenOptimization(); }
+function weightsFor(scen)   { if (scen==='bias') { alert('I pesi interni non sono ottimizzabili per Bias.'); return; } document.getElementById('wopt-target').value = scen; runWeightOptimization(); }
+function sweepFor(scen) {
+  const M = SCEN_META[scen];
+  document.getElementById('bt-sweep-param').value = M.thrKey;
+  const el=document.getElementById('bt-sweep-from'); if (el) el.value = 50;
+  const el2=document.getElementById('bt-sweep-to'); if (el2) el2.value = 80;
+  const el3=document.getElementById('bt-sweep-step'); if (el3) el3.value = 2;
+  runBtSweep();
+}
+
+// Render delle card per scenario
+function renderOptHub() {
+  const host = document.getElementById('opt-hub');
+  if (!host) return;
+  const results = loadOptResults();
+  const srcLabel = { backtest:'backtest', scenopt:'🎯 parametri', weights:'🧬 pesi', sa:'🔥 annealing' };
+  let html = '';
+  for (const scen of ['swing','trend','scalp','bias']) {
+    const M = SCEN_META[scen];
+    const r = results[scen];
+    const W = (SCORE_WEIGHTS[scen]) || {};
+    const wMod = Object.entries(W).filter(([k,v])=>v!==1).map(([k,v])=>`${k}×${v}`).join(' ');
+    const when = r ? new Date(r.ts).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})+' '+new Date(r.ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : null;
+    html += `<div style="background:#141920;border:1px solid ${M.color}44;border-radius:9px;padding:10px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="color:${M.color};font-weight:800;font-size:14px">${M.icon} ${M.label}</div>
+        <div style="color:#94a3b8;font-size:11px">soglia <b style="color:#f0f4fa">${PAPER_PARAMS[M.thrKey]}</b> · trail <b style="color:#f0f4fa">${PAPER_PARAMS[M.trailKey]}×</b></div>
+      </div>
+      ${wMod ? `<div style="color:#e879f9;font-size:10px;margin-bottom:5px">pesi: ${wMod}</div>` : ''}
+      ${r ? `<div style="background:#0d1117;border-radius:7px;padding:7px;margin-bottom:7px">
+        <div style="color:#94a3b8;font-size:10px">ULTIMO RISULTATO (${srcLabel[r.source]||r.source} · ${when})</div>
+        <div style="color:#c0cce0;font-size:12px;margin-top:2px">${r.n} trade · WR ${r.wr}% · PF ${r.pf} · DD ${r.dd}%
+          <span style="color:${r.pnl>=0?'#22c55e':'#ef4444'};font-weight:800"> €${r.pnl}</span></div>
+      </div>` : `<div style="color:#64748b;font-size:11px;margin-bottom:7px">Nessun risultato registrato — lancia un backtest o un'ottimizzazione.</div>`}
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px">
+        <button onclick="scenQuickBacktest('${scen}')" style="background:#1a2332;color:#c0cce0;border:1px solid #2a3550;border-radius:6px;padding:7px 0;font-size:11px;font-weight:700">🧪 Backtest</button>
+        <button onclick="sweepFor('${scen}')" style="background:#1a2332;color:#f97316;border:1px solid #2a3550;border-radius:6px;padding:7px 0;font-size:11px;font-weight:700">🔁 Sweep</button>
+        <button onclick="scenOptFor('${scen}')" style="background:#1a2332;color:#3b82f6;border:1px solid #2a3550;border-radius:6px;padding:7px 0;font-size:11px;font-weight:700">🎯 Param</button>
+        <button onclick="weightsFor('${scen}')" ${scen==='bias'?'disabled style="background:#10151f;color:#475569;border:1px solid #1e2535;border-radius:6px;padding:7px 0;font-size:11px"':'style="background:#1a2332;color:#e879f9;border:1px solid #2a3550;border-radius:6px;padding:7px 0;font-size:11px;font-weight:700"'}>🧬 Pesi</button>
+      </div>
+    </div>`;
+  }
+  host.innerHTML = html;
+}
+
 // ── OTTIMIZZAZIONE PER SCENARIO: coordinate descent, un parametro alla volta ──
 const SCEN_OPT_SPACE = {
   swing: [ { key:'thrSwing',  label:'Soglia',      min:50,  max:75,  step:2   },
@@ -3795,6 +3897,7 @@ async function runScenOptimization() {
       html += `</div>`;
     });
 
+    saveOptResult(scen, 'scenopt', improved ? finalSt : baseSt);
     if (improved) {
       savePaperParams(current);
       if (typeof syncParamInputs === 'function') syncParamInputs();
@@ -4097,6 +4200,7 @@ async function runWeightOptimization() {
       html += `</div>`;
     });
 
+    saveOptResult(scen, 'weights', improved ? finalSt : baseSt);
     if (improved) {
       saveScoreWeights(scen, current);
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:10px;color:#22c55e;font-size:12px;font-weight:700">
@@ -4615,6 +4719,7 @@ function syncParamInputs() {
 }
 
 function renderHistScreen() {
+  setTimeout(renderOptHub, 50);
   syncParamInputs();
   renderHistSavedList();
 }
