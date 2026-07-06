@@ -1,5 +1,5 @@
-// ── XAU/USD Analyzer — Service Worker v8.3 coerenza annealing (Live Scenari + Swing 5M) ─────────
-const CACHE = 'xauapp-v15-live-scenarios-v8-3-annealing-coherence';
+// ── XAU/USD Analyzer — Service Worker v8.3.2 parametri nel CSV ─────────
+const CACHE = 'xauapp-v17-live-scenarios-v8-3-2-parametri-csv';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-72.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -42,6 +42,8 @@ let openTrades = {};
 let paperCapital = 10000;
 let paperTrades  = [];
 let paperParams  = { spread: 0.04, slippage: 0.02, partialPct: 15, beRR: 0.4, trailRR: 0.4 };
+let scoreWeights = { _profile:'csv-ieri-2026-07-06-v8-1', swing:{macro:1,mtf:1,adx:1,rsi:1,pivot:1,pullback:1,specific:1,sess:1}, trend:{macro:1,mtf:1,adx:1,rsi:1,pivot:1,pullback:1,specific:1,sess:1}, scalp:{macro:1,mtf:1,adx:1,rsi:1,pivot:1,pullback:1,specific:1,sess:1} };
+let paramHash = '';
 let lastCheckTs  = 0;
 let paperCapitalPeak = 10000;
 
@@ -56,6 +58,14 @@ const COOL_TRADE   = 15 * 60 * 1000; // 15 min in background // 5 min cooldown t
 let lastTradeTs    = 0; // legacy
 let lastTradeTsByScenario = {};
 const COOL_ALERT   = 15 * 60 * 1000;
+function stableSortObj(x) {
+  if (Array.isArray(x)) return x.map(stableSortObj);
+  if (x && typeof x === 'object') return Object.keys(x).sort().reduce((o,k)=>(o[k]=stableSortObj(x[k]),o),{});
+  return x;
+}
+function stableStringify(x) { return JSON.stringify(stableSortObj(x)); }
+function simpleHash(str) { let h=2166136261; for (let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); } return ('00000000'+(h>>>0).toString(16)).slice(-8); }
+function swParamBundleHash() { return paramHash || simpleHash(stableStringify({ params:paperParams, weights:scoreWeights })); }
 
 function swSpread(t=null) {
   const v = Number(t?.spread ?? paperParams?.spread ?? SPREAD);
@@ -105,6 +115,8 @@ self.addEventListener('message', async e => {
     paperCapitalPeak = Math.max(paperCapitalPeak, paperCapital);
     paperTrades  = d.paperTrades  || [];
     paperParams  = { ...paperParams, ...(d.paperParams || {}) };
+    if (d.scoreWeights) scoreWeights = { ...scoreWeights, ...d.scoreWeights };
+    if (d.paramHash) paramHash = d.paramHash;
     openTrade    = d.openTrade    || null;
     openTrades   = d.openTrades   || (d.openTrade ? {[(d.openTrade.scenario||'swing')]: d.openTrade} : {});
     syncLegacyOpen();
@@ -131,6 +143,8 @@ self.addEventListener('message', async e => {
     if (d.openTrades !== undefined)   openTrades   = d.openTrades;
     if (d.paperCapital !== undefined) { paperCapital = d.paperCapital; paperCapitalPeak = Math.max(paperCapitalPeak, paperCapital); }
     if (d.paperParams) paperParams = { ...paperParams, ...d.paperParams };
+    if (d.scoreWeights) scoreWeights = { ...scoreWeights, ...d.scoreWeights };
+    if (d.paramHash) paramHash = d.paramHash;
     syncLegacyOpen();
   }
 
@@ -139,6 +153,8 @@ self.addEventListener('message', async e => {
     if (d.trade) openTrades[d.trade.scenario || 'swing'] = d.trade;
     syncLegacyOpen();
     if (d.paperParams) paperParams = { ...paperParams, ...d.paperParams };
+    if (d.scoreWeights) scoreWeights = { ...scoreWeights, ...d.scoreWeights };
+    if (d.paramHash) paramHash = d.paramHash;
     paperCapital = d.capital || paperCapital;
     paperCapitalPeak = Math.max(paperCapitalPeak, paperCapital);
     if (d.tdKey) tdKey = d.tdKey;
@@ -159,6 +175,8 @@ self.addEventListener('message', async e => {
     paperCapitalPeak = Math.max(paperCapitalPeak, paperCapital);
     paperTrades  = d.paperTrades  ?? paperTrades;
     paperParams  = { ...paperParams, ...(d.paperParams || {}) };
+    if (d.scoreWeights) scoreWeights = { ...scoreWeights, ...d.scoreWeights };
+    if (d.paramHash) paramHash = d.paramHash;
     openTrades   = d.openTrades ?? openTrades;
     openTrade    = d.openTrade    ?? openTrade;
     if (openTrade && !openTrades[openTrade.scenario || 'swing']) openTrades[openTrade.scenario || 'swing'] = openTrade;
@@ -166,7 +184,7 @@ self.addEventListener('message', async e => {
   }
 
   if (d.type === 'PING') {
-    notifyClients({ type: 'PONG', ts: Date.now(), bgActive: !!bgInterval, hasTrade: !!openTrade, openSlots:Object.values(openTrades||{}).filter(Boolean).length, paperEnabled });
+    notifyClients({ type: 'PONG', ts: Date.now(), bgActive: !!bgInterval, hasTrade: !!openTrade, openSlots:Object.values(openTrades||{}).filter(Boolean).length, paperEnabled, paperParams, scoreWeights, paramHash: swParamBundleHash() });
   }
 });
 

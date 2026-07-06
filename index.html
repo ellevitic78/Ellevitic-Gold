@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#f0b429"/>
 <link rel="manifest" href="manifest.json"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
-<title>XAU/USD Analyzer · v8.3 coerenza annealing</title>
+<title>XAU/USD Analyzer · v8.3.2 parametri nel CSV</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:#080b10;color:#fde68a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;font-size:17px}
@@ -66,14 +66,14 @@ button{cursor:pointer}
 <body>
 
 <div id="version-visible-banner" style="position:sticky;top:0;z-index:999999;background:linear-gradient(90deg,#16a34a,#f0b429);color:#06110a;text-align:center;font-weight:900;font-size:15px;padding:8px 10px;border-bottom:2px solid #fde68a;box-shadow:0 4px 18px #0008">
-  ✅ VERSIONE NUOVA CARICATA — <span style="font-size:17px">v8.3 COERENZA ANNEALING</span> — best corrente e auto-apply verificati
+  ✅ VERSIONE NUOVA CARICATA — <span style="font-size:17px">v8.3.2 PARAMETRI NEL CSV</span> — parametri e hash allineati
 </div>
 
 <!-- ══ SETUP SCREEN ══════════════════════════════════════════ -->
 <div id="setup-screen" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px">
   <div style="font-size:48px;margin-bottom:14px">🥇</div>
   <div style="color:#f0b429;font-weight:800;font-size:22px;margin-bottom:6px">XAU/USD Analyzer</div>
-  <div style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e66;border-radius:8px;padding:6px 10px;font-size:15px;font-weight:900;margin-bottom:10px">✅ v8.3 COERENZA — se vedi questo, annealing/backtest/auto-apply sono controllati</div>
+  <div style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e66;border-radius:8px;padding:6px 10px;font-size:15px;font-weight:900;margin-bottom:10px">✅ v8.3.2 — parametri salvati dentro ogni CSV</div>
   <div style="color:#f0f4fa;font-size:17px;text-align:center;margin-bottom:28px;line-height:1.6">App standalone con dati live.<br>Configura le API key per iniziare.</div>
   <div style="width:100%;margin-bottom:10px">
     <div style="color:#f0b429;font-size:17px;font-weight:700;margin-bottom:5px">TWELVE DATA API KEY <span style="color:#ef4444">*</span></div>
@@ -108,7 +108,7 @@ button{cursor:pointer}
           <span id="hdr-chg" style="font-size:17px;font-weight:600"></span>
         </div>
         <div id="hdr-sub" style="color:#f0f4fa;font-size:16px;margin-top:1px"></div>
-        <div id="build-badge" style="display:inline-block;background:#22c55e22;color:#22c55e;border:1px solid #22c55e77;border-radius:8px;padding:5px 8px;font-size:14px;font-weight:900;margin-top:5px;letter-spacing:.2px">✅ NUOVA VERSIONE · v8.3 COERENZA ANNEALING · 2026-07-06</div>
+        <div id="build-badge" style="display:inline-block;background:#22c55e22;color:#22c55e;border:1px solid #22c55e77;border-radius:8px;padding:5px 8px;font-size:14px;font-weight:900;margin-top:5px;letter-spacing:.2px">✅ NUOVA VERSIONE · v8.3.2 PARAMETRI NEL CSV · 2026-07-06</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
         <span id="mtf-badge" style="background:#c0cce020;color:#f0f4fa;border:1px solid #c0cce044;border-radius:5px;padding:4px 12px;font-size:17px;font-weight:700">–</span>
@@ -672,7 +672,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-const APP_BUILD = '2026-07-06-live-scenarios-v8-3-annealing-coherence';
+const APP_BUILD = '2026-07-06-live-scenarios-v8-3-2-parametri-csv';
 // ══ STORAGE ══════════════════════════════════════════════════
 const LS = {
   get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch{return null;} },
@@ -2444,6 +2444,7 @@ function openPaperTradeFor(scenarioId, dirIn, esIn, allScores=null, threshold=nu
     }),
   };
 
+  const openParamSnapshot = csvParamSnapshot('paper_open');
   const trade = {
     id:            Date.now() + Math.floor(Math.random()*1000),
     direction:     es.dir,
@@ -2473,6 +2474,8 @@ function openPaperTradeFor(scenarioId, dirIn, esIn, allScores=null, threshold=nu
     partialClosed:  false,
     maxFavorable:   es.setup.entry,
     minAdverse:     es.setup.entry,
+    paramSnapshot: openParamSnapshot,
+    paramHash:     openParamSnapshot.hash,
   };
 
   p.openTrades[scenarioId] = trade;
@@ -2924,6 +2927,7 @@ function exportPaperLog() {
     // Motivazioni entry scenario vincente
     'Entry_reason1', 'Entry_reason2', 'Entry_reason3',
     'Entry_reason4', 'Entry_reason5',
+    ...paramCsvHeaders(),
   ];
 
   const rows = trades.map(t => {
@@ -2969,6 +2973,8 @@ function exportPaperLog() {
       (tr.reasons || [])[0] || '', (tr.reasons || [])[1] || '', (tr.reasons || [])[2] || '',
       // Entry reasons
       reasons[0] || '', reasons[1] || '', reasons[2] || '', reasons[3] || '', reasons[4] || '',
+      // Snapshot parametri/pesi usati all'apertura del trade; fallback ai parametri correnti per vecchi log
+      ...paramCsvRow(t.paramSnapshot || csvParamSnapshot('paper_export_current')),
     ].map(v => {
       // Escape per CSV
       const s = String(v === null || v === undefined ? '' : v);
@@ -3316,6 +3322,8 @@ async function testSyncSw() {
     openTrade:    p.openTrade,
     openTrades:   p.openTrades || {},
     paperParams:  PAPER_PARAMS,
+    scoreWeights: SCORE_WEIGHTS,
+    paramHash: paramBundleHash(),
   });
   if (ok) logDiag('✓ Sync inviato al SW', '#22c55e');
   else logDiag('✗ Sync fallito — SW non raggiungibile', '#ef4444');
@@ -3336,11 +3344,15 @@ function handleSwMessageCore(e) {
     'BG_TRADE_UPDATE':'#c0cce0',
   };
   const col = colors[d.type] || '#dde5f0';
+  if (d.type === 'PONG') { lastSwPong = d; try { if (typeof renderOptHub === 'function') renderOptHub(); } catch(e) {} }
+
   if (d.type === 'BG_UPDATE') {
     logDiag(`SW → ${d.type}: price=$${d.price?.toFixed(2)||'–'} rsi=${d.rsi||'–'}`, col);
   } else if (d.type === 'PONG') {
-    logDiag(`SW → PONG: bg=${d.bgActive} trade=${d.hasTrade} paper=${d.paperEnabled}`, col);
+    lastSwPong = d;
+    logDiag(`SW → PONG: bg=${d.bgActive} trade=${d.hasTrade} paper=${d.paperEnabled} hash=${d.paramHash||'–'}`, col);
     refreshSwDiag();
+    try { if (typeof renderOptHub === 'function') renderOptHub(); } catch(e) {}
   } else if (d.type !== 'BG_UPDATE') {
     logDiag(`SW → ${d.type}${d.trade?' ['+d.trade.direction+']':''}${d.price?' $'+d.price.toFixed(2):''}`, col);
   }
@@ -3689,6 +3701,28 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
            period: { from: fullBase[warmup]?.t, to: fullBase[fullBase.length-1]?.t }, mode };
 }
 
+function rebuildUnifiedPortfolioLedger(trades, startCap=10000) {
+  // In un backtest multi-gamba (Swing 5M + Trend/Bias 1H + Scalp 1M) ogni gamba
+  // nasce con il suo capitale interno. Per il CSV auditabile ricostruiamo qui
+  // una sola equity di portafoglio, ordinata per chiusura trade.
+  let cap = +(startCap || 10000);
+  return [...(trades || [])].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt)).map(t => {
+    const total = Number(t.pnlTotal ?? ((t.pnlEur || 0) + (t.partialPnl || 0))) || 0;
+    const before = +cap.toFixed(2);
+    cap = +(cap + total).toFixed(2);
+    return {
+      ...t,
+      legCapitalAfter: t.capitalAfter,
+      capitalBefore: before,
+      capitalBeforeClose: before,
+      capitalAfter: cap,
+      portfolioCapitalAfter: cap,
+      standaloneCapitalAfter: +((t.capitalBefore ?? before) + total).toFixed(2),
+      reconciliationDelta: +(cap - before - total).toFixed(6),
+    };
+  });
+}
+
 // ── Run singolo con UI ─────────────────────────────────────────
 async function runBacktest() {
   if (btRunning) return;
@@ -3704,14 +3738,17 @@ async function runBacktest() {
   const mode = document.getElementById('bt-mode').value;
   const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
   const scalpChecked = !!document.getElementById('bt-scen-scalp')?.checked;
+  // v8.3.2: snapshot unico dei parametri backtest usati per tutta la run e poi scritto nel CSV
+  const btParams = btGetParams();
 
   try {
     if (mode === '5m' || mode === '1m') {
       // Modalità dedicata scalp: come prima
-      const res = await btRun(mode, maxBars, { scalp:true, swing:false, trend:false, bias:false }, btGetParams(), (pct, n, cap) => {
+      const res = await btRun(mode, maxBars, { scalp:true, swing:false, trend:false, bias:false }, btParams, (pct, n, cap) => {
         progBar.style.width = pct + '%';
         progText.textContent = `Simulazione ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
       });
+      res.paramSnapshot = csvParamSnapshot('backtest_run', btParams);
       state.btResults = res;
     } else {
       // COMPLESSIVO multi-gamba:
@@ -3737,7 +3774,7 @@ async function runBacktest() {
 
       for (let li=0; li<legs.length; li++) {
         const leg = legs[li];
-        const r = await btRun(leg.mode, leg.bars, leg.scen, btGetParams(), (pct, n, cap) => {
+        const r = await btRun(leg.mode, leg.bars, leg.scen, btParams, (pct, n, cap) => {
           const globalPct = Math.round((li/legs.length)*100 + pct/legs.length);
           progBar.style.width = globalPct + '%';
           progText.textContent = `Gamba ${leg.label} ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
@@ -3745,13 +3782,15 @@ async function runBacktest() {
         trades = [...trades, ...r.trades].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
         startCap = r.startCap;
       }
+      trades = rebuildUnifiedPortfolioLedger(trades, startCap);
       const st = btStats(trades, startCap);
       const period = trades.length
         ? { from: trades.reduce((a,t)=>a<t.openedAt?a:t.openedAt, trades[0].openedAt),
             to:   trades.reduce((a,t)=>a>t.closedAt?a:t.closedAt, trades[0].closedAt) }
         : { from: new Date().toISOString(), to: new Date().toISOString() };
       state.btResults = { trades, startCap, endCap: startCap + (st?.pnl||0), period,
-        mode: has5m && has1m ? 'swing5m+1h+1m' : has5m ? 'swing5m+1h' : (has1m ? '1h+1m' : '1h') };
+        mode: has5m && has1m ? 'swing5m+1h+1m' : has5m ? 'swing5m+1h' : (has1m ? '1h+1m' : '1h'),
+        paramSnapshot: csvParamSnapshot('backtest_run', btParams) };
     }
     progBar.style.width='100%';
     progText.textContent = `Completato: ${state.btResults.trades.length} trade`;
@@ -3919,12 +3958,13 @@ function saveScoreWeightsAndSync(scen, w, meta={}) {
   if (!w || scen === 'bias') return;
   const before = JSON.parse(JSON.stringify(SCORE_WEIGHTS));
   saveScoreWeights(scen, w);
+  syncAllParameterLayers(meta.source || 'weights');
+  const hash = paramBundleHash(PAPER_PARAMS, SCORE_WEIGHTS);
   try {
     const hist = JSON.parse(localStorage.getItem('xauapp_param_apply_log') || '[]');
-    hist.push({ ts:Date.now(), source:meta.source||'weights', scenario:scen, changed:['scoreWeights'], beforeWeights:before, afterWeights:JSON.parse(JSON.stringify(SCORE_WEIGHTS)) });
-    localStorage.setItem('xauapp_param_apply_log', JSON.stringify(hist.slice(-30)));
+    hist.push({ ts:Date.now(), source:meta.source||'weights', scenario:scen, changed:['scoreWeights'], beforeWeights:before, afterWeights:JSON.parse(JSON.stringify(SCORE_WEIGHTS)), hash, profile:PARAM_PROFILE_ID, build:APP_BUILD });
+    localStorage.setItem('xauapp_param_apply_log', JSON.stringify(hist.slice(-50)));
   } catch(e) {}
-  try { savePaperParams(PAPER_PARAMS); } catch(e) {}
 }
 
 function saNeighbor(p, temp, space=SA_SPACE) {
@@ -4037,7 +4077,7 @@ async function runSaOptimization() {
     const improved = saImproves(bestSt, baseSt, { minTrades:10, minPf:1.05, requirePnl:true });
 
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55;margin-bottom:10px">
-      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing v8.3 — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s · ${spaceSummary(saSpace)}${includeScalp?' · gamba ⚡Scalp 1M inclusa':''}</div>
+      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing v8.3.1 — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s · ${spaceSummary(saSpace)}${includeScalp?' · gamba ⚡Scalp 1M inclusa':''}</div>
       <div style="background:#0d1117;border:1px solid #2a3550;border-radius:7px;padding:7px;margin-bottom:8px;color:#94a3b8;font-size:11px">Migliore mostrato = migliore per <b>obiettivo robusto</b>, non solo P&L. Delta best vs baseline: <b style="color:${bestObj>=baseObj?'#22c55e':'#ef4444'}">${saDeltaLine(bestSt, baseSt)}</b></div>
       ${scalpSkipped?`<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:7px;padding:7px;margin-bottom:8px;color:#f0b429;font-size:11px">⚠️ Scalp richiesto ma dati 1M assenti — ottimizzazione eseguita senza. Scarica il "1M profondo".</div>`:''}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
@@ -4221,15 +4261,15 @@ async function runScenSA(scen) {
     }
 
     const savedSt = applyFull ? (portfolioFullSt || scenarioOnlySt) : (applyScenarioOnly ? scenarioOnlySt : baseSt);
-    saveOptResult(scen, 'sa', savedSt);
+    saveOptResult(scen, applyFull ? 'sa-full' : (applyScenarioOnly ? 'sa-scenario-only' : 'sa-noapply'), savedSt, { applied: applyFull || applyScenarioOnly });
     const stLine = (st)=> st ? `${st.n} trade · WR ${st.wr}% · PF ${st.pf} · DD ${st.maxDD}% · Obj ${Math.round(saObjective(st))}` : 'nessun trade';
     const card = (title, st, base, col='#c0cce0') => `<div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${col}44"><div style="color:${col};font-size:10px;font-weight:800">${title}</div><div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(st)}</div><div style="color:${(st?.pnl||0)>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${st?st.pnl:0}</div>${base?`<div style="color:#94a3b8;font-size:10px">${saDeltaLine(st, base)} vs baseline</div>`:''}</div>`;
     const commonChanged = Object.keys(commonUpdates).some(k => commonUpdates[k] !== baseLive.common[k]);
 
     let html = `<div class="card" style="border:2px solid ${(applyFull||applyScenarioOnly)?'#22c55e':'#f0b429'}55">
-      <div style="color:${M.color};font-weight:900;font-size:15px;margin-bottom:8px">🔥 Annealing v8.3 ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s</div>
+      <div style="color:${M.color};font-weight:900;font-size:15px;margin-bottom:8px">🔥 Annealing v8.3.1 ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s</div>
       <div style="background:#0d1117;border:1px solid #2a3550;border-radius:7px;padding:7px;margin-bottom:8px;color:#94a3b8;font-size:11px">
-        Durante il loop il <b>BEST</b> è il migliore per <b>obiettivo robusto isolato</b>. Dopo il loop la v8.3 fa due conferme: scenario-only senza parametri comuni e portafoglio completo con parametri comuni.
+        Durante il loop il <b>BEST</b> è il migliore per <b>obiettivo robusto isolato</b>. Dopo il loop la v8.3.1 fa due conferme: scenario-only senza parametri comuni e portafoglio completo con parametri comuni.
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
         ${card('BASELINE SCENARIO ISOLATO', baseSt, null, '#94a3b8')}
@@ -4248,7 +4288,7 @@ async function runScenSA(scen) {
     } else {
       html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:8px;color:#f0b429;font-size:12px">⚪ Nessun auto-apply: il best del loop non supera la conferma scenario-only/portafoglio con criterio robusto.</div>`;
     }
-    html += `<div style="color:#94a3b8;font-size:10px;margin-top:6px">Regola v8.3: i parametri comuni vengono applicati solo se migliorano il portafoglio; la UI distingue best del loop, scenario-only e portafoglio.</div></div>`;
+    html += `<div style="color:#94a3b8;font-size:10px;margin-top:6px">Regola v8.3.1: i parametri comuni vengono applicati solo se migliorano il portafoglio; la UI distingue best del loop, scenario-only e portafoglio.</div></div>`;
     resEl.innerHTML = html;
     progText.textContent = `Annealing ${M.label} completato — ${applyFull?'FULL applicato':applyScenarioOnly?'solo scenario applicato':'nessun auto-apply'}.`;
     renderOptHub();
@@ -4272,10 +4312,10 @@ const SCEN_META = {
 function loadOptResults() {
   try { return JSON.parse(localStorage.getItem('xauapp_opt_results') || '{}'); } catch(e) { return {}; }
 }
-function saveOptResult(scen, source, st) {
+function saveOptResult(scen, source, st, meta={}) {
   if (!st) return;
   const all = loadOptResults();
-  all[scen] = { ts: Date.now(), source, n: st.n, wr: st.wr, pf: st.pf, dd: st.maxDD, pnl: st.pnl };
+  all[scen] = { ts: Date.now(), source, applied:!!meta.applied, hash:paramBundleHash(), objective:Math.round(saObjective(st)), n: st.n, wr: st.wr, pf: st.pf, dd: st.maxDD, pnl: st.pnl };
   try { localStorage.setItem('xauapp_opt_results', JSON.stringify(all)); } catch(e) {}
   renderOptHub();
 }
@@ -4327,13 +4367,18 @@ function renderOptHub() {
   const host = document.getElementById('opt-hub');
   if (!host) return;
   const results = loadOptResults();
-  const srcLabel = { backtest:'🧪 backtest', scenopt:'🎯 parametri', weights:'🧬 pesi', sa:'🔥 annealing' };
+  const srcLabel = { backtest:'🧪 backtest', scenopt:'🎯 parametri', weights:'🧬 pesi', sa:'🔥 annealing', 'sa-full':'🔥 annealing FULL', 'sa-scenario-only':'🔥 annealing solo scenario', 'sa-noapply':'⚪ annealing non applicato' };
   let html = `<div style="background:#0d1117;border:1px solid #2a3550;border-radius:9px;padding:8px;margin-bottom:8px">
     <div style="color:#3b82f6;font-size:11px;font-weight:800;margin-bottom:5px">PARAMETRI LIVE COMUNI / BACKTEST</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">
       ${[['minConf',PAPER_PARAMS.minConf],['rischio %',PAPER_PARAMS.riskPct],['BE R',PAPER_PARAMS.beRR],['Trail R',PAPER_PARAMS.trailRR],['TP1 %',PAPER_PARAMS.partialPct],['spread/slip',`${PAPER_PARAMS.spread}/${PAPER_PARAMS.slippage}`]].map(([k,v])=>`<div style="background:#141920;border-radius:6px;padding:5px;text-align:center"><div style="color:#94a3b8;font-size:9px">${k}</div><b style="color:#f0f4fa;font-size:12px">${v}</b></div>`).join('')}
     </div>
-    <div style="color:#64748b;font-size:10px;margin-top:5px">Se un annealing o una ottimizzazione per scenario è migliorativa, viene salvato l’intero snapshot dei parametri live e sincronizzato negli input del backtest.</div>
+    <div style="color:#64748b;font-size:10px;margin-top:5px">v8.3.2: risultati ottimizzazione azzerati al primo avvio; profilo CSV ieri/v8.1 caricato come baseline. Ogni CSV esportato contiene snapshot parametri, pesi e hash usati.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px">
+      <button onclick="resetOptResultsAndLoadCsvYesterdayProfile()" style="background:#f0b42920;border:1px solid #f0b42955;color:#f0b429;border-radius:6px;padding:8px 0;font-size:11px;font-weight:900">♻️ Reset risultati + profilo CSV ieri</button>
+      <button onclick="saveUiParamsToLive()" style="background:#3b82f620;border:1px solid #3b82f655;color:#3b82f6;border-radius:6px;padding:8px 0;font-size:11px;font-weight:900">💾 Salva UI → live/backtest/SW</button>
+    </div>
+    ${renderParamSyncStatus()}
   </div>`;
   for (const scen of ['swing','trend','scalp','bias']) {
     const M = SCEN_META[scen];
@@ -4357,8 +4402,9 @@ function renderOptHub() {
         </div></div>` : `<div style="color:#64748b;font-size:10px;margin-bottom:6px">Bias usa un motore di scoring dedicato (nessun peso interno).</div>`}
       ${r ? `<div style="background:#0d1117;border-radius:7px;padding:7px;margin-bottom:7px">
         <div style="color:#94a3b8;font-size:10px">ULTIMO RISULTATO (${srcLabel[r.source]||r.source} · ${when})</div>
-        <div style="color:#c0cce0;font-size:12px;margin-top:2px">${r.n} trade · WR ${r.wr}% · PF ${r.pf} · DD ${r.dd}%
+        <div style="color:#c0cce0;font-size:12px;margin-top:2px">${r.n} trade · WR ${r.wr}% · PF ${r.pf} · DD ${r.dd}% · Obj ${r.objective??'–'}
           <span style="color:${r.pnl>=0?'#22c55e':'#ef4444'};font-weight:800"> €${r.pnl}</span></div>
+        <div style="color:${r.applied?'#22c55e':'#f0b429'};font-size:10px;margin-top:2px">${r.applied?'APPLICATO':'NON APPLICATO/solo diagnostico'} · hash ${r.hash||'–'}</div>
       </div>` : `<div style="color:#64748b;font-size:11px;margin-bottom:7px">Nessun risultato registrato — lancia un backtest o l'annealing.</div>`}
       <div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:5px">
         <button onclick="scenQuickBacktest('${scen}')" style="background:#1a2332;color:#c0cce0;border:1px solid #2a3550;border-radius:6px;padding:8px 0;font-size:11px;font-weight:700">🧪 Backtest</button>
@@ -4493,7 +4539,7 @@ async function runScenOptimization() {
       html += `</div>`;
     });
 
-    saveOptResult(scen, 'scenopt', improved ? finalSt : baseSt);
+    saveOptResult(scen, 'scenopt', improved ? finalSt : baseSt, { applied: improved });
     if (improved) {
       applyOptimizedParams(current, { source:'scenario-coordinate', scenario:scen });
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:10px;color:#22c55e;font-size:12px;font-weight:700">
@@ -4808,9 +4854,9 @@ async function runWeightOptimization() {
       html += `</div>`;
     });
 
-    saveOptResult(scen, 'weights', improved ? finalSt : baseSt);
+    saveOptResult(scen, 'weights', improved ? finalSt : baseSt, { applied: improved });
     if (improved) {
-      saveScoreWeights(scen, current);
+      saveScoreWeightsAndSync(scen, current, { source:'scenario-weights', scenario:scen });
       applyOptimizedParams({}, { source:'scenario-weights', scenario:scen }); // riscrive lo snapshot completo dei parametri correnti per allineare live/backtest/SW
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:10px;color:#22c55e;font-size:12px;font-weight:700">
         ✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)}) — PESI LIVE DI ${scenNames[scen].toUpperCase()} AGGIORNATI e snapshot completo parametri live/backtest risincronizzato:<br>
@@ -4993,11 +5039,12 @@ function renderBtResults() {
 function exportBtCsv() {
   const r = state.btResults;
   if (!r?.trades?.length) { alert('Nessun risultato da esportare.'); return; }
-  const head = ['openedAt','closedAt','scenario','bias','direction','entry','slInitial','slFinal','tp1Initial','tp2Initial','tp2Final','lotsInitial','lots','riskEur','spread','slippage','exitReason','exitPrice','partialClosedAt','partialLots','partialExitPrice','partialPnl','finalPnl','pnlEur','pnlTotal','rrFinal','rr','confidence','capitalBefore','capitalBeforeClose','capitalAfter','portfolioCapitalAfter','standaloneCapitalAfter','reconciliationDelta'];
-  const rows = r.trades.map(t => head.map(k => {
-    const v = t[k] ?? '';
+  const tradeHead = ['openedAt','closedAt','scenario','bias','direction','entry','slInitial','slFinal','tp1Initial','tp2Initial','tp2Final','lotsInitial','lots','riskEur','spread','slippage','exitReason','exitPrice','partialClosedAt','partialLots','partialExitPrice','partialPnl','finalPnl','pnlEur','pnlTotal','rrFinal','rr','confidence','capitalBefore','capitalBeforeClose','capitalAfter','portfolioCapitalAfter','legCapitalAfter','standaloneCapitalAfter','reconciliationDelta'];
+  const head = [...tradeHead, ...paramCsvHeaders()];
+  const snap = r.paramSnapshot || csvParamSnapshot('backtest_export_current', btGetParams());
+  const rows = r.trades.map(t => [...tradeHead.map(k => t[k] ?? ''), ...paramCsvRow(snap)].map(v => {
     const out = String(v === null || v === undefined ? '' : v);
-    return (out.includes(',') || out.includes('\n')) ? `"${out.replace(/"/g, "'")}"` : out;
+    return (out.includes(',') || out.includes('\\n')) ? `"${out.replace(/"/g, "'")}"` : out;
   }).join(','));
   const csv = head.join(',') + String.fromCharCode(10) + rows.join(String.fromCharCode(10));
   const blob = new Blob([csv], { type:'text/csv' });
@@ -6643,8 +6690,14 @@ function renderPaperWidgetIn(el) {
 
 // ── Helper functions per scoring (globali) ──────────────────
 // ── Parametri LIVE del paper trading (persistenti, ottimizzabili) ──
+const PARAM_PROFILE_ID = 'csv-ieri-2026-07-06-v8-1';
+const PARAM_RESET_EPOCH = '2026-07-06-v8-3-1-reset-sync-csv-ieri';
 const PAPER_PARAMS_DEFAULTS = {
-  _v: 4, // v4: ledger auditabile, filtri sessione XAU, spread/slippage parametrizzati
+  _v: 5, // v5: reset risultati ottimizzazioni + profilo CSV ieri + sync hash multi-livello
+  _profile: PARAM_PROFILE_ID,
+  // Profilo base coerente con la build v8.1 che ha prodotto il CSV di ieri.
+  // Dal CSV si ricavano direttamente riskPct≈5%, spread=0.04, slippage=0.02;
+  // soglie/trailing/pesi non sono presenti nel CSV, quindi vengono fissati al profilo v8.1 incorporato.
   thrSwing: 54, thrTrend: 74, thrScalp: 62, thrBias: 72,
   minConf: 60, riskPct: 5.0, beRR: 0.4, trailRR: 0.4,
   trailSwing: 2.7, trailTrend: 1.4, trailScalp: 0.8, trailBias: 1.0,
@@ -6652,26 +6705,43 @@ const PAPER_PARAMS_DEFAULTS = {
   spread: 0.04,
   slippage: 0.02,
 };
+const RESET_OPT_KEYS = ['xauapp_opt_results','xauapp_param_apply_log'];
+function resetOptimizationArtifacts(reason='reset') {
+  try { RESET_OPT_KEYS.forEach(k => localStorage.removeItem(k)); localStorage.setItem('xauapp_last_opt_reset', JSON.stringify({ ts:Date.now(), reason, build:APP_BUILD })); } catch(e) {}
+}
+const PARAM_NEEDS_RESET = (() => {
+  try { return localStorage.getItem('xauapp_param_seed_epoch') !== PARAM_RESET_EPOCH; } catch(e) { return false; }
+})();
+if (PARAM_NEEDS_RESET) {
+  resetOptimizationArtifacts('auto-reset-v8.3.1-load-csv-yesterday-profile');
+  try { localStorage.setItem('xauapp_live_params', JSON.stringify({ ...PAPER_PARAMS_DEFAULTS, _seededAt:Date.now() })); } catch(e) {}
+  try { localStorage.setItem('xauapp_param_seed_epoch', PARAM_RESET_EPOCH); } catch(e) {}
+}
 let PAPER_PARAMS = (() => {
   try {
     const saved = JSON.parse(localStorage.getItem('xauapp_live_params') || 'null');
-    // Mantiene i parametri già ottimizzati e aggiunge solo i nuovi campi mancanti.
-    const fresh = saved ? { ...PAPER_PARAMS_DEFAULTS, ...saved, _v: PAPER_PARAMS_DEFAULTS._v } : { ...PAPER_PARAMS_DEFAULTS };
+    // v8.3.1: accetta solo parametri della stessa versione/profilo; altrimenti riparte dal profilo CSV ieri.
+    const compatible = saved && saved._v === PAPER_PARAMS_DEFAULTS._v && saved._profile === PARAM_PROFILE_ID;
+    const fresh = compatible ? { ...PAPER_PARAMS_DEFAULTS, ...saved, _v: PAPER_PARAMS_DEFAULTS._v, _profile:PARAM_PROFILE_ID } : { ...PAPER_PARAMS_DEFAULTS };
     try { localStorage.setItem('xauapp_live_params', JSON.stringify(fresh)); } catch(e) {}
     return fresh;
   } catch(e) { return { ...PAPER_PARAMS_DEFAULTS }; }
 })();
 // ── Pesi INTERNI dello scoring, per scenario (moltiplicatori, 1.0 = default) ──
 const SCORE_WEIGHTS_DEFAULTS = {
-  _v: 1,
+  _v: 2,
+  _profile: PARAM_PROFILE_ID,
   swing: { macro:1, mtf:1, adx:1, rsi:1, pivot:1, pullback:1, specific:1, sess:1 },
   trend: { macro:1, mtf:1, adx:1, rsi:1, pivot:1, pullback:1, specific:1, sess:1 },
   scalp: { macro:1, mtf:1, adx:1, rsi:1, pivot:1, pullback:1, specific:1, sess:1 },
 };
+if (PARAM_NEEDS_RESET) {
+  try { localStorage.setItem('xauapp_score_weights', JSON.stringify(SCORE_WEIGHTS_DEFAULTS)); } catch(e) {}
+}
 let SCORE_WEIGHTS = (() => {
   try {
     const saved = JSON.parse(localStorage.getItem('xauapp_score_weights') || 'null');
-    if (saved && saved._v === SCORE_WEIGHTS_DEFAULTS._v) {
+    if (saved && saved._v === SCORE_WEIGHTS_DEFAULTS._v && saved._profile === PARAM_PROFILE_ID) {
       return { ...SCORE_WEIGHTS_DEFAULTS, ...saved,
         swing:{...SCORE_WEIGHTS_DEFAULTS.swing,...(saved.swing||{})},
         trend:{...SCORE_WEIGHTS_DEFAULTS.trend,...(saved.trend||{})},
@@ -6683,7 +6753,140 @@ let SCORE_WEIGHTS = (() => {
 function saveScoreWeights(scen, w) {
   SCORE_WEIGHTS[scen] = { ...SCORE_WEIGHTS[scen], ...w };
   SCORE_WEIGHTS._v = SCORE_WEIGHTS_DEFAULTS._v;
+  SCORE_WEIGHTS._profile = PARAM_PROFILE_ID;
   try { localStorage.setItem('xauapp_score_weights', JSON.stringify(SCORE_WEIGHTS)); } catch(e) {}
+}
+
+
+const PARAM_SYNC_KEYS = ['thrSwing','thrTrend','thrScalp','thrBias','minConf','riskPct','beRR','trailRR','trailSwing','trailTrend','trailScalp','trailBias','partialPct','spread','slippage'];
+let lastSwPong = null;
+function stableSortObj(x) {
+  if (Array.isArray(x)) return x.map(stableSortObj);
+  if (x && typeof x === 'object') return Object.keys(x).sort().reduce((o,k)=>(o[k]=stableSortObj(x[k]),o),{});
+  return x;
+}
+function stableStringify(x) { return JSON.stringify(stableSortObj(x)); }
+function simpleHash(str) {
+  let h = 2166136261;
+  for (let i=0; i<str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return ('00000000' + (h >>> 0).toString(16)).slice(-8);
+}
+function paramsOnly(p=PAPER_PARAMS) {
+  const out = { _profile: PARAM_PROFILE_ID, _v: PAPER_PARAMS_DEFAULTS._v };
+  PARAM_SYNC_KEYS.forEach(k => out[k] = Number(p?.[k] ?? PAPER_PARAMS_DEFAULTS[k]));
+  return out;
+}
+function weightsOnly(w=SCORE_WEIGHTS) {
+  return {
+    _profile: PARAM_PROFILE_ID,
+    _v: SCORE_WEIGHTS_DEFAULTS._v,
+    swing:{...SCORE_WEIGHTS_DEFAULTS.swing,...(w?.swing||{})},
+    trend:{...SCORE_WEIGHTS_DEFAULTS.trend,...(w?.trend||{})},
+    scalp:{...SCORE_WEIGHTS_DEFAULTS.scalp,...(w?.scalp||{})},
+  };
+}
+function paramBundle(p=PAPER_PARAMS, w=SCORE_WEIGHTS) {
+  return { build:APP_BUILD, profile:PARAM_PROFILE_ID, params:paramsOnly(p), weights:weightsOnly(w) };
+}
+function paramBundleHash(p=PAPER_PARAMS, w=SCORE_WEIGHTS) { return simpleHash(stableStringify(paramBundle(p,w))); }
+function btParamsAsPercentParams(bp) {
+  const base = paramsOnly(PAPER_PARAMS);
+  if (!bp) return base;
+  return {
+    ...base,
+    riskPct:    +(Number(bp.riskPct ?? 0) * 100).toFixed(6),
+    partialPct: +(Number(bp.partialPct ?? 0) * 100).toFixed(6),
+    minConf:    Number(bp.minConf ?? base.minConf),
+    thrSwing:   Number(bp.thrSwing ?? base.thrSwing),
+    thrTrend:   Number(bp.thrTrend ?? base.thrTrend),
+    thrScalp:   Number(bp.thrScalp ?? base.thrScalp),
+    thrBias:    Number(bp.thrBias ?? base.thrBias),
+    beRR:       Number(bp.beRR ?? base.beRR),
+    trailRR:    Number(bp.trailRR ?? base.trailRR),
+    trailSwing: Number(bp.trailSwing ?? base.trailSwing),
+    trailTrend: Number(bp.trailTrend ?? base.trailTrend),
+    trailScalp: Number(bp.trailScalp ?? base.trailScalp),
+    trailBias:  Number(bp.trailBias ?? base.trailBias),
+    spread:     Number(bp.spread ?? base.spread),
+    slippage:   Number(bp.slippage ?? base.slippage),
+  };
+}
+function csvParamSnapshot(source='live', btParams=null) {
+  const params = btParams ? btParamsAsPercentParams(btParams) : paramsOnly(PAPER_PARAMS);
+  const weights = weightsOnly(SCORE_WEIGHTS);
+  const bundle = { build:APP_BUILD, profile:PARAM_PROFILE_ID, source, params, weights };
+  return { ...bundle, hash:simpleHash(stableStringify(bundle)) };
+}
+function paramCsvHeaders() {
+  const wKeys = ['macro','mtf','adx','rsi','pivot','pullback','specific','sess'];
+  return [
+    'paramBuild','paramProfile','paramHash','paramSource',
+    ...PARAM_SYNC_KEYS.map(k => 'param_' + k),
+    ...['swing','trend','scalp'].flatMap(s => wKeys.map(k => `weight_${s}_${k}`)),
+    'paramsJSON','weightsJSON'
+  ];
+}
+function paramCsvRow(snap) {
+  const s = snap || csvParamSnapshot('missing_snapshot_fallback');
+  const params = s.params || {};
+  const weights = s.weights || {};
+  const wKeys = ['macro','mtf','adx','rsi','pivot','pullback','specific','sess'];
+  return [
+    s.build || APP_BUILD, s.profile || PARAM_PROFILE_ID, s.hash || simpleHash(stableStringify(s)), s.source || '',
+    ...PARAM_SYNC_KEYS.map(k => params[k] ?? ''),
+    ...['swing','trend','scalp'].flatMap(sc => wKeys.map(k => weights?.[sc]?.[k] ?? '')),
+    stableStringify(params), stableStringify(weights)
+  ];
+}
+function uiParamsSnapshotRaw() {
+  const map = { 'btp-risk':'riskPct','btp-minconf':'minConf','btp-thr-swing':'thrSwing','btp-thr-trend':'thrTrend','btp-thr-scalp':'thrScalp','btp-thr-bias':'thrBias','btp-berr':'beRR','btp-trailrr':'trailRR','btp-trail-swing':'trailSwing','btp-trail-trend':'trailTrend','btp-trail-scalp':'trailScalp','btp-trail-bias':'trailBias','btp-partial':'partialPct','btp-spread':'spread','btp-slippage':'slippage' };
+  const out = { ...paramsOnly(PAPER_PARAMS) };
+  Object.entries(map).forEach(([id,k]) => { const el=document.getElementById(id); const v=el?parseFloat(el.value):NaN; if (Number.isFinite(v)) out[k]=v; });
+  return out;
+}
+function localStorageParamsSnapshot() {
+  try { return paramsOnly(JSON.parse(localStorage.getItem('xauapp_live_params') || 'null') || {}); } catch(e) { return null; }
+}
+function syncHashes() {
+  const liveH = paramBundleHash(PAPER_PARAMS, SCORE_WEIGHTS);
+  let lsH = 'ERR', uiH = 'N/D', btH = 'N/D';
+  try { lsH = paramBundleHash(JSON.parse(localStorage.getItem('xauapp_live_params')||'{}'), JSON.parse(localStorage.getItem('xauapp_score_weights')||'{}')); } catch(e) {}
+  try { uiH = simpleHash(stableStringify({ profile:PARAM_PROFILE_ID, params:uiParamsSnapshotRaw(), weights:weightsOnly(SCORE_WEIGHTS) })); } catch(e) {}
+  try { const bp = btGetParams(); const raw = { ...paramsOnly(PAPER_PARAMS), riskPct: +(bp.riskPct*100).toFixed(6), partialPct:+(bp.partialPct*100).toFixed(6), minConf:bp.minConf, thrSwing:bp.thrSwing, thrTrend:bp.thrTrend, thrScalp:bp.thrScalp, thrBias:bp.thrBias, beRR:bp.beRR, trailRR:bp.trailRR, trailSwing:bp.trailSwing, trailTrend:bp.trailTrend, trailScalp:bp.trailScalp, trailBias:bp.trailBias, spread:bp.spread, slippage:bp.slippage }; btH = simpleHash(stableStringify({ profile:PARAM_PROFILE_ID, params:raw, weights:weightsOnly(SCORE_WEIGHTS) })); } catch(e) {}
+  return { liveH, lsH, uiH, btH, swH:lastSwPong?.paramHash || 'N/D' };
+}
+function renderParamSyncStatus() {
+  const h = syncHashes();
+  const okLocal = h.liveH === h.lsH;
+  const okUi = h.uiH === h.btH; // UI e backtest leggono gli stessi input
+  const okSw = h.swH === 'N/D' ? null : h.swH === h.liveH;
+  const chip = (label, val, ok) => `<span style="display:inline-block;background:${ok===null?'#1e2535':ok?'#22c55e18':'#ef444418'};border:1px solid ${ok===null?'#2a3550':ok?'#22c55e55':'#ef444455'};color:${ok===null?'#c0cce0':ok?'#22c55e':'#ef4444'};border-radius:6px;padding:3px 6px;margin:2px;font-size:10px;font-weight:800">${label}: ${val}</span>`;
+  return `<div style="background:#080b10;border:1px solid ${(okLocal&&okUi&&(okSw!==false))?'#22c55e44':'#f0b42955'};border-radius:8px;padding:7px;margin-top:7px">
+    <div style="color:#fde68a;font-size:10px;font-weight:900;margin-bottom:3px">🔒 SYNC PARAMETRI v8.3.1 — profilo ${PARAM_PROFILE_ID}</div>
+    ${chip('live',h.liveH,true)}${chip('localStorage',h.lsH,okLocal)}${chip('UI',h.uiH,okUi)}${chip('backtest',h.btH,okUi)}${chip('SW',h.swH,okSw)}
+    <div style="color:#94a3b8;font-size:10px;margin-top:4px">Se i codici coincidono, parametri live, storage, input backtest e service worker sono allineati. Da v8.3.2 il CSV esporta parametri, pesi e hash: ogni backtest è auditabile anche dopo nuove ottimizzazioni.</div>
+  </div>`;
+}
+function syncAllParameterLayers(reason='sync') {
+  try { localStorage.setItem('xauapp_live_params', JSON.stringify(PAPER_PARAMS)); } catch(e) {}
+  try { localStorage.setItem('xauapp_score_weights', JSON.stringify(SCORE_WEIGHTS)); } catch(e) {}
+  try { if (typeof syncParamInputs === 'function') syncParamInputs(); } catch(e) {}
+  try { if (typeof sendToSW === 'function') sendToSW({ type:'UPDATE_CONFIG', tdKey:state.tdKey, config:LS.get('alert_config')||{}, paperEnabled:state.paper.enabled, paperCapital:state.paper.capital, openTrade:state.paper.openTrade, openTrades:state.paper.openTrades||{}, paperParams:PAPER_PARAMS, scoreWeights:SCORE_WEIGHTS, paramHash:paramBundleHash() }); } catch(e) {}
+  try { localStorage.setItem('xauapp_param_last_sync', JSON.stringify({ ts:Date.now(), reason, hash:paramBundleHash(), build:APP_BUILD })); } catch(e) {}
+}
+function resetOptResultsAndLoadCsvYesterdayProfile() {
+  PAPER_PARAMS = { ...PAPER_PARAMS_DEFAULTS, _seededAt:Date.now() };
+  SCORE_WEIGHTS = JSON.parse(JSON.stringify(SCORE_WEIGHTS_DEFAULTS));
+  resetOptimizationArtifacts('manual-reset-csv-yesterday-profile');
+  try { localStorage.setItem('xauapp_param_seed_epoch', PARAM_RESET_EPOCH); } catch(e) {}
+  syncAllParameterLayers('manual-reset-csv-yesterday-profile');
+  try { if (typeof renderOptHub === 'function') renderOptHub(); } catch(e) {}
+  alert('Risultati ottimizzazioni azzerati. Profilo parametri CSV ieri/v8.1 ricaricato e sincronizzato su live, backtest, localStorage e SW.');
+}
+function saveUiParamsToLive() {
+  PAPER_PARAMS = { ...PAPER_PARAMS, ...uiParamsSnapshotRaw(), _v:PAPER_PARAMS_DEFAULTS._v, _profile:PARAM_PROFILE_ID };
+  syncAllParameterLayers('manual-ui-to-live');
+  try { if (typeof renderOptHub === 'function') renderOptHub(); } catch(e) {}
 }
 
 function paperSlots() {
@@ -6708,25 +6911,24 @@ function hasOpenScenario(scenario) {
 function paperParamsSnapshot(overrides={}) {
   // Snapshot COMPLETO: ogni auto-apply salva tutto il set parametri, non solo il delta.
   // In questo modo live, backtest UI e service worker restano sempre allineati.
-  return { ...PAPER_PARAMS_DEFAULTS, ...PAPER_PARAMS, ...(overrides || {}), _v: PAPER_PARAMS_DEFAULTS._v };
+  return { ...PAPER_PARAMS_DEFAULTS, ...PAPER_PARAMS, ...(overrides || {}), _v: PAPER_PARAMS_DEFAULTS._v, _profile: PARAM_PROFILE_ID };
 }
 
-function savePaperParams(p) {
+function savePaperParams(p, reason='savePaperParams') {
   PAPER_PARAMS = paperParamsSnapshot(p);
-  try { localStorage.setItem('xauapp_live_params', JSON.stringify(PAPER_PARAMS)); } catch(e) {}
-  try { if (typeof syncParamInputs === 'function') syncParamInputs(); } catch(e) {}
+  syncAllParameterLayers(reason);
   try { if (typeof renderOptHub === 'function') renderOptHub(); } catch(e) {}
-  try { if (typeof sendToSW === 'function') sendToSW({ type:'UPDATE_CONFIG', tdKey:state.tdKey, config:LS.get('alert_config')||{}, paperEnabled:state.paper.enabled, paperCapital:state.paper.capital, openTrade:state.paper.openTrade, openTrades:state.paper.openTrades||{}, paperParams:PAPER_PARAMS }); } catch(e) {}
 }
 
 function applyOptimizedParams(overrides={}, meta={}) {
   const before = paperParamsSnapshot();
   const after = paperParamsSnapshot(overrides);
-  savePaperParams(after);
+  savePaperParams(after, meta.source || 'optimization');
+  const hash = paramBundleHash(after, SCORE_WEIGHTS);
   try {
     const hist = JSON.parse(localStorage.getItem('xauapp_param_apply_log') || '[]');
-    hist.push({ ts:Date.now(), source:meta.source||'optimization', scenario:meta.scenario||null, changed:Object.keys(overrides||{}), before, after });
-    localStorage.setItem('xauapp_param_apply_log', JSON.stringify(hist.slice(-30)));
+    hist.push({ ts:Date.now(), source:meta.source||'optimization', scenario:meta.scenario||null, changed:Object.keys(overrides||{}), before, after, hash, profile:PARAM_PROFILE_ID, build:APP_BUILD });
+    localStorage.setItem('xauapp_param_apply_log', JSON.stringify(hist.slice(-50)));
   } catch(e) {}
   return after;
 }
@@ -8044,6 +8246,8 @@ async function toggleBackground() {
     openTrade:     state.paper.openTrade,
     openTrades:    state.paper.openTrades || {},
     paperParams:   PAPER_PARAMS,
+    scoreWeights:  SCORE_WEIGHTS,
+    paramHash:     paramBundleHash(),
   });
 
   if (!ok) {
@@ -8093,6 +8297,8 @@ async function restoreBgState() {
       openTrade:    state.paper.openTrade,
       openTrades:   state.paper.openTrades || {},
       paperParams:  PAPER_PARAMS,
+      scoreWeights: SCORE_WEIGHTS,
+      paramHash:    paramBundleHash(),
     });
     if (ok) {
       updateBgUI(true);

@@ -1,8 +1,8 @@
 {
-  "name": "XAU/USD Analyzer v8.3 coerenza annealing",
-  "short_name": "XAU v8.3",
-  "description": "XAU/USD Analyzer — v8.3 coerenza annealing/backtest, swing 5M e auto-apply verificato.",
-  "start_url": "./?v=8.1-evidente",
+  "name": "XAU/USD Analyzer v8.3.2 parametri nel CSV",
+  "short_name": "XAU v8.3.2",
+  "description": "XAU/USD Analyzer — v8.3.2 export CSV con snapshot parametri, pesi e hash.",
+  "start_url": "./?v=8.3.2-parametri-csv",
   "scope": "./",
   "display": "standalone",
   "background_color": "#080b10",
