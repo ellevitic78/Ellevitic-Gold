@@ -7,9 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Gold AI"/>
 <meta name="theme-color" content="#f0b429"/>
-<link rel="manifest" href="manifest.json"/>
-<link rel="apple-touch-icon" href="icon-192.png"/>
-<title>XAU/USD Analyzer · v8.4 fast good params</title>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
+<title>XAU/USD Analyzer</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:#080b10;color:#fde68a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;font-size:17px}
@@ -65,15 +65,10 @@ button{cursor:pointer}
 </head>
 <body>
 
-<div id="version-visible-banner" style="position:sticky;top:0;z-index:999999;background:linear-gradient(90deg,#16a34a,#f0b429);color:#06110a;text-align:center;font-weight:900;font-size:15px;padding:8px 10px;border-bottom:2px solid #fde68a;box-shadow:0 4px 18px #0008">
-  ✅ VERSIONE NUOVA CARICATA — <span style="font-size:17px">v8.4 FAST · PARAMETRI BUONI</span> — parametri e hash allineati
-</div>
-
 <!-- ══ SETUP SCREEN ══════════════════════════════════════════ -->
 <div id="setup-screen" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px">
   <div style="font-size:48px;margin-bottom:14px">🥇</div>
   <div style="color:#f0b429;font-weight:800;font-size:22px;margin-bottom:6px">XAU/USD Analyzer</div>
-  <div style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e66;border-radius:8px;padding:6px 10px;font-size:15px;font-weight:900;margin-bottom:10px">✅ v8.4 — fast backtest + parametri buoni</div>
   <div style="color:#f0f4fa;font-size:17px;text-align:center;margin-bottom:28px;line-height:1.6">App standalone con dati live.<br>Configura le API key per iniziare.</div>
   <div style="width:100%;margin-bottom:10px">
     <div style="color:#f0b429;font-size:17px;font-weight:700;margin-bottom:5px">TWELVE DATA API KEY <span style="color:#ef4444">*</span></div>
@@ -108,7 +103,6 @@ button{cursor:pointer}
           <span id="hdr-chg" style="font-size:17px;font-weight:600"></span>
         </div>
         <div id="hdr-sub" style="color:#f0f4fa;font-size:16px;margin-top:1px"></div>
-        <div id="build-badge" style="display:inline-block;background:#22c55e22;color:#22c55e;border:1px solid #22c55e77;border-radius:8px;padding:5px 8px;font-size:14px;font-weight:900;margin-top:5px;letter-spacing:.2px">✅ NUOVA VERSIONE · v8.4 FAST · PARAMETRI BUONI · 2026-07-06</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
         <span id="mtf-badge" style="background:#c0cce020;color:#f0f4fa;border:1px solid #c0cce044;border-radius:5px;padding:4px 12px;font-size:17px;font-weight:700">–</span>
@@ -429,11 +423,11 @@ button{cursor:pointer}
     <div style="color:#22c55e;font-size:16px;font-weight:900;margin-bottom:4px">🧪 Backtest COMPLESSIVO — tutti gli scenari insieme (multi-slot)</div>
     <div style="color:#c0cce0;font-size:12px;line-height:1.5;margin-bottom:10px">
       Simula il paper trading sul passato usando <b>lo stesso identico scoring e le stesse regole di gestione</b>
-      (soglie, spread, rischio 1%, TP1 parziale configurabile, breakeven, trailing per scenario, exit a orario; Swing può essere testato con trigger/gestione 5M).
+      (soglie, spread, rischio 1%, TP1 parziale 50%, breakeven, trailing per scenario, exit a orario).
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
       <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px">
-        <span style="color:#c0cce0;font-size:13px">Profondità backtest</span>
+        <span style="color:#c0cce0;font-size:13px">Barre 1H da testare</span>
         <label style="display:flex;align-items:center;gap:5px;background:#141920;border-radius:7px;padding:6px 9px;cursor:pointer;margin-right:6px">
           <input type="checkbox" id="bt-fixedrisk" checked style="width:15px;height:15px;accent-color:#3b82f6"/>
           <span style="color:#c0cce0;font-size:11px;font-weight:700">Rischio fisso<br><span style="color:#94a3b8;font-weight:400;font-size:9px">P&L additivi tra scenari</span></span>
@@ -466,8 +460,7 @@ button{cursor:pointer}
     <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:6px">
       <span style="color:#c0cce0;font-size:13px">Modalità</span>
       <select id="bt-mode" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
-        <option value="hybrid5m" selected>Ibrido — Swing 5M + Trend/Bias 1H</option>
-        <option value="1h">1H puro — Swing/Trend/Bias</option>
+        <option value="1h" selected>1H — Swing/Trend/Bias</option>
         <option value="5m">5M — Scalp (approssimato)</option>
         <option value="1m">1M — Scalp (reale, richiede 1M profondo)</option>
       </select>
@@ -475,7 +468,7 @@ button{cursor:pointer}
 
     <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
       <summary style="color:#f0b429;font-size:13px;font-weight:700;cursor:pointer">⚙️ Parametri (default = valori live)</summary>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Rischio %</div><input type="number" id="btp-risk" value="5" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min confidence</div><input type="number" id="btp-minconf" value="60" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Swing</div><input type="number" id="btp-thr-swing" value="54" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Trend</div><input type="number" id="btp-thr-trend" value="74" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Scalp</div><input type="number" id="btp-thr-scalp" value="62" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Bias</div><input type="number" id="btp-thr-bias" value="72" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">BE trigger (R)</div><input type="number" id="btp-berr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail trigger (R)</div><input type="number" id="btp-trailrr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Swing ×ATR</div><input type="number" id="btp-trail-swing" value="2.7" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Trend ×ATR</div><input type="number" id="btp-trail-trend" value="1.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Scalp ×ATR</div><input type="number" id="btp-trail-scalp" value="0.8" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Bias ×ATR</div><input type="number" id="btp-trail-bias" value="1.0" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parziale TP1 %</div><input type="number" id="btp-partial" value="15" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Spread $</div><input type="number" id="btp-spread" value="0.04" step="0.01" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Slippage $</div><input type="number" id="btp-slippage" value="0.02" step="0.01" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Rischio %</div><input type="number" id="btp-risk" value="5" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min confidence</div><input type="number" id="btp-minconf" value="60" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Swing</div><input type="number" id="btp-thr-swing" value="54" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Trend</div><input type="number" id="btp-thr-trend" value="74" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Scalp</div><input type="number" id="btp-thr-scalp" value="62" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Bias</div><input type="number" id="btp-thr-bias" value="72" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">BE trigger (R)</div><input type="number" id="btp-berr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail trigger (R)</div><input type="number" id="btp-trailrr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Swing ×ATR</div><input type="number" id="btp-trail-swing" value="2.7" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Trend ×ATR</div><input type="number" id="btp-trail-trend" value="1.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Scalp ×ATR</div><input type="number" id="btp-trail-scalp" value="0.8" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parziale TP1 %</div><input type="number" id="btp-partial" value="15" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div></div>
     </details>
 
     <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
@@ -492,39 +485,15 @@ button{cursor:pointer}
     <details open style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
       <summary style="color:#a855f7;font-size:13px;font-weight:700;cursor:pointer">🔥 Ottimizzazione (Simulated Annealing)</summary>
       <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
-        Cerca i parametri migliori partendo dai valori live. In modalità ibrida lo Swing viene valutato su 5M, mentre Trend/Bias restano su 1H.
+        Cerca i parametri migliori su 5000 barre 1H partendo dai valori live.
         Se il risultato batte la baseline (P&L superiore, PF ≥ 1.05, ≥ 10 trade),
         <b style="color:#22c55e">i parametri live vengono sostituiti automaticamente</b>.
       </div>
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
         <div style="flex:1"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Iterazioni (≈3-6s l'una)</div>
-        <input type="number" id="sa-iters" value="40" min="5" max="2000" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+        <input type="number" id="sa-iters" value="40" min="5" max="300" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
         <button id="sa-run-btn" onclick="runSaOptimization()" style="flex:1;background:#a855f7;color:#fff;border-radius:7px;padding:11px 0;font-size:13px;font-weight:800;border:none;margin-top:14px">🔥 Avvia ottimizzazione</button>
       </div>
-      <details style="background:#0d1117;border:1px solid #2a3550;border-radius:7px;padding:7px;margin-top:8px">
-        <summary style="color:#e9d5ff;font-size:12px;font-weight:700;cursor:pointer">🧭 Spazio di ricerca annealing</summary>
-        <div style="color:#94a3b8;font-size:10px;line-height:1.5;margin:6px 0">
-          Vale sia per l'annealing globale sia per quello per scenario. <b>Standard</b> usa i range vecchi; <b>Largo/Esplorativo/Estremo</b> allargano range, affinano il passo e permettono pesi interni oltre ×2. Rischio overfitting crescente.
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-          <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Profilo</div>
-            <select id="opt-search-profile" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:7px;font-size:12px">
-              <option value="standard" selected>Standard sicuro</option>
-              <option value="wide">Largo</option>
-              <option value="explore">Esplorativo</option>
-              <option value="extreme">Estremo</option>
-            </select></div>
-          <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Ampiezza ×</div>
-            <input type="number" id="opt-range-mult" value="1" min="0.5" max="4" step="0.25" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:12px"/></div>
-          <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Passo</div>
-            <select id="opt-step-mode" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:7px;font-size:12px">
-              <option value="normal" selected>Normale</option>
-              <option value="fine">Fine</option>
-              <option value="ultra">Ultra fine</option>
-              <option value="coarse">Grosso</option>
-            </select></div>
-        </div>
-      </details>
     </details>
 
     <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
@@ -532,19 +501,17 @@ button{cursor:pointer}
       <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
         Ottimizza i parametri del singolo scenario in isolamento (soglia, poi trailing) con
         ricerca completa su ogni parametro. Stessa logica dell'Annealing: se il risultato
-        combinato batte la baseline, <b style="color:#22c55e">viene aggiornato l’intero snapshot parametri live/backtest</b>.
+        combinato batte la baseline, <b style="color:#22c55e">i parametri live dello scenario vengono aggiornati</b>.
       </div>
-      <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap">
-        <div style="flex:1;min-width:110px"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Scenario</div>
+      <div style="display:flex;gap:6px;align-items:flex-end">
+        <div style="flex:1"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Scenario</div>
           <select id="scen-opt-target" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:8px;font-size:13px">
             <option value="trend" selected>📈 Trend</option>
             <option value="swing">📊 Swing</option>
             <option value="bias">⏰ Bias</option>
             <option value="scalp">⚡ Scalp (1M profondo)</option>
           </select></div>
-        <div style="flex:1;min-width:100px"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Iterazioni annealing scenario</div>
-          <input type="number" id="scen-sa-iters" value="60" min="5" max="2000" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:8px;color:#f0f4fa;font-size:13px"/></div>
-        <button id="scen-opt-btn" onclick="runScenOptimization()" style="flex:1;min-width:130px;background:#3b82f6;color:#fff;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🎯 Ottimizza scenario</button>
+        <button id="scen-opt-btn" onclick="runScenOptimization()" style="flex:1;background:#3b82f6;color:#fff;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🎯 Ottimizza scenario</button>
       </div>
     </details>
 
@@ -553,7 +520,7 @@ button{cursor:pointer}
       <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
         Ottimizza i <b>pesi dei criteri dentro lo score</b> (macro, MTF, ADX, RSI, pivot, pullback,
         criteri specifici, sessione) come moltiplicatori ×0–×2, un criterio alla volta, scenario isolato.
-        Se il risultato batte la baseline, <b style="color:#22c55e">pesi e snapshot parametri live/backtest vengono aggiornati</b>.
+        Se il risultato batte la baseline, <b style="color:#22c55e">i pesi live dello scenario vengono aggiornati</b>.
         ~57 backtest: 3-6 minuti.
       </div>
       <div style="display:flex;gap:6px;align-items:flex-end">
@@ -672,7 +639,6 @@ button{cursor:pointer}
 </div>
 
 <script>
-const APP_BUILD = '2026-07-06-v8-4-fast-good-params';
 // ══ STORAGE ══════════════════════════════════════════════════
 const LS = {
   get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch{return null;} },
@@ -701,9 +667,8 @@ let state = {
     openTrades: {},          // slot indipendenti per scenario
     trades: [],              // storico trade chiusi
     equity: [10000],         // curva equity nel tempo
-    lastSignalTs: 0,         // timestamp ultimo segnale legacy
-    lastSignalTsByScenario: {}, // cooldown indipendente per scenario
-    cooldownMin: 5,          // minuti minimi tra due trade nello stesso scenario
+    lastSignalTs: 0,         // timestamp ultimo segnale (evita doppi)
+    cooldownMin: 5,          // minuti minimi tra un trade e il prossimo
   },
   corrData: {dxy:[],us10y:[],dxyInverted:false,dxySymbol:'',us10ySymbol:''},
   pivots: {pivot:4330,r1:4360,r2:4390,s1:4300,s2:4270},
@@ -1301,7 +1266,7 @@ async function updateLivePrice() {
     if (sub) sub.textContent = `Twelve Data · ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})} · key …${state.tdKey.slice(-4)}`;
 
     // Paper trading: gestione solo quando app visibile (in background gestisce il SW)
-    if (hasAnyPaperTrade() && price > 0 && document.visibilityState === 'visible') {
+    if (state.paper?.openTrade && price > 0 && document.visibilityState === 'visible') {
       try { evaluateAutoExit(price); } catch(e) { console.warn('[price] evaluateAutoExit:', e.message); }
     }
     // Se lo Score è ancora in "Caricamento", prova a renderizzare ora
@@ -1353,8 +1318,7 @@ async function doFetch(){
     const cur1hPrice = state.candles['1h']?.slice(-1)[0]?.c;
     if(cur1hPrice) {
       evaluateAutoExit(cur1hPrice);
-      // Live auto: entry sempre attiva quando il paper è ON, non solo nel tab Score.
-      if (state.paper?.enabled) evaluateAutoEntry();
+      if (!state.paper.openTrade && state.mode === 'recap') evaluateAutoEntry();
     }
   }catch(e){
     const msg = e.message||String(e);
@@ -1905,7 +1869,7 @@ function renderDiary(){
     const pnlTot=+(p.capital-(p.initialCapital||10000)).toFixed(2);
     const wins=pt.filter(t=>t.isWin).length;
     const wr=pt.length?Math.round(wins/pt.length*100):0;
-    const dd=+(currentDrawdown(p)*100).toFixed(1);
+    const dd=+((( p.initialCapital||10000)-p.capital)/(p.initialCapital||10000)*100).toFixed(1);
 
     // KPI
     html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
@@ -1954,8 +1918,7 @@ function renderDiary(){
     } else {
       html+=`<div class="card"><div class="section-title">📋 Storico Trade Automatici</div>`;
       pt.slice(0,30).forEach(t=>{
-        const pnlDisplay = t.pnlTotal ?? t.pnlEur ?? 0;
-        const col=t.isWin?'#22c55e':pnlDisplay===0?'#c0cce0':'#ef4444';
+        const col=t.isWin?'#22c55e':t.pnlEur===0?'#c0cce0':'#ef4444';
         const exitCol=t.exitReason==='TP2'?'#14b8a6':t.exitReason==='TP1'||t.exitReason==='TP1_PA'?'#22c55e':t.exitReason==='SL'?'#ef4444':'#c0cce0';
         html+=`<div style="background:#1e2740;border-radius:9px;padding:10px 12px;margin-bottom:6px;border-left:3px solid ${col}">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
@@ -1964,7 +1927,7 @@ function renderDiary(){
               <span style="background:${exitCol}20;color:${exitCol};border-radius:4px;padding:1px 6px;font-size:16px;font-weight:700">${t.exitReason||'–'}</span>
               <span style="color:#cbd5e1;font-size:15px">${t.scenario||'–'}</span>
             </div>
-            <span style="color:${col};font-weight:800;font-size:17px">${pnlDisplay>=0?'+':''}€${pnlDisplay.toFixed(2)}</span>
+            <span style="color:${col};font-weight:800;font-size:17px">${t.pnlEur>=0?'+':''}€${t.pnlEur?.toFixed(2)||'0'}</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-bottom:4px">
             ${[['Entry','$'+fmtP(t.entry),'#f0b429'],['Exit','$'+fmtP(t.exitPrice),col],['R/R',t.rr,'#f97316'],['Lot',t.lots,'#dde5f0']].map(([l,v,cv])=>`
@@ -1999,7 +1962,7 @@ function renderDiary(){
     const pnlTot=+(p.capital-(p.initialCapital||10000)).toFixed(2);
     const wins=pt.filter(t=>t.isWin).length;
     const wr=pt.length?Math.round(wins/pt.length*100):0;
-    const dd=+(currentDrawdown(p)*100).toFixed(1);
+    const dd=+((( p.initialCapital||10000)-p.capital)/(p.initialCapital||10000)*100).toFixed(1);
     html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
       <div class="kpi" style="border-color:${pnlTot>=0?'#22c55e33':'#ef444433'}">
         <div class="lbl">Capitale</div><div class="val" style="color:${pnlTot>=0?'#22c55e':'#ef4444'}">€${p.capital?.toFixed(0)||10000}</div>
@@ -2035,8 +1998,7 @@ function renderDiary(){
     } else {
       html+=`<div class="card"><div class="section-title">📋 Storico Trade Automatici</div>`;
       pt.slice(0,30).forEach(t=>{
-        const pnlDisplay = t.pnlTotal ?? t.pnlEur ?? 0;
-        const col=t.isWin?'#22c55e':pnlDisplay===0?'#c0cce0':'#ef4444';
+        const col=t.isWin?'#22c55e':t.pnlEur===0?'#c0cce0':'#ef4444';
         const exitCol={'TP2':'#14b8a6','TP1':'#22c55e','TP1_PA':'#22c55e','SL':'#ef4444'}[t.exitReason]||'#f97316';
         html+=`<div style="background:#1e2740;border-radius:9px;padding:10px 12px;margin-bottom:6px;border-left:3px solid ${col}">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
@@ -2045,7 +2007,7 @@ function renderDiary(){
               <span style="background:${exitCol}20;color:${exitCol};border-radius:4px;padding:1px 6px;font-size:16px;font-weight:700">${t.exitReason||'–'}</span>
               <span style="color:#cbd5e1;font-size:15px">${t.scenario||'–'}</span>
             </div>
-            <span style="color:${col};font-weight:800;font-size:17px">${pnlDisplay>=0?'+':''}€${pnlDisplay.toFixed(2)}</span>
+            <span style="color:${col};font-weight:800;font-size:17px">${t.pnlEur>=0?'+':''}€${(t.pnlEur||0).toFixed(2)}</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-bottom:4px">
             ${[['Entry','$'+fmtP(t.entry),'#f0b429'],['Exit','$'+fmtP(t.exitPrice),col],['R/R',t.rr||'–','#f97316'],['Cap','€'+(t.capitalAfter?.toFixed(0)||'–'),'#dde5f0']].map(([l,v,cv])=>
@@ -2073,10 +2035,9 @@ function renderDiary(){
     if(!trades.length){
       html+=`<div style="text-align:center;padding:40px 0;color:#fde68a"><div style="font-size:32px;margin-bottom:8px">📊</div>Nessun trade automatico ancora.<br><span style="font-size:17px;color:#cbd5e1">Avvia dalla pagina 🎯 Score</span></div>`;
     } else {
-      const tradePnl = t => t.pnlTotal ?? t.pnlEur ?? 0;
-      const wins=trades.filter(t=>tradePnl(t)>0), losses=trades.filter(t=>tradePnl(t)<0);
-      const pnlTot=+trades.reduce((s,t)=>s+tradePnl(t),0).toFixed(2);
-      const pfNum=wins.reduce((s,t)=>s+tradePnl(t),0), pfDen=Math.abs(losses.reduce((s,t)=>s+tradePnl(t),0));
+      const wins=trades.filter(t=>t.isWin), losses=trades.filter(t=>!t.isWin&&t.pnlEur<0);
+      const pnlTot=+trades.reduce((s,t)=>s+(t.pnlEur||0),0).toFixed(2);
+      const pfNum=wins.reduce((s,t)=>s+(t.pnlEur||0),0), pfDen=Math.abs(losses.reduce((s,t)=>s+(t.pnlEur||0),0));
       const pf=pfDen>0?+(pfNum/pfDen).toFixed(2):'∞';
       const withBE=trades.filter(t=>t.breakEvenSet).length, withTR=trades.filter(t=>t.trailingActive).length;
       const withPA=trades.filter(t=>t.exitReason?.startsWith('PA')||t.exitReason==='TP1_PA').length;
@@ -2090,7 +2051,7 @@ function renderDiary(){
       ['swing','scalp','trend'].forEach(id=>{
         const ts=trades.filter(t=>t.scenario===id); if(!ts.length) return;
         const tw=ts.filter(t=>t.isWin).length, wr=Math.round(tw/ts.length*100);
-        const tpnl=+ts.reduce((s,t)=>s+tradePnl(t),0).toFixed(2);
+        const tpnl=+ts.reduce((s,t)=>s+(t.pnlEur||0),0).toFixed(2);
         const col=wr>=55?'#22c55e':wr>=40?'#f0b429':'#ef4444';
         const lbl={'swing':'📊 Swing','scalp':'⚡ Scalp','trend':'📈 Trend'}[id];
         html+=`<div style="background:#1e2740;border-radius:9px;padding:10px 12px;margin-bottom:7px">
@@ -2101,7 +2062,7 @@ function renderDiary(){
       html+=`</div>`;
       html+=`<div class="card"><div class="section-title">🚪 Distribuzione Exit</div>`;
       const exitMap={};
-      trades.forEach(t=>{const r=t.exitReason||'?';if(!exitMap[r])exitMap[r]={n:0,w:0,pnl:0};exitMap[r].n++;if(t.isWin)exitMap[r].w++;exitMap[r].pnl+=tradePnl(t);});
+      trades.forEach(t=>{const r=t.exitReason||'?';if(!exitMap[r])exitMap[r]={n:0,w:0,pnl:0};exitMap[r].n++;if(t.isWin)exitMap[r].w++;exitMap[r].pnl+=(t.pnlEur||0);});
       const exitCols={'TP2':'#14b8a6','TP1':'#22c55e','TP1_PA':'#22c55e','BE':'#c0cce0','SL':'#ef4444'};
       Object.entries(exitMap).sort((a,b)=>b[1].n-a[1].n).forEach(([r,s])=>{
         const wr=Math.round(s.w/s.n*100),col=exitCols[r]||'#f97316';
@@ -2284,54 +2245,13 @@ function getSessionStatus() {
 }
 
 // ══ PAPER TRADING ENGINE ═════════════════════════════════════
-const SPREAD      = 0.04;   // fallback $0.04 spread bid/ask, sovrascrivibile da PAPER_PARAMS.spread
-const SLIPPAGE    = 0.02;   // fallback slippage prudenziale per lato, sovrascrivibile da PAPER_PARAMS.slippage
+const SPREAD      = 0.04;   // $0.04 spread fisso bid/ask
 const RISK_PCT    = 0.01;   // 1% del capitale per trade (rischio per stop)
 const LEVERAGE    = 100;    // leva 1:100
 const MAX_POS_PCT = 0.05;   // max 5% capitale per singola posizione
 const MIN_CONF    = 55;     // confidence minima per entry
 const MIN_SEMS    = 2;      // semafori verdi minimi
 const MAX_DD      = 0.10;   // max drawdown 10% prima di stop
-
-function paperSpread() {
-  const v = Number(PAPER_PARAMS?.spread);
-  return Number.isFinite(v) && v >= 0 ? v : SPREAD;
-}
-function paperSlippage() {
-  const v = Number(PAPER_PARAMS?.slippage);
-  return Number.isFinite(v) && v >= 0 ? v : SLIPPAGE;
-}
-function entryFill(rawPrice, dir, spread=paperSpread(), slippage=paperSlippage()) {
-  return dir === 'BUY'
-    ? +(rawPrice + spread/2 + slippage).toFixed(2)
-    : +(rawPrice - spread/2 - slippage).toFixed(2);
-}
-function exitFill(rawPrice, dir, spread=paperSpread(), slippage=paperSlippage()) {
-  return dir === 'BUY'
-    ? +(rawPrice - spread/2 - slippage).toFixed(2)
-    : +(rawPrice + spread/2 + slippage).toFixed(2);
-}
-function initialRiskDistance(t) {
-  return Math.abs((t.entry ?? 0) - (t.slInitial ?? t.slOrig ?? t.initialSL ?? t.sl ?? 0)) || 1;
-}
-function xauMarketOpen(ref=nowRef()) {
-  const d = ref instanceof Date ? ref : new Date(ref);
-  if (Number.isNaN(d.getTime())) return true;
-  const day = d.getUTCDay();
-  const min = d.getUTCHours()*60 + d.getUTCMinutes();
-  // Filtro prudenziale XAU/USD: niente nuove barre operative da venerdì sera a domenica sera UTC.
-  // Evita i falsi trade weekend presenti in alcuni feed storici/demo.
-  if (day === 6) return false;                 // sabato
-  if (day === 0 && min < 22*60 + 10) return false; // domenica prima della riapertura serale
-  if (day === 5 && min >= 21*60 + 55) return false; // venerdì dopo pre-chiusura
-  return true;
-}
-function round2(v) { return +(Number(v)||0).toFixed(2); }
-function currentDrawdown(p=state.paper) {
-  const eq = Array.isArray(p.equity) ? p.equity.filter(v => Number.isFinite(Number(v))).map(Number) : [];
-  const peak = Math.max(p.initialCapital || 10000, p.capital || 0, ...eq);
-  return peak > 0 ? (peak - (p.capital || 0)) / peak : 0;
-}
 
 // Calcola lot size con leva 1:100 e limite 5% capitale
 // XAU/USD standard: 1 lot = 100 oz
@@ -2361,7 +2281,7 @@ function evaluateAutoEntry() {
   const p = state.paper;
   if (!p.enabled) return;
 
-  const dd = currentDrawdown(p);
+  const dd = (p.initialCapital - p.capital) / p.initialCapital;
   if (dd >= MAX_DD) {
     console.log('[PAPER] Stop: max drawdown');
     p.enabled = false;
@@ -2373,7 +2293,7 @@ function evaluateAutoEntry() {
   const nowTs = Date.now();
   const evalEl = document.getElementById('paper-last-eval');
   if (evalEl) evalEl.textContent = `Ultimo check: ${new Date().toLocaleTimeString('it-IT')}`;
-  if (!p.lastSignalTsByScenario) p.lastSignalTsByScenario = {};
+  if (nowTs - p.lastSignalTs < p.cooldownMin * 60 * 1000) return;
   if (isWeekendRisk()) { console.log('[PAPER] Skip: weekend gap risk'); return; }
 
   // MULTI-SLOT: ogni scenario eleggibile col proprio slot libero apre in parallelo
@@ -2384,17 +2304,14 @@ function evaluateAutoEntry() {
   let openedAny = false;
   for (const s of recap.scores) {
     if (slots[s.id]) continue; // slot già occupato da questo scenario
-    if (nowTs - (p.lastSignalTsByScenario[s.id] || 0) < p.cooldownMin * 60 * 1000) continue; // cooldown per scenario
     const bDir = s.bestDir || 'WAIT';
     if (bDir === 'WAIT') continue;
     const esc = bDir === 'BUY' ? s.buy : s.sell;
     if (!esc || !esc.setup) continue; // bestDir ≠ WAIT già implica soglia superata
     if (esc.score < PAPER_PARAMS.minConf) { console.log('[PAPER]', s.id, 'skip: sotto minConf', esc.score); continue; }
     if (esc.setup.chasing) { console.log('[PAPER]', s.id, 'skip: chasing'); continue; }
-    if (openPaperTradeFor(s.id, bDir, esc, recap.scores, s.threshold)) {
-      p.lastSignalTsByScenario[s.id] = nowTs;
-      openedAny = true;
-    }
+    openPaperTradeFor(s.id, bDir, esc);
+    openedAny = true;
   }
   if (openedAny) {
     p.lastSignalTs = nowTs;
@@ -2405,14 +2322,14 @@ function evaluateAutoEntry() {
 }
 
 // Apre un trade nello slot del SUO scenario
-function openPaperTradeFor(scenarioId, dirIn, esIn, allScores=null, threshold=null) {
+function openPaperTradeFor(scenarioId, dirIn, esIn) {
   const p = state.paper;
-  if (!p.openTrades) p.openTrades = {};
-  if (p.openTrades[scenarioId]) return null; // max 1 trade per scenario
   const es = { score: esIn.score, dir: dirIn, setup: esIn.setup, reasons: esIn.R || [] };
 
   const rawEntry = es.setup.entry;
-  const entry = entryFill(rawEntry, es.dir);
+  const entry = es.dir === 'BUY'
+    ? +(rawEntry + SPREAD / 2).toFixed(2)
+    : +(rawEntry - SPREAD / 2).toFixed(2);
 
   const sl  = es.setup.sl;
   const tp1 = es.setup.tp1;
@@ -2424,7 +2341,7 @@ function openPaperTradeFor(scenarioId, dirIn, esIn, allScores=null, threshold=nu
     scenario:   scenarioId,
     label:      scenarioId,
     totalScore: es.score,
-    threshold:  threshold,
+    threshold:  null,
     direction:  es.dir,
     reasons:    es.reasons,
     marketSnapshot: {
@@ -2437,14 +2354,9 @@ function openPaperTradeFor(scenarioId, dirIn, esIn, allScores=null, threshold=nu
       session:  getSessionStatus().sess,
       ts:       new Date().toISOString(),
     },
-    allScores: (allScores||[]).map(x => {
-      const dir = x.bestDir || 'WAIT';
-      const one = dir === 'BUY' ? x.buy : dir === 'SELL' ? x.sell : (x.buy?.score >= (x.sell?.score||0) ? x.buy : x.sell);
-      return { id:x.id, label:x.label, score:x.bestScore || one?.score || 0, dir, eligible:dir!=='WAIT', threshold:x.threshold, reasons:(one?.reasons || one?.R || []).slice(0,5) };
-    }),
+    allScores: [],
   };
 
-  const openParamSnapshot = csvParamSnapshot('paper_open');
   const trade = {
     id:            Date.now() + Math.floor(Math.random()*1000),
     direction:     es.dir,
@@ -2452,14 +2364,7 @@ function openPaperTradeFor(scenarioId, dirIn, esIn, allScores=null, threshold=nu
     confidence:    es.score,
     openedAt:      new Date().toISOString(),
     capitalAtOpen: p.capital,
-    capitalBefore: p.capital,
-    spread:        paperSpread(),
-    slippage:      paperSlippage(),
-    slInitial:     sl,
-    slOrig:        sl,
-    tp1Initial:    tp1,
-    tp2Initial:    tp2,
-    lotsInitial:   lots,
+    spread:        SPREAD,
     pattern:       `Auto [${scenarioId}]`,
     macroDir:      '–',
     atrAtEntry:    (state.candles['1h']||[]).slice(-1)[0]?.atr || 0,
@@ -2474,24 +2379,21 @@ function openPaperTradeFor(scenarioId, dirIn, esIn, allScores=null, threshold=nu
     partialClosed:  false,
     maxFavorable:   es.setup.entry,
     minAdverse:     es.setup.entry,
-    paramSnapshot: openParamSnapshot,
-    paramHash:     openParamSnapshot.hash,
   };
 
   p.openTrades[scenarioId] = trade;
-  syncLegacyOpen();
   console.log('[PAPER] Trade aperto:', scenarioId, trade.direction, '@', entry);
 
   sendToSW({
     type: 'PAPER_TRADE_OPEN',
     trade: {
-      ...trade,
+      id: trade.id, direction: trade.direction,
+      entry: trade.entry, sl: trade.sl, tp1: trade.tp1, tp2: trade.tp2,
+      lots: trade.lots, scenario: trade.scenario,
+      atrAtEntry: trade.atrAtEntry, breakEvenSet: false,
       trailMult: getTrailMult(trade.scenario||'swing'),
       warnThresh: getWarnThreshold(trade.scenario||'swing'),
     },
-    capital: p.capital,
-    openTrades: p.openTrades || {},
-    paperParams: PAPER_PARAMS,
     tdKey: state.tdKey,
   }).catch(()=>{});
 
@@ -2504,7 +2406,6 @@ function openPaperTradeFor(scenarioId, dirIn, esIn, allScores=null, threshold=nu
       });
     }).catch(()=>{});
   }
-  return trade;
 }
 
 // ── Analisi forza prezzo per gestione trade ──────────────────
@@ -2731,29 +2632,20 @@ function evaluateAutoExitCore(t, currentPrice) {
     if (!closed && !t.partialDone) {
       const hitTp1 = (dir === 'BUY' && currentPrice >= t.tp1) || (dir === 'SELL' && currentPrice <= t.tp1);
       if (hitTp1) {
-        const halfLots = Math.min(t.lots, +(t.lots * PAPER_PARAMS.partialPct/100).toFixed(2));
-        const exitHalf = exitFill(t.tp1, dir, t.spread ?? paperSpread(), t.slippage ?? paperSlippage());
+        const halfLots = +(t.lots * PAPER_PARAMS.partialPct/100).toFixed(2);
+        const exitHalf = dir === 'BUY' ? +(t.tp1 - SPREAD/2).toFixed(2) : +(t.tp1 + SPREAD/2).toFixed(2);
         const pnlHalf  = +((dir==='BUY' ? exitHalf - t.entry : t.entry - exitHalf) * halfLots * 100).toFixed(2);
-        const capBeforePartial = p.capital;
         p.capital = +(p.capital + pnlHalf).toFixed(2);
-        p.equity.push(p.capital);
-        if (p.equity.length > 200) p.equity.shift();
         t.lots = +(t.lots - halfLots).toFixed(2);
         t.partialDone = true;
-        t.partialClosed = true;
-        t.partialClosedAt = new Date().toISOString();
-        t.partialLots = halfLots;
-        t.partialExitPrice = exitHalf;
-        t.partialCapitalBefore = capBeforePartial;
-        t.partialCapitalAfter = p.capital;
         t.partialPnl = pnlHalf;
         // SL a breakeven pieno dopo il parziale (trade ora risk-free)
-        const beSL = dir === 'BUY' ? +(t.entry + (t.spread ?? paperSpread())).toFixed(2) : +(t.entry - (t.spread ?? paperSpread())).toFixed(2);
+        const beSL = dir === 'BUY' ? +(t.entry + SPREAD).toFixed(2) : +(t.entry - SPREAD).toFixed(2);
         if ((dir==='BUY' && beSL > t.sl) || (dir==='SELL' && beSL < t.sl)) t.sl = beSL;
         t.breakEvenSet = true;
-        logAction(`TP1 parziale ${PAPER_PARAMS.partialPct}%: +€${pnlHalf} · resto ${t.lots} lot corre a TP2 · SL→BE`);
+        logAction(`TP1 parziale 50%: +€${pnlHalf} · resto ${t.lots} lot corre a TP2 · SL→BE`);
         if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-          navigator.serviceWorker.ready.then(reg => reg.showNotification(`🎯 TP1 — ${PAPER_PARAMS.partialPct}% incassato`, {
+          navigator.serviceWorker.ready.then(reg => reg.showNotification('🎯 TP1 — 50% incassato', {
             body: `+€${pnlHalf} · Resto corre a TP2 $${fmtP(t.tp2)} · SL a breakeven`,
             icon: '/icon-192.png', tag: 'paper-partial', vibrate: [200,100,200],
           })).catch(()=>{});
@@ -2795,41 +2687,28 @@ function evaluateAutoExitCore(t, currentPrice) {
   }
 
   // ── Chiudi il trade ───────────────────────────────────────
-  const exitWithSpread = exitFill(exitPrice, dir, t.spread ?? paperSpread(), t.slippage ?? paperSlippage());
+  const exitWithSpread = dir === 'BUY'
+    ? +(exitPrice - SPREAD / 2).toFixed(2)
+    : +(exitPrice + SPREAD / 2).toFixed(2);
 
   const pnlPts = dir === 'BUY' ? exitWithSpread - t.entry : t.entry - exitWithSpread;
   const pnlEur = +(pnlPts * t.lots * 100).toFixed(2);
-  const pnlTotal = +((pnlEur + (t.partialPnl||0))).toFixed(2);
-  const isWin  = pnlTotal > 0;
-  const capitalBeforeClose = p.capital;
+  const isWin  = pnlEur > 0;
 
   p.capital = +(p.capital + pnlEur).toFixed(2);
   p.equity.push(p.capital);
   if (p.equity.length > 200) p.equity.shift();
 
-  const riskInitial = initialRiskDistance(t);
-  const riskEurInitial = t.riskEur || +(riskInitial * (t.lotsInitial ?? t.lots) * 100).toFixed(2);
-  const standaloneAfter = +((t.capitalBefore ?? t.capitalAtOpen ?? 0) + pnlTotal).toFixed(2);
-
   const closed_trade = {
     ...t,
     exitPrice:     exitWithSpread,
-    exitReason:    (exitReason === 'SL' && t.breakEvenSet) ? 'SL_BE' : exitReason,
+    exitReason,
     pnlEur,
-    finalPnl:      pnlEur,
-    pnlTotal,
     isWin,
     closedAt:      new Date().toISOString(),
-    capitalBeforeClose,
     capitalAfter:  p.capital,
-    portfolioCapitalAfter: p.capital,
-    standaloneCapitalAfter: standaloneAfter,
-    reconciliationDelta: +(p.capital - standaloneAfter).toFixed(2),
-    slFinal:       t.sl,
-    tp2Final:      t.tp2,
-    rrFinal:       +(pnlPts / riskInitial).toFixed(2),
-    rr:            +(pnlTotal / (riskEurInitial || 1)).toFixed(2),
-    pnlTotal:      pnlTotal,
+    rr:            +(pnlPts / Math.abs(t.entry - t.sl || 1)).toFixed(2),
+    pnlTotal:      +((pnlEur + (t.partialPnl||0))).toFixed(2),
     partialPnl:    t.partialPnl || 0,
     paAtClose:     pa ? { warnScore: pa.warnScore, strScore: pa.strScore, topWarning: pa.warnings[0]?.msg } : null,
     managementLog: t.managementLog,
@@ -2846,17 +2725,17 @@ function evaluateAutoExitCore(t, currentPrice) {
   if (state.mode === 'recap') renderRecapScreen();
   else if (typeof renderPaperWidget === 'function') renderPaperWidget();
   // Notifica SW che il trade è chiuso
-  sendToSW({ type: 'PAPER_TRADE_CLOSED', trade: closed_trade, capital: p.capital, trades: p.trades, openTrades: p.openTrades || {} }).catch(()=>{});
+  sendToSW({ type: 'PAPER_TRADE_CLOSED' }).catch(()=>{});
 
   const evalEl = document.getElementById('paper-last-eval');
-  if (evalEl) evalEl.textContent = `Chiusura: ${new Date().toLocaleTimeString('it-IT')} · ${closed_trade.exitReason} · ${closed_trade.pnlTotal > 0 ? '+' : ''}€${closed_trade.pnlTotal}`;
+  if (evalEl) evalEl.textContent = `Chiusura: ${new Date().toLocaleTimeString('it-IT')} · ${exitReason} · ${pnlEur > 0 ? '+' : ''}€${pnlEur}`;
 
   if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-    const emoji = isWin ? '✅' : closed_trade.exitReason.startsWith('SL') ? '❌' : '➖';
+    const emoji = isWin ? '✅' : exitReason.startsWith('SL') ? '❌' : '➖';
     const paNote = closed_trade.paAtClose?.topWarning ? ` · ${closed_trade.paAtClose.topWarning}` : '';
     navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification(`${emoji} Paper Trade — ${closed_trade.exitReason}`, {
-        body: `${dir} XAU · ${closed_trade.pnlTotal > 0 ? '+' : ''}€${closed_trade.pnlTotal.toFixed(2)} · Cap: €${p.capital.toFixed(0)}${paNote}`,
+      reg.showNotification(`${emoji} Paper Trade — ${exitReason}`, {
+        body: `${dir} XAU · ${pnlEur > 0 ? '+' : ''}€${pnlEur.toFixed(2)} · Cap: €${p.capital.toFixed(0)}${paNote}`,
         icon: '/icon-192.png', tag: 'paper-close', vibrate: [300, 100, 300],
       });
     }).catch(() => {});
@@ -2867,26 +2746,20 @@ function savePaperState() {
   const p = state.paper;
   LS.set('paper_capital',  p.capital);
   LS.set('paper_open',     p.openTrade);
-  LS.set('paper_openTrades',p.openTrades || {});
   LS.set('paper_trades',   p.trades);
   LS.set('paper_equity',   p.equity);
   LS.set('paper_enabled',  p.enabled);
   LS.set('paper_lastSig',  p.lastSignalTs);
-  LS.set('paper_lastSigByScenario', p.lastSignalTsByScenario || {});
 }
 
 function loadPaperState() {
   const p = state.paper;
   p.capital      = LS.get('paper_capital')   ?? 10000;
   p.openTrade    = LS.get('paper_open')      ?? null;
-  p.openTrades   = LS.get('paper_openTrades')?? {};
-  if (p.openTrade && !p.openTrades[p.openTrade.scenario || 'swing']) p.openTrades[p.openTrade.scenario || 'swing'] = p.openTrade;
-  syncLegacyOpen();
   p.trades       = LS.get('paper_trades')    ?? [];
   p.equity       = LS.get('paper_equity')    ?? [10000];
   p.enabled      = LS.get('paper_enabled')   ?? false;
   p.lastSignalTs = LS.get('paper_lastSig')   ?? 0;
-  p.lastSignalTsByScenario = LS.get('paper_lastSigByScenario') ?? {};
 }
 
 // ══ PAPER TRADING LOG EXPORT ═════════════════════════════════
@@ -2902,10 +2775,10 @@ function exportPaperLog() {
     // Dati trade base
     'ID', 'Aperto_il', 'Chiuso_il', 'Durata_min',
     'Scenario', 'Direzione',
-    'Entry', 'SL_iniziale', 'SL_finale', 'TP1_iniziale', 'TP2_iniziale', 'TP2_finale',
+    'Entry', 'SL_iniziale', 'TP1_iniziale', 'TP2_iniziale',
     'Exit_Price', 'Exit_Reason',
-    'Lotti_iniziali', 'Lotti_finali', 'Rischio_EUR', 'Partial_PnL', 'Final_PnL', 'PnL_Totale', 'RR_finale', 'RR_totale',
-    'Capitale_entry', 'Capitale_pre_close', 'Capitale_dopo_portafoglio', 'Capitale_dopo_standalone', 'Delta_riconciliazione', 'Spread', 'Slippage', 'Vittoria',
+    'Lotti', 'Rischio_EUR', 'PnL_EUR', 'RR_realizzato',
+    'Capitale_dopo', 'Vittoria',
     // Score entry
     'Score_entry', 'Soglia_scenario',
     'Sessione_entry', 'RSI_1H_entry', 'MACD_1H_entry', 'ATR_1H_entry',
@@ -2927,7 +2800,6 @@ function exportPaperLog() {
     // Motivazioni entry scenario vincente
     'Entry_reason1', 'Entry_reason2', 'Entry_reason3',
     'Entry_reason4', 'Entry_reason5',
-    ...paramCsvHeaders(),
   ];
 
   const rows = trades.map(t => {
@@ -2947,10 +2819,10 @@ function exportPaperLog() {
     return [
       t.id, t.openedAt, t.closedAt || '', durMin,
       t.scenario || '', t.direction,
-      t.entry, t.slInitial ?? t.slOrig ?? '', t.slFinal ?? t.sl ?? '', t.tp1Initial ?? t.tp1, t.tp2Initial ?? t.tp2, t.tp2Final ?? t.tp2,
+      t.entry, t.sl, t.tp1, t.tp2,
       t.exitPrice || '', t.exitReason || '',
-      t.lotsInitial ?? '', t.lots, t.riskEur, t.partialPnl || 0, t.finalPnl ?? t.pnlEur ?? '', t.pnlTotal ?? t.pnlEur ?? '', t.rrFinal ?? '', t.rr ?? '',
-      t.capitalBefore ?? t.capitalAtOpen ?? '', t.capitalBeforeClose ?? '', t.portfolioCapitalAfter ?? t.capitalAfter ?? '', t.standaloneCapitalAfter ?? '', t.reconciliationDelta ?? '', t.spread ?? '', t.slippage ?? '', t.isWin ? 'SI' : 'NO',
+      t.lots, t.riskEur, t.pnlEur || '', t.rr || '',
+      t.capitalAfter || '', t.isWin ? 'SI' : 'NO',
       // Score entry
       snap.totalScore || '', snap.threshold || '',
       mkt.session || '', mkt.rsi1h || '', mkt.macd1h || '', mkt.atr1h || '',
@@ -2973,8 +2845,6 @@ function exportPaperLog() {
       (tr.reasons || [])[0] || '', (tr.reasons || [])[1] || '', (tr.reasons || [])[2] || '',
       // Entry reasons
       reasons[0] || '', reasons[1] || '', reasons[2] || '', reasons[3] || '', reasons[4] || '',
-      // Snapshot parametri/pesi usati all'apertura del trade; fallback ai parametri correnti per vecchi log
-      ...paramCsvRow(t.paramSnapshot || csvParamSnapshot('paper_export_current')),
     ].map(v => {
       // Escape per CSV
       const s = String(v === null || v === undefined ? '' : v);
@@ -3003,11 +2873,11 @@ function exportPaperLogJSON() {
       pnlTotal:   +(p.capital - p.initialCapital).toFixed(2),
       byScenario: ['swing','scalp','trend'].map(id => {
         const ts = p.trades.filter(t=>t.scenario===id);
-        return { id, n:ts.length, wins:ts.filter(t=>t.isWin).length, pnl:+ts.reduce((s,t)=>s+(t.pnlTotal ?? t.pnlEur ?? 0),0).toFixed(2) };
+        return { id, n:ts.length, wins:ts.filter(t=>t.isWin).length, pnl:+ts.reduce((s,t)=>s+(t.pnlEur||0),0).toFixed(2) };
       }),
       byExitReason: [...new Set(p.trades.map(t=>t.exitReason))].map(r => {
         const ts = p.trades.filter(t=>t.exitReason===r);
-        return { reason:r, n:ts.length, pnl:+ts.reduce((s,t)=>s+(t.pnlTotal ?? t.pnlEur ?? 0),0).toFixed(2) };
+        return { reason:r, n:ts.length, pnl:+ts.reduce((s,t)=>s+(t.pnlEur||0),0).toFixed(2) };
       }),
     }
   };
@@ -3036,7 +2906,6 @@ function resetPaperTrading() {
   p.equity = [10000];
   p.enabled = false;
   p.lastSignalTs = 0;
-  p.lastSignalTsByScenario = {};
   savePaperState();
   renderPaperWidget();
   if (state.diaryTab === 'paper') renderDiary();
@@ -3051,7 +2920,7 @@ function renderPaperWidget() {
   const pnlPct   = +(pnlTotal / p.initialCapital * 100).toFixed(2);
   const wins     = p.trades.filter(t=>t.isWin).length;
   const wr       = p.trades.length ? Math.round(wins/p.trades.length*100) : 0;
-  const dd       = +(currentDrawdown(p) * 100).toFixed(1);
+  const dd       = +((p.initialCapital - p.capital) / p.initialCapital * 100).toFixed(1);
   const ddReached = dd >= MAX_DD * 100;
 
   el.innerHTML = `
@@ -3113,7 +2982,7 @@ function renderPaperWidget() {
 
 function togglePaperTrading() {
   const p = state.paper;
-  const dd = currentDrawdown(p);
+  const dd = (p.initialCapital - p.capital) / p.initialCapital;
   if (!p.enabled && dd >= MAX_DD) {
     alert('Drawdown massimo raggiunto. Premi "Azzera" per ricominciare.');
     return;
@@ -3127,8 +2996,6 @@ function togglePaperTrading() {
     paperCapital:  p.capital,
     paperTrades:   p.trades,
     openTrade:     p.openTrade,
-    openTrades:    p.openTrades || {},
-    paperParams:   PAPER_PARAMS,
   }).catch(()=>{});
   if (state.mode === 'recap') renderRecapScreen();
   else if (typeof renderPaperWidget === 'function') renderPaperWidget();
@@ -3320,10 +3187,6 @@ async function testSyncSw() {
     paperCapital: p.capital,
     paperTrades:  p.trades,
     openTrade:    p.openTrade,
-    openTrades:   p.openTrades || {},
-    paperParams:  PAPER_PARAMS,
-    scoreWeights: SCORE_WEIGHTS,
-    paramHash: paramBundleHash(),
   });
   if (ok) logDiag('✓ Sync inviato al SW', '#22c55e');
   else logDiag('✗ Sync fallito — SW non raggiungibile', '#ef4444');
@@ -3344,15 +3207,11 @@ function handleSwMessageCore(e) {
     'BG_TRADE_UPDATE':'#c0cce0',
   };
   const col = colors[d.type] || '#dde5f0';
-  if (d.type === 'PONG') { lastSwPong = d; try { if (typeof renderOptHub === 'function') renderOptHub(); } catch(e) {} }
-
   if (d.type === 'BG_UPDATE') {
     logDiag(`SW → ${d.type}: price=$${d.price?.toFixed(2)||'–'} rsi=${d.rsi||'–'}`, col);
   } else if (d.type === 'PONG') {
-    lastSwPong = d;
-    logDiag(`SW → PONG: bg=${d.bgActive} trade=${d.hasTrade} paper=${d.paperEnabled} hash=${d.paramHash||'–'}`, col);
+    logDiag(`SW → PONG: bg=${d.bgActive} trade=${d.hasTrade} paper=${d.paperEnabled}`, col);
     refreshSwDiag();
-    try { if (typeof renderOptHub === 'function') renderOptHub(); } catch(e) {}
   } else if (d.type !== 'BG_UPDATE') {
     logDiag(`SW → ${d.type}${d.trade?' ['+d.trade.direction+']':''}${d.price?' $'+d.price.toFixed(2):''}`, col);
   }
@@ -3398,122 +3257,13 @@ function btAggregate(cc, hours) {
   return out;
 }
 
-const BT_PREP_CACHE = new Map();
-const BT_PREP_CACHE_MAX = 24;
-function btDataVersion(raw) {
-  const c = raw?.candles || [];
-  return `${c.length}:${c[0]?.t||''}:${c[c.length-1]?.t||''}`;
-}
-function btRangeKey(range) {
-  return Array.isArray(range) ? `${range[0]}:${range[1]}` : 'all';
-}
-function btRememberPrepared(key, val) {
-  if (BT_PREP_CACHE.size >= BT_PREP_CACHE_MAX) BT_PREP_CACHE.delete(BT_PREP_CACHE.keys().next().value);
-  BT_PREP_CACHE.set(key, val);
-  return val;
-}
-function btTs(arr) {
-  if (!arr) return [];
-  if (!arr._btTs) {
-    try { Object.defineProperty(arr, '_btTs', { value: arr.map(cd => +new Date(cd.t)), enumerable:false }); }
-    catch(e) { arr._btTs = arr.map(cd => +new Date(cd.t)); }
-  }
-  return arr._btTs;
-}
 function btSliceByTime(candles, t) {
-  // Compatibilità: binary search invece della scansione a ritroso O(n) per ogni barra.
-  const ts = btTs(candles);
-  const x = +new Date(t);
-  let lo = 0, hi = ts.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    if (ts[mid] <= x) lo = mid + 1; else hi = mid;
+  let hi = candles.length;
+  for (let i = candles.length-1; i >= 0; i--) {
+    if (new Date(candles[i].t) <= t) { hi = i+1; break; }
+    if (i === 0) hi = 0;
   }
-  return candles.slice(0, lo);
-}
-function btMakeSliceCursor(seriesMap) {
-  const pos = {};
-  const tsMap = {};
-  Object.entries(seriesMap).forEach(([k, arr]) => { pos[k] = 0; tsMap[k] = btTs(arr || []); });
-  return function sliceTo(key, t, limit=null) {
-    const arr = seriesMap[key] || [];
-    const ts = tsMap[key] || [];
-    const x = +new Date(t);
-    let p = pos[key] || 0;
-    while (p < ts.length && ts[p] <= x) p++;
-    // Protezione per eventuali chiamate non monotone.
-    while (p > 0 && ts[p-1] > x) p--;
-    pos[key] = p;
-    const start = limit ? Math.max(0, p - limit) : 0;
-    return arr.slice(start, p);
-  };
-}
-async function btPrepareSeries(mode, maxBars, range=null) {
-  const is1m = mode === '1m';
-  const isHybrid5m = mode === 'hybrid5m' || mode === 'swing5m';
-  const isScalp = mode === '5m' || mode === '1m';
-  const is5mDriven = mode === '5m' || isHybrid5m;
-  const seriesKey = is1m ? 'xauusd_1m' : is5mDriven ? 'xauusd_5m' : 'xauusd_1h';
-  const raw = await histLoad(seriesKey);
-  if (!raw?.candles?.length) throw new Error(`Serve lo storico ${is1m?'XAU 1M (usa "1M profondo")':is5mDriven?'XAU 5M':'XAU 1H'} — scaricalo prima.`);
-  const corrKey = (is1m || is5mDriven) ? 'eurusd_5m' : 'eurusd_1h';
-  const tnxKey  = (is1m || is5mDriven) ? 'tnx_5m'    : 'tnx_1h';
-  const eurRaw = await histLoad(corrKey), tnxRaw = await histLoad(tnxKey);
-  const key = [APP_BUILD, mode, maxBars, btRangeKey(range), seriesKey, btDataVersion(raw), corrKey, btDataVersion(eurRaw), tnxKey, btDataVersion(tnxRaw)].join('|');
-  if (BT_PREP_CACHE.has(key)) return BT_PREP_CACHE.get(key);
-
-  let src = raw.candles.slice(-maxBars);
-  if (range) {
-    const a = Math.floor(src.length * range[0]);
-    const b = Math.floor(src.length * range[1]);
-    src = src.slice(a, b);
-  }
-  const fullBase = btEnrich(src);
-
-  let full1h, full4h, full1d, full5m, full1mArr = [];
-  if (is1m) {
-    full1mArr = fullBase;
-    const agg5 = [];
-    let b=null,bk=null;
-    for (const cd of src) {
-      const d=new Date(cd.t);
-      const k=d.toISOString().slice(0,13)+'_'+Math.floor(d.getUTCMinutes()/5);
-      if(k!==bk){if(b)agg5.push(b);b={t:cd.t,o:cd.o,h:cd.h,l:cd.l,c:cd.c,vol:cd.vol||0};bk=k;}
-      else{b.h=Math.max(b.h,cd.h);b.l=Math.min(b.l,cd.l);b.c=cd.c;b.vol+=cd.vol||0;}
-    }
-    if(b)agg5.push(b);
-    full5m = btEnrich(agg5);
-    full1h = btEnrich(btAggregate(src, 1));
-    full4h = btEnrich(btAggregate(src, 4));
-    full1d = btEnrich(btAggregate(src, 24));
-  } else if (is5mDriven) {
-    full5m = fullBase;
-    full1h = btEnrich(btAggregate(src, 1));
-    full4h = btEnrich(btAggregate(src, 4));
-    full1d = btEnrich(btAggregate(src, 24));
-  } else {
-    full1h = fullBase;
-    full5m = [];
-    full4h = btEnrich(btAggregate(src, 4));
-    full1d = btEnrich(btAggregate(src, 24));
-  }
-  const fullEur = eurRaw?.candles?.length ? btEnrich(eurRaw.candles.slice(-maxBars)) : [];
-  const fullTnx = tnxRaw?.candles?.length ? btEnrich(tnxRaw.candles.slice(-maxBars)) : [];
-  [fullBase, full1mArr, full5m, full1h, full4h, full1d, fullEur, fullTnx].forEach(btTs);
-  return btRememberPrepared(key, { is1m, isHybrid5m, isScalp, is5mDriven, fullBase, full1h, full4h, full1d, full5m, full1mArr, fullEur, fullTnx });
-}
-
-function btBarsFor5mEquivalent(maxBars) {
-  // Se l'utente sceglie 5.000 barre 1H, lo Swing 5M usa ~60.000 barre per coprire lo stesso periodo.
-  // Se sceglie già una profondità molto alta, capiamo che vuole un test profondo ma lo limitiamo per non bloccare il telefono.
-  const n = Number.isFinite(maxBars) ? maxBars : 5000;
-  return Math.max(500, Math.min(200000, n <= 10000 ? n * 12 : n));
-}
-function btModeForScenario(scen) {
-  return scen === 'scalp' ? '1m' : scen === 'swing' ? 'hybrid5m' : '1h';
-}
-function btBarsForScenario(scen, maxBars) {
-  return scen === 'swing' ? btBarsFor5mEquivalent(maxBars) : maxBars;
+  return candles.slice(0, hi);
 }
 
 // Legge i parametri dalla UI (con default = valori live del paper)
@@ -3540,16 +3290,59 @@ function btGetParams() {
     trailScalp: gv('btp-trail-scalp', D.trailScalp),
     trailBias:  gv('btp-trail-bias', D.trailBias),
     partialPct: gv('btp-partial', D.partialPct) / 100,
-    spread:     gv('btp-spread', D.spread ?? SPREAD),
-    slippage:   gv('btp-slippage', D.slippage ?? SLIPPAGE),
   };
 }
 
 // ── Core: esegue un backtest e ritorna i risultati (no UI) ────
 async function btRun(mode, maxBars, useScen, P, onProgress) {
-  const prep = await btPrepareSeries(mode, maxBars, P?._range || null);
-  const { is1m, isHybrid5m, isScalp, is5mDriven, fullBase, full1h, full4h, full1d, full5m, full1mArr, fullEur, fullTnx } = prep;
-  const sliceTo = btMakeSliceCursor({ full1h, full4h, full1d, full5m, fullEur, fullTnx });
+  const isScalp = mode === '5m' || mode === '1m';
+  const is1m = mode === '1m';
+  const seriesKey = is1m ? 'xauusd_1m' : isScalp ? 'xauusd_5m' : 'xauusd_1h';
+  const raw = await histLoad(seriesKey);
+  if (!raw?.candles?.length) throw new Error(`Serve lo storico ${is1m?'XAU 1M (usa "1M profondo")':isScalp?'XAU 5M':'XAU 1H'} — scaricalo prima.`);
+
+  let src = raw.candles.slice(-maxBars);
+  if (P._range) {
+    const a = Math.floor(src.length * P._range[0]);
+    const b = Math.floor(src.length * P._range[1]);
+    src = src.slice(a, b);
+  }
+  const fullBase = btEnrich(src);
+
+  // Contesto TF superiori
+  let full1h, full4h, full1d, full5m, full1mArr = [];
+  if (is1m) {
+    full1mArr = fullBase;
+    // Aggrega 5M reali dalle 1M
+    const agg5 = [];
+    let b=null,bk=null;
+    for (const cd of src) {
+      const d=new Date(cd.t);
+      const k=d.toISOString().slice(0,13)+'_'+Math.floor(d.getUTCMinutes()/5);
+      if(k!==bk){if(b)agg5.push(b);b={t:cd.t,o:cd.o,h:cd.h,l:cd.l,c:cd.c,vol:cd.vol||0};bk=k;}
+      else{b.h=Math.max(b.h,cd.h);b.l=Math.min(b.l,cd.l);b.c=cd.c;b.vol+=cd.vol||0;}
+    }
+    if(b)agg5.push(b);
+    full5m = btEnrich(agg5);
+    full1h = btEnrich(btAggregate(src, 1));
+    full4h = btEnrich(btAggregate(src, 4));
+    full1d = btEnrich(btAggregate(src, 24));
+  } else if (isScalp) {
+    full5m = fullBase;
+    full1h = btEnrich(btAggregate(src, 1));
+    full4h = btEnrich(btAggregate(src, 4));
+    full1d = btEnrich(btAggregate(src, 24));
+  } else {
+    full1h = fullBase;
+    full5m = [];
+    full4h = btEnrich(btAggregate(src, 4));
+    full1d = btEnrich(btAggregate(src, 24));
+  }
+  const corrKey = isScalp ? 'eurusd_5m' : 'eurusd_1h';  // per 1m: le 5m sono il meglio disponibile
+  const tnxKey  = isScalp ? 'tnx_5m'    : 'tnx_1h';
+  const eurRaw = await histLoad(corrKey), tnxRaw = await histLoad(tnxKey);
+  const fullEur = eurRaw?.candles?.length ? btEnrich(eurRaw.candles.slice(-maxBars)) : [];
+  const fullTnx = tnxRaw?.candles?.length ? btEnrich(tnxRaw.candles.slice(-maxBars)) : [];
 
   const backup = {
     candles: state.candles, candles4h: state.candles4h,
@@ -3575,15 +3368,6 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
       const cd = fullBase[i];
       const t  = new Date(cd.t);
 
-      // Filtro sessioni reali: niente gestione/entry su barre weekend sintetiche o fuori mercato.
-      if (!xauMarketOpen(t)) {
-        if (onProgress && (i - warmup) % 50 === 0) {
-          onProgress(Math.round(((i-warmup)/total)*100), trades.length, capital);
-          await new Promise(r => setTimeout(r, 0));
-        }
-        continue;
-      }
-
       // ── Gestione trade aperti (uno slot per scenario) ─────
       for (const scenKey of Object.keys(slots)) {
         const tr = slots[scenKey];
@@ -3603,27 +3387,16 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
         if (!closed && ((isBuy && cd.h >= tr.tp2) || (!isBuy && cd.l <= tr.tp2))) {
           closed = true; exitReason = 'TP2'; exitPrice = tr.tp2;
         }
-        if (!closed && !tr.partialDone && P.partialPct > 0.001 && ((isBuy && cd.h >= tr.tp1) || (!isBuy && cd.l <= tr.tp1))) {
+        if (!closed && !tr.partialDone && ((isBuy && cd.h >= tr.tp1) || (!isBuy && cd.l <= tr.tp1))) {
           const partLots = tr.lots * P.partialPct;
-          if (partLots < 0.01) { tr.partialDone = true; }
-          else {
-          const exitHalf = exitFill(tr.tp1, dir, tr.spread ?? P.spread, tr.slippage ?? P.slippage);
+          const exitHalf = isBuy ? tr.tp1 - SPREAD/2 : tr.tp1 + SPREAD/2;
           const pnlHalf  = (isBuy ? exitHalf - tr.entry : tr.entry - exitHalf) * partLots * 100;
-          const capBeforePartial = capital;
-          capital = +(capital + pnlHalf).toFixed(2);
-          tr.lots = +(tr.lots - partLots).toFixed(2);
-          tr.partialDone = true;
-          tr.partialClosed = true;
-          tr.partialClosedAt = cd.t;
-          tr.partialLots = +partLots.toFixed(2);
-          tr.partialExitPrice = +exitHalf.toFixed(2);
-          tr.partialCapitalBefore = +capBeforePartial.toFixed(2);
-          tr.partialCapitalAfter = capital;
-          tr.partialPnl = +pnlHalf.toFixed(2);
-          const beSL = isBuy ? tr.entry + (tr.spread ?? P.spread) : tr.entry - (tr.spread ?? P.spread);
+          capital += pnlHalf;
+          tr.lots = tr.lots - partLots;
+          tr.partialDone = true; tr.partialPnl = +pnlHalf.toFixed(2);
+          const beSL = isBuy ? tr.entry + SPREAD : tr.entry - SPREAD;
           if ((isBuy && beSL > tr.sl) || (!isBuy && beSL < tr.sl)) tr.sl = beSL;
           tr.breakEvenSet = true;
-          }
         }
 
         if (!closed) {
@@ -3643,30 +3416,16 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
             if ((isBuy && trailSL > tr.sl) || (!isBuy && trailSL < tr.sl)) tr.sl = trailSL;
           }
         } else {
-          const exitSpread = exitFill(exitPrice, dir, tr.spread ?? P.spread, tr.slippage ?? P.slippage);
+          const exitSpread = isBuy ? exitPrice - SPREAD/2 : exitPrice + SPREAD/2;
           const pnlPts = isBuy ? exitSpread - tr.entry : tr.entry - exitSpread;
           const pnlEur = +(pnlPts * tr.lots * 100).toFixed(2);
-          const pnlTotal = +(pnlEur + (tr.partialPnl||0)).toFixed(2);
-          const capBeforeClose = capital;
           capital = +(capital + pnlEur).toFixed(2);
-          const riskInitial = Math.abs(tr.entry - tr.slOrig) || 1;
-          const riskEurInitial = tr.riskEur || +(riskInitial * (tr.lotsInitial ?? tr.lots) * 100).toFixed(2);
-          const standaloneAfter = +((tr.capitalBefore ?? START_CAP) + pnlTotal).toFixed(2);
           trades.push({
             ...tr, exitPrice: +exitSpread.toFixed(2), exitReason, pnlEur,
-            finalPnl: pnlEur,
-            pnlTotal,
-            isWin: pnlTotal > 0,
-            closedAt: cd.t,
-            capitalBeforeClose: capBeforeClose,
-            capitalAfter: capital,
-            portfolioCapitalAfter: capital,
-            standaloneCapitalAfter: standaloneAfter,
-            reconciliationDelta: +(capital - standaloneAfter).toFixed(2),
-            slFinal: tr.sl,
-            tp2Final: tr.tp2,
-            rrFinal: +(pnlPts / riskInitial).toFixed(2),
-            rr: +(pnlTotal / (riskEurInitial || 1)).toFixed(2),
+            pnlTotal: +(pnlEur + (tr.partialPnl||0)).toFixed(2),
+            isWin: (pnlEur + (tr.partialPnl||0)) > 0,
+            closedAt: cd.t, capitalAfter: capital,
+            rr: +(pnlPts / Math.abs(tr.entry - tr.slOrig || 1)).toFixed(2),
           });
           delete slots[scenKey]; lastClose[scenKey] = i;
         }
@@ -3677,21 +3436,18 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
         state.btNow = cd.t;
         if (is1m) {
           const s1m = full1mArr.slice(Math.max(0, i-119), i+1);
-          state.candles = { '1m': s1m, '5m': sliceTo('full5m', t, 60), '1h': sliceTo('full1h', t, 120), '1d': sliceTo('full1d', t, 35) };
-        } else if (isHybrid5m) {
-          const s5m = full5m.slice(Math.max(0, i-119), i+1);
-          state.candles = { '5m': s5m, '1m': [], '1h': sliceTo('full1h', t, 120), '1d': sliceTo('full1d', t, 35) };
+          state.candles = { '1m': s1m, '5m': btSliceByTime(full5m, t).slice(-60), '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
         } else if (isScalp) {
           const s5m = full5m.slice(Math.max(0, i-119), i+1);
-          state.candles = { '5m': s5m, '1m': s5m.slice(-30), '1h': sliceTo('full1h', t, 120), '1d': sliceTo('full1d', t, 35) };
+          state.candles = { '5m': s5m, '1m': s5m.slice(-30), '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
         } else {
-          state.candles = { '1h': fullBase.slice(Math.max(0, i-119), i+1), '5m': [], '1m': [], '1d': sliceTo('full1d', t, 35) };
+          state.candles = { '1h': fullBase.slice(Math.max(0, i-119), i+1), '5m': [], '1m': [], '1d': btSliceByTime(full1d, t).slice(-35) };
         }
-        state.candles4h = sliceTo('full4h', t, 60);
+        state.candles4h = btSliceByTime(full4h, t).slice(-60);
         state.pivots = calcPivots(state.candles['1d']);
         state.corrData = {
-          dxy: sliceTo('fullEur', t, 60), dxyInverted: true,
-          us10y: sliceTo('fullTnx', t, 60),
+          dxy: btSliceByTime(fullEur, t).slice(-60), dxyInverted: true,
+          us10y: btSliceByTime(fullTnx, t).slice(-60),
         };
 
         let recap = null;
@@ -3717,14 +3473,13 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
             const riskEur = sizeBase * P.riskPct;
             const slDist  = Math.abs(setup.entry - setup.sl);
             const lots = slDist ? Math.max(0.01, +Math.min(riskEur/(slDist*100), (sizeBase*0.05)/((setup.entry/100)*100)).toFixed(2)) : 0.01;
-            const atrNow = (is5mDriven ? full5m : fullBase)[i]?.atr || 15;
+            const atrNow = (isScalp ? full5m : fullBase)[i]?.atr || 15;
             slots[best.scen] = {
               direction: best.dir,
-              entry: entryFill(setup.entry, best.dir, P.spread, P.slippage),
-              sl: setup.sl, slInitial: setup.sl, slOrig: setup.sl, tp1: setup.tp1, tp1Initial: setup.tp1, tp2: setup.tp2, tp2Initial: setup.tp2,
-              lots, lotsInitial: lots, riskEur: +riskEur.toFixed(2), scenario: best.scen, confidence: best.score,
-              openedAt: cd.t, capitalBefore: +capital.toFixed(2), atrAtEntry: atrNow,
-              spread: P.spread, slippage: P.slippage,
+              entry: best.dir==='BUY' ? setup.entry + SPREAD/2 : setup.entry - SPREAD/2,
+              sl: setup.sl, slOrig: setup.sl, tp1: setup.tp1, tp2: setup.tp2,
+              lots, scenario: best.scen, confidence: best.score,
+              openedAt: cd.t, atrAtEntry: atrNow,
               trailMult: trailMap[best.scen] ?? 1.5,
               timedExitUTC: setup.timedExitUTC ?? null, bias: setup.bias ?? null,
               maxFavorable: setup.entry, partialDone: false, breakEvenSet: false, partialPnl: 0,
@@ -3750,28 +3505,6 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
            period: { from: fullBase[warmup]?.t, to: fullBase[fullBase.length-1]?.t }, mode };
 }
 
-function rebuildUnifiedPortfolioLedger(trades, startCap=10000) {
-  // In un backtest multi-gamba (Swing 5M + Trend/Bias 1H + Scalp 1M) ogni gamba
-  // nasce con il suo capitale interno. Per il CSV auditabile ricostruiamo qui
-  // una sola equity di portafoglio, ordinata per chiusura trade.
-  let cap = +(startCap || 10000);
-  return [...(trades || [])].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt)).map(t => {
-    const total = Number(t.pnlTotal ?? ((t.pnlEur || 0) + (t.partialPnl || 0))) || 0;
-    const before = +cap.toFixed(2);
-    cap = +(cap + total).toFixed(2);
-    return {
-      ...t,
-      legCapitalAfter: t.capitalAfter,
-      capitalBefore: before,
-      capitalBeforeClose: before,
-      capitalAfter: cap,
-      portfolioCapitalAfter: cap,
-      standaloneCapitalAfter: +((t.capitalBefore ?? before) + total).toFixed(2),
-      reconciliationDelta: +(cap - before - total).toFixed(6),
-    };
-  });
-}
-
 // ── Run singolo con UI ─────────────────────────────────────────
 async function runBacktest() {
   if (btRunning) return;
@@ -3787,59 +3520,50 @@ async function runBacktest() {
   const mode = document.getElementById('bt-mode').value;
   const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
   const scalpChecked = !!document.getElementById('bt-scen-scalp')?.checked;
-  // v8.3.2: snapshot unico dei parametri backtest usati per tutta la run e poi scritto nel CSV
-  const btParams = btGetParams();
 
   try {
     if (mode === '5m' || mode === '1m') {
       // Modalità dedicata scalp: come prima
-      const res = await btRun(mode, maxBars, { scalp:true, swing:false, trend:false, bias:false }, btParams, (pct, n, cap) => {
+      const res = await btRun(mode, maxBars, { scalp:true, swing:false, trend:false, bias:false }, btGetParams(), (pct, n, cap) => {
         progBar.style.width = pct + '%';
         progText.textContent = `Simulazione ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
       });
-      res.paramSnapshot = csvParamSnapshot('backtest_run', btParams);
       state.btResults = res;
     } else {
-      // COMPLESSIVO multi-gamba:
-      // - Swing su 5M operativo, con contesto H1/4H/Daily
-      // - Trend/Bias su 1H
-      // - Scalp su 1M opzionale
-      const swingOn = document.getElementById('bt-scen-swing').checked;
-      const trendOn = document.getElementById('bt-scen-trend').checked;
-      const biasOn  = document.getElementById('bt-scen-bias').checked;
-      const preferSwing5m = mode === 'hybrid5m';
-      const has5m = preferSwing5m && swingOn && !!(await histLoad('xauusd_5m'))?.candles?.length;
+      // COMPLESSIVO a doppia gamba: 1H (Swing/Trend/Bias) + gamba Scalp 1M se spuntata
+      const useScen = {
+        swing: document.getElementById('bt-scen-swing').checked,
+        trend: document.getElementById('bt-scen-trend').checked,
+        bias:  document.getElementById('bt-scen-bias').checked,
+        scalp: false,
+      };
+      const any1h = useScen.swing || useScen.trend || useScen.bias;
       const has1m = scalpChecked && !!(await histLoad('xauusd_1m'))?.candles?.length;
-      if (preferSwing5m && swingOn && !has5m) progText.textContent = '⚠️ Swing 5M richiesto ma storico 5M assente — uso fallback 1H';
       if (scalpChecked && !has1m) progText.textContent = '⚠️ Scalp richiesto ma 1M assente — procedo senza';
 
       let trades = [], startCap = 10000;
-      const legs = [];
-      if (swingOn && has5m) legs.push({ label:'📊 Swing 5M', mode:'hybrid5m', bars:btBarsFor5mEquivalent(maxBars), scen:{ swing:true, trend:false, bias:false, scalp:false } });
-      const use1h = { swing:swingOn && !has5m, trend:trendOn, bias:biasOn, scalp:false };
-      if (use1h.swing || use1h.trend || use1h.bias) legs.push({ label: has5m?'1H Trend/Bias':'1H Swing/Trend/Bias', mode:'1h', bars:Math.min(maxBars, 5000), scen:use1h });
-      if (has1m) legs.push({ label:'⚡ Scalp 1M', mode:'1m', bars:60000, scen:{ scalp:true, swing:false, trend:false, bias:false } });
-      if (!legs.length) throw new Error('Nessuno scenario selezionato o storico richiesto assente');
-
-      for (let li=0; li<legs.length; li++) {
-        const leg = legs[li];
-        const r = await btRun(leg.mode, leg.bars, leg.scen, btParams, (pct, n, cap) => {
-          const globalPct = Math.round((li/legs.length)*100 + pct/legs.length);
-          progBar.style.width = globalPct + '%';
-          progText.textContent = `Gamba ${leg.label} ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
+      if (any1h) {
+        const r1 = await btRun('1h', Math.min(maxBars, 5000), useScen, btGetParams(), (pct, n, cap) => {
+          progBar.style.width = Math.round(pct*(has1m?0.5:1)) + '%';
+          progText.textContent = `Gamba 1H ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
         });
-        trades = [...trades, ...r.trades].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
-        startCap = r.startCap;
+        trades = r1.trades; startCap = r1.startCap;
       }
-      trades = rebuildUnifiedPortfolioLedger(trades, startCap);
+      if (has1m) {
+        const r2 = await btRun('1m', 60000, { scalp:true, swing:false, trend:false, bias:false }, btGetParams(), (pct, n, cap) => {
+          progBar.style.width = Math.round((has1m&&any1h?50:0) + pct*(any1h?0.5:1)) + '%';
+          progText.textContent = `Gamba ⚡Scalp 1M ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
+        });
+        trades = [...trades, ...r2.trades].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
+      }
+      if (!any1h && !has1m) throw new Error('Nessuno scenario selezionato (o dati 1M assenti per Scalp)');
       const st = btStats(trades, startCap);
       const period = trades.length
         ? { from: trades.reduce((a,t)=>a<t.openedAt?a:t.openedAt, trades[0].openedAt),
             to:   trades.reduce((a,t)=>a>t.closedAt?a:t.closedAt, trades[0].closedAt) }
         : { from: new Date().toISOString(), to: new Date().toISOString() };
       state.btResults = { trades, startCap, endCap: startCap + (st?.pnl||0), period,
-        mode: has5m && has1m ? 'swing5m+1h+1m' : has5m ? 'swing5m+1h' : (has1m ? '1h+1m' : '1h'),
-        paramSnapshot: csvParamSnapshot('backtest_run', btParams) };
+        mode: has1m && any1h ? '1h+1m' : (has1m ? '1m' : '1h') };
     }
     progBar.style.width='100%';
     progText.textContent = `Completato: ${state.btResults.trades.length} trade`;
@@ -3849,67 +3573,6 @@ async function runBacktest() {
   }
   btn.disabled=false; btn.style.opacity='1'; btn.textContent='🧪 Avvia backtest';
   btRunning = false;
-}
-
-// ── PROFILI DI ESPLORAZIONE OTTIMIZZATORE ───────────────
-// Standard replica i range originari. Gli altri profili espandono range e raffinano passo.
-function optNum(id, fallback, min=-Infinity, max=Infinity) {
-  const el = document.getElementById(id);
-  const v = el ? parseFloat(el.value) : NaN;
-  return Math.min(max, Math.max(min, Number.isFinite(v) ? v : fallback));
-}
-function optProfileCfg() {
-  const profile = document.getElementById('opt-search-profile')?.value || 'standard';
-  const base = {
-    standard:{ range:1.00, step:1.00, weightMax:2.00, weightStep:0.25 },
-    wide:    { range:1.60, step:0.50, weightMax:2.50, weightStep:0.25 },
-    explore: { range:2.30, step:0.35, weightMax:3.00, weightStep:0.25 },
-    extreme: { range:3.20, step:0.25, weightMax:4.00, weightStep:0.25 },
-  }[profile] || { range:1, step:1, weightMax:2, weightStep:0.25 };
-  const userRange = optNum('opt-range-mult', 1, 0.5, 4);
-  const stepMode = document.getElementById('opt-step-mode')?.value || 'normal';
-  const stepModeMult = ({ coarse:1.50, normal:1.00, fine:0.50, ultra:0.25 })[stepMode] || 1;
-  return { ...base, profile, range: base.range * userRange, step: base.step * stepModeMult };
-}
-function hardLimitsForParam(key) {
-  if (/thr|Conf/i.test(key)) return { min:0, max:100 };
-  if (/partial/i.test(key)) return { min:0, max:100 };
-  if (/RR|trail|Trail/i.test(key)) return { min:0.05, max:8 };
-  return { min:-1e9, max:1e9 };
-}
-function expandParamSpace(baseSpace) {
-  const cfg = optProfileCfg();
-  const out = {};
-  for (const [key, sp] of Object.entries(baseSpace)) {
-    const center = Number.isFinite(PAPER_PARAMS?.[key]) ? PAPER_PARAMS[key] : (sp.min + sp.max) / 2;
-    const half = ((sp.max - sp.min) / 2) * cfg.range;
-    const lim = hardLimitsForParam(key);
-    const step = Math.max(0.01, sp.step * cfg.step);
-    out[key] = {
-      min: +Math.max(lim.min, center - half).toFixed(4),
-      max: +Math.min(lim.max, center + half).toFixed(4),
-      step: +step.toFixed(4),
-    };
-  }
-  return out;
-}
-function getOptIters(id, fallback) {
-  const el = document.getElementById(id);
-  const v = el ? parseInt(el.value, 10) : fallback;
-  return Math.max(5, Math.min(2000, Number.isFinite(v) ? v : fallback));
-}
-function getWeightValues() {
-  const cfg = optProfileCfg();
-  const vals = [];
-  const maxV = Math.max(2, cfg.weightMax);
-  const step = Math.max(0.05, cfg.weightStep * cfg.step);
-  for (let v=0; v <= maxV + 1e-9; v += step) vals.push(+v.toFixed(3));
-  [0, 0.5, 0.75, 1, 1.25, 1.5, 2].forEach(v => { if (!vals.includes(v) && v <= maxV) vals.push(v); });
-  return vals.sort((a,b)=>a-b);
-}
-function spaceSummary(space) {
-  const cfg = optProfileCfg();
-  return `${cfg.profile} · ampiezza×${cfg.range.toFixed(2)} · passo×${cfg.step.toFixed(2)} · ${Object.entries(space).map(([k,v])=>`${k}[${v.min}→${v.max}/${v.step}]`).join(' · ')}`;
 }
 
 // ── OTTIMIZZAZIONE Simulated Annealing sui parametri ──────────
@@ -3925,7 +3588,6 @@ const SA_SPACE = {
   partialPct: { min:30, max:70, step:5 },
   thrScalp:   { min:55, max:75, step:2 },
   trailScalp: { min:0.4, max:1.6, step:0.1 },
-  trailBias:  { min:0.6, max:2.0, step:0.2 },
 };
 // riskPct escluso di proposito: col compounding ottimizzarlo significa solo alzarlo — non è un'ottimizzazione, è leva.
 
@@ -3941,89 +3603,14 @@ function saObjective(st) {
   return obj;
 }
 
-
-function saNum(x, fallback=0) {
-  const n = Number(x);
-  return Number.isFinite(n) ? n : fallback;
-}
-function saPfNum(st) {
-  if (!st) return 0;
-  return st.pf === '∞' ? 10 : saNum(st.pf, 0);
-}
-function saStatLine(st) {
-  return st ? `${st.n||0} trade · WR ${st.wr??'–'}% · PF ${st.pf??'–'} · DD ${st.maxDD??'–'}% · Obj ${Math.round(saObjective(st))}` : 'nessun risultato';
-}
-function saDeltaLine(a, b) {
-  if (!a || !b) return '';
-  const dp = saNum(a.pnl) - saNum(b.pnl);
-  const dobj = saObjective(a) - saObjective(b);
-  return `${dp>=0?'+':''}€${dp.toFixed(0)} · Obj ${dobj>=0?'+':''}${Math.round(dobj)}`;
-}
-function saImproves(a, b, opts={}) {
-  if (!a || !b) return false;
-  const minTrades = opts.minTrades ?? 10;
-  const minPf = opts.minPf ?? 1.05;
-  const requirePnl = opts.requirePnl ?? true;
-  return saObjective(a) > saObjective(b) && (!requirePnl || saNum(a.pnl) > saNum(b.pnl)) && saPfNum(a) >= minPf && (a.n||0) >= minTrades;
-}
-function btParamsFromSnapshot(overrides={}, weightOverrides=null) {
-  const merged = paperParamsSnapshot(overrides);
-  const P = { ...merged, riskPct: merged.riskPct/100, partialPct: Math.max(0, (merged.partialPct||0)/100), fixedRisk:true };
-  if (weightOverrides) {
-    P.weights = {
-      swing: { ...(SCORE_WEIGHTS.swing||{}), ...(weightOverrides.swing||{}) },
-      trend: { ...(SCORE_WEIGHTS.trend||{}), ...(weightOverrides.trend||{}) },
-      scalp: { ...(SCORE_WEIGHTS.scalp||{}), ...(weightOverrides.scalp||{}) },
-    };
-  }
-  return P;
-}
-async function evalPortfolioStatsV83(overrides={}, weightOverrides=null, opts={}) {
-  const maxBars = opts.maxBars || 5000;
-  const P = btParamsFromSnapshot(overrides, weightOverrides);
-  let trades = [];
-  let startCap = 10000;
-  const has5m = !!(await histLoad('xauusd_5m'))?.candles?.length;
-  const has1m = !!(await histLoad('xauusd_1m'))?.candles?.length;
-  if (has5m) {
-    const rs = await btRun('hybrid5m', btBarsFor5mEquivalent(maxBars), { swing:true, trend:false, bias:false, scalp:false }, P, null);
-    trades = trades.concat(rs.trades);
-    startCap = rs.startCap;
-  } else {
-    const rSwing = await btRun('1h', maxBars, { swing:true, trend:false, bias:false, scalp:false }, P, null);
-    trades = trades.concat(rSwing.trades);
-    startCap = rSwing.startCap;
-  }
-  const r1 = await btRun('1h', maxBars, { swing:false, trend:true, bias:true, scalp:false }, P, null);
-  trades = trades.concat(r1.trades);
-  if (has1m) {
-    const r2 = await btRun('1m', 60000, { swing:false, trend:false, bias:false, scalp:true }, P, null);
-    trades = trades.concat(r2.trades);
-  }
-  trades.sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
-  return btStats(trades, startCap);
-}
-function saveScoreWeightsAndSync(scen, w, meta={}) {
-  if (!w || scen === 'bias') return;
-  const before = JSON.parse(JSON.stringify(SCORE_WEIGHTS));
-  saveScoreWeights(scen, w);
-  syncAllParameterLayers(meta.source || 'weights');
-  const hash = paramBundleHash(PAPER_PARAMS, SCORE_WEIGHTS);
-  try {
-    const hist = JSON.parse(localStorage.getItem('xauapp_param_apply_log') || '[]');
-    hist.push({ ts:Date.now(), source:meta.source||'weights', scenario:scen, changed:['scoreWeights'], beforeWeights:before, afterWeights:JSON.parse(JSON.stringify(SCORE_WEIGHTS)), hash, profile:PARAM_PROFILE_ID, build:APP_BUILD });
-    localStorage.setItem('xauapp_param_apply_log', JSON.stringify(hist.slice(-50)));
-  } catch(e) {}
-}
-
-function saNeighbor(p, temp, space=SA_SPACE) {
+function saNeighbor(p, temp) {
   const q = { ...p };
-  const keys = Object.keys(space);
+  const keys = Object.keys(SA_SPACE);
   // Perturba 1-2 parametri, ampiezza proporzionale alla temperatura
   const nMut = Math.random() < 0.5 ? 1 : 2;
   for (let m = 0; m < nMut; m++) {
     const k = keys[Math.floor(Math.random() * keys.length)];
-    const sp = space[k];
+    const sp = SA_SPACE[k];
     const range = (sp.max - sp.min);
     const delta = (Math.random() * 2 - 1) * range * Math.max(0.15, temp) ;
     let v = (q[k] ?? PAPER_PARAMS[k]) + delta;
@@ -4044,8 +3631,7 @@ async function runSaOptimization() {
   btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Ottimizzazione...';
   progCard.style.display='block'; resEl.innerHTML='';
 
-  const iters = getOptIters('sa-iters', 40);
-  const saSpace = expandParamSpace(SA_SPACE);
+  const iters = Math.max(5, Math.min(300, parseInt(document.getElementById('sa-iters').value, 10) || 40));
   const maxBars = 5000;
   const useScen = {
     swing: document.getElementById('bt-scen-swing').checked,
@@ -4059,41 +3645,30 @@ async function runSaOptimization() {
     // proseguiamo senza scalp, lo segnaliamo nel report
   }
   const scalpSkipped = !!document.getElementById('bt-scen-scalp')?.checked && !includeScalp;
-  const hasSwing5m = useScen.swing && !!(await histLoad('xauusd_5m'))?.candles?.length;
   const evalCombined = async (P) => {
-    let all = [];
-    if (hasSwing5m) {
-      const rs = await btRun('hybrid5m', btBarsFor5mEquivalent(maxBars), { swing:true, trend:false, bias:false, scalp:false }, P, null);
-      all = all.concat(rs.trades);
-    }
-    const use1h = { swing: useScen.swing && !hasSwing5m, trend: useScen.trend, bias: useScen.bias, scalp:false };
-    if (use1h.swing || use1h.trend || use1h.bias) {
-      const r1 = await btRun('1h', maxBars, use1h, P, null);
-      all = all.concat(r1.trades);
-    }
+    const r1 = await btRun('1h', maxBars, useScen, P, null);
+    let all = r1.trades;
     if (includeScalp) {
       const r2 = await btRun('1m', maxBars, { swing:false, trend:false, bias:false, scalp:true }, P, null);
-      all = all.concat(r2.trades);
+      all = [...r1.trades, ...r2.trades].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
     }
-    all.sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
     return btStats(all, 10000);
   };
 
   const t0 = Date.now();
-  const fullP = (base) => btParamsFromSnapshot(
-    Object.fromEntries(Object.keys(saSpace).map(k => [k, base[k] ?? PAPER_PARAMS[k]]))
-  );
+  const fullP = (base) => ({ riskPct: PAPER_PARAMS.riskPct/100, trailBias: PAPER_PARAMS.trailBias,
+    ...Object.fromEntries(Object.keys(SA_SPACE).map(k => [k, base[k] ?? PAPER_PARAMS[k]])),
+    partialPct: (base.partialPct ?? PAPER_PARAMS.partialPct)/100 });
 
   const log = (msg) => { progText.innerHTML = msg; };
 
   try {
     // ── Baseline: parametri live attuali ──────────────────
     log('Baseline con parametri live attuali...');
-    const baseParams = Object.fromEntries(Object.keys(saSpace).map(k => [k, PAPER_PARAMS[k]]));
+    const baseParams = Object.fromEntries(Object.keys(SA_SPACE).map(k => [k, PAPER_PARAMS[k]]));
     const baseSt  = await evalCombined(fullP(baseParams));
     let current = { ...baseParams };
-    const baseObj = saObjective(baseSt);
-    let currentObj = baseObj, currentSt = baseSt;
+    let currentObj = saObjective(baseSt);
     let best = { ...current }, bestObj = currentObj, bestSt = baseSt;
 
     log(`Baseline: ${baseSt?baseSt.n:0} trade · P&L €${baseSt?baseSt.pnl:0} · PF ${baseSt?baseSt.pf:'–'}`);
@@ -4102,20 +3677,20 @@ async function runSaOptimization() {
     // ── Loop SA ───────────────────────────────────────────
     for (let k = 0; k < iters; k++) {
       const temp = 1 - k / iters;             // temperatura lineare 1 → 0
-      const cand = saNeighbor(current, temp, saSpace);
+      const cand = saNeighbor(current, temp);
       const st   = await evalCombined(fullP(cand));
       const obj  = saObjective(st);
 
       const accept = obj > currentObj ||
         Math.random() < Math.exp((obj - currentObj) / (Math.max(temp, 0.02) * 3000));
-      if (accept) { current = cand; currentObj = obj; currentSt = st; }
+      if (accept) { current = cand; currentObj = obj; }
       if (obj > bestObj) { best = { ...cand }; bestObj = obj; bestSt = st; }
 
       const pct = Math.round(((k+1)/iters)*100);
       progBar.style.width = pct + '%';
       const elapsed = (Date.now()-t0)/1000;
       const eta = Math.round(elapsed/(k+1)*(iters-k-1));
-      log(`Iter ${k+1}/${iters} · T=${temp.toFixed(2)} · ${accept?'accettata':'scartata'} · corrente ${saStatLine(currentSt)} · BEST ${saDeltaLine(bestSt, baseSt)} · fine ~${etaClock(eta)}`);
+      log(`Iter ${k+1}/${iters} · T=${temp.toFixed(2)} · best: €${bestSt?bestSt.pnl:0} (PF ${bestSt?bestSt.pf:'–'}, ${bestSt?bestSt.n:0} trade) · fine ~${etaClock(eta)}`);
       await new Promise(r => setTimeout(r, 0));
     }
 
@@ -4123,18 +3698,17 @@ async function runSaOptimization() {
     const basePnl = baseSt ? baseSt.pnl : -1e9;
     const bestPnl = bestSt ? bestSt.pnl : -1e9;
     const bestPf  = bestSt ? (bestSt.pf==='∞'?10:parseFloat(bestSt.pf)) : 0;
-    const improved = saImproves(bestSt, baseSt, { minTrades:10, minPf:1.05, requirePnl:true });
+    const improved = bestObj > currentObj*0 && bestPnl > basePnl && bestPf >= 1.05 && (bestSt?.n||0) >= 10;
 
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55;margin-bottom:10px">
-      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing v8.4 fast — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s · ${spaceSummary(saSpace)}${includeScalp?' · gamba ⚡Scalp 1M inclusa':''}</div>
-      <div style="background:#0d1117;border:1px solid #2a3550;border-radius:7px;padding:7px;margin-bottom:8px;color:#94a3b8;font-size:11px">Migliore mostrato = migliore per <b>obiettivo robusto</b>, non solo P&L. Delta best vs baseline: <b style="color:${bestObj>=baseObj?'#22c55e':'#ef4444'}">${saDeltaLine(bestSt, baseSt)}</b></div>
+      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s${includeScalp?' · gamba ⚡Scalp 1M inclusa':''}</div>
       ${scalpSkipped?`<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:7px;padding:7px;margin-bottom:8px;color:#f0b429;font-size:11px">⚠️ Scalp richiesto ma dati 1M assenti — ottimizzazione eseguita senza. Scarica il "1M profondo".</div>`:''}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
         <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live attuali)</div>
-          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${baseSt?baseSt.n:0} trade · WR ${baseSt?baseSt.wr:'–'}%<br>PF ${baseSt?baseSt.pf:'–'} · DD ${baseSt?baseSt.maxDD:'–'}%<br>Obj ${Math.round(baseObj)}</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${baseSt?baseSt.n:0} trade · WR ${baseSt?baseSt.wr:'–'}%<br>PF ${baseSt?baseSt.pf:'–'} · DD ${baseSt?baseSt.maxDD:'–'}%</div>
           <div style="color:${(baseSt?.pnl||0)>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900;margin-top:3px">€${baseSt?baseSt.pnl:0}</div></div>
-        <div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${improved?'#22c55e44':'#2a3550'}"><div style="color:#22c55e;font-size:10px;font-weight:700">MIGLIORE TROVATO PER OBIETTIVO</div>
-          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${bestSt?bestSt.n:0} trade · WR ${bestSt?bestSt.wr:'–'}%<br>PF ${bestSt?bestSt.pf:'–'} · DD ${bestSt?bestSt.maxDD:'–'}%<br>Obj ${Math.round(bestObj)} · ${saDeltaLine(bestSt, baseSt)}</div>
+        <div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${improved?'#22c55e44':'#2a3550'}"><div style="color:#22c55e;font-size:10px;font-weight:700">MIGLIORE TROVATO</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${bestSt?bestSt.n:0} trade · WR ${bestSt?bestSt.wr:'–'}%<br>PF ${bestSt?bestSt.pf:'–'} · DD ${bestSt?bestSt.maxDD:'–'}%</div>
           <div style="color:${bestPnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900;margin-top:3px">€${bestSt?bestSt.pnl:0}</div></div>
       </div>
       <div style="color:#f0f4fa;font-size:12px;font-weight:700;margin-bottom:4px">Parametri migliori:</div>
@@ -4143,9 +3717,10 @@ async function runSaOptimization() {
       </div>`;
 
     if (improved) {
-      applyOptimizedParams(best, { source:'global-annealing' });
+      savePaperParams(best);
+      syncParamInputs();
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;color:#22c55e;font-size:12px;font-weight:700">
-        ✅ Migliorativo secondo obiettivo robusto (${saDeltaLine(bestSt, baseSt)} vs baseline) — SNAPSHOT COMPLETO PARAMETRI LIVE/BACKTEST AGGIORNATO.<br>
+        ✅ Migliorativo (+€${(bestPnl-basePnl).toFixed(0)} vs baseline) — PARAMETRI LIVE AGGIORNATI.<br>
         <span style="color:#c0cce0;font-weight:400;font-size:11px">Il paper trading userà questi valori da subito. I valori in giallo sono quelli cambiati.</span></div>`;
     } else {
       html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;color:#f0b429;font-size:12px">
@@ -4168,33 +3743,6 @@ const SCEN_SA_PARAM_SPACE = {
   scalp: { thr:{key:'thrScalp',min:55,max:75,step:2}, trail:{key:'trailScalp',min:0.4,max:1.6,step:0.1} },
   bias:  { thr:{key:'thrBias', min:50,max:80,step:3}, trail:{key:'trailBias', min:0.6,max:2.0,step:0.2} },
 };
-// Parametri comuni di gestione che l'annealing per scenario può ottimizzare.
-// riskPct resta escluso: ottimizzarlo significa quasi sempre aumentare leva/rischio.
-// spread/slippage sono costi di mercato, non edge: si impostano, non si ottimizzano.
-const SCEN_SA_COMMON_SPACE = {
-  minConf:    { min:0,   max:75, step:5   },
-  beRR:       { min:0.4, max:1.3, step:0.1 },
-  trailRR:    { min:0.4, max:1.6, step:0.1 },
-  partialPct: { min:10,  max:70, step:5   },
-};
-function getScenSaParamSpace(scen) {
-  const raw = SCEN_SA_PARAM_SPACE[scen];
-  const exp = expandParamSpace({ [raw.thr.key]:raw.thr, [raw.trail.key]:raw.trail });
-  return { thr:{ key:raw.thr.key, ...exp[raw.thr.key] }, trail:{ key:raw.trail.key, ...exp[raw.trail.key] } };
-}
-function getScenSaCommonSpace() {
-  return expandParamSpace(SCEN_SA_COMMON_SPACE);
-}
-function getScenOptSpace(scen) {
-  const raw = Object.fromEntries(SCEN_OPT_SPACE[scen].map(p => [p.key, p]));
-  const exp = expandParamSpace(raw);
-  return SCEN_OPT_SPACE[scen].map(p => ({ ...p, ...exp[p.key] }));
-}
-function getScenOptCommon() {
-  const raw = Object.fromEntries(SCEN_OPT_COMMON.map(p => [p.key, p]));
-  const exp = expandParamSpace(raw);
-  return SCEN_OPT_COMMON.map(p => ({ ...p, ...exp[p.key] }));
-}
 
 async function runScenSA(scen) {
   if (btRunning) return;
@@ -4203,28 +3751,26 @@ async function runScenSA(scen) {
   const progBar  = document.getElementById('bt-progress-bar');
   const progText = document.getElementById('bt-progress-text');
   const resEl    = document.getElementById('bt-results');
-  progCard.style.display='block'; resEl.innerHTML=''; progBar.style.width='0%';
+  progCard.style.display='block'; resEl.innerHTML='';
 
   const M = SCEN_META[scen];
-  const PS = getScenSaParamSpace(scen);
-  const COMMON_SPACE = getScenSaCommonSpace();
+  const PS = SCEN_SA_PARAM_SPACE[scen];
   const canWeights = scen !== 'bias'; // bias non ha pesi interni
-  const iters = getOptIters('scen-sa-iters', scen === 'scalp' ? 40 : 60);
-  const maxBars = M.mode === '1m' ? 60000 : (M.mode === 'hybrid5m' ? btBarsFor5mEquivalent(5000) : 5000);
+  const iters = scen === 'scalp' ? 40 : 60; // 1M più pesante
+  const maxBars = M.mode === '1m' ? 60000 : 5000;
   const useScen = { swing:false, trend:false, bias:false, scalp:false }; useScen[scen] = true;
   const t0 = Date.now();
 
+  // Stato = { thr, trail, w: {8 moltiplicatori} } — SOLO cose di questo scenario
   const liveState = () => ({
-    thr: PAPER_PARAMS[PS.thr.key],
-    trail: PAPER_PARAMS[PS.trail.key],
-    common: Object.fromEntries(Object.keys(COMMON_SPACE).map(k => [k, PAPER_PARAMS[k]])),
+    thr: PAPER_PARAMS[PS.thr.key], trail: PAPER_PARAMS[PS.trail.key],
     w: canWeights ? { ...SCORE_WEIGHTS[scen] } : null,
   });
   const snap = (v,s) => Math.round(v/s)*s;
-  const W_VALS = getWeightValues();
+  const W_VALS = [0, 0.5, 0.75, 1, 1.25, 1.5, 2];
   const neighbor = (st, temp) => {
-    const n = { thr: st.thr, trail: st.trail, common: { ...(st.common || {}) }, w: st.w ? { ...st.w } : null };
-    const dims = ['thr','trail', ...Object.keys(COMMON_SPACE).map(k=>'common:'+k), ...(canWeights ? WEIGHT_GROUPS : [])];
+    const n = { thr: st.thr, trail: st.trail, w: st.w ? { ...st.w } : null };
+    const dims = ['thr','trail', ...(canWeights ? WEIGHT_GROUPS : [])];
     const k = 1 + (Math.random() < temp ? 1 : 0);
     for (let x=0; x<k; x++) {
       const d = dims[Math.floor(Math.random()*dims.length)];
@@ -4234,12 +3780,6 @@ async function runScenSA(scen) {
       } else if (d === 'trail') {
         const amp = Math.max(1, Math.round(3*temp)) * PS.trail.step;
         n.trail = +Math.min(PS.trail.max, Math.max(PS.trail.min, snap(n.trail + (Math.random()<0.5?-amp:amp), PS.trail.step))).toFixed(2);
-      } else if (d.startsWith('common:')) {
-        const key = d.slice(7);
-        const sp = COMMON_SPACE[key];
-        const amp = Math.max(1, Math.round(3*temp)) * sp.step;
-        const raw = (n.common[key] ?? PAPER_PARAMS[key]) + (Math.random()<0.5?-amp:amp);
-        n.common[key] = +Math.min(sp.max, Math.max(sp.min, snap(raw, sp.step))).toFixed(3);
       } else if (n.w) {
         const cur = W_VALS.indexOf(n.w[d] ?? 1);
         const idx = Math.min(W_VALS.length-1, Math.max(0, (cur<0?3:cur) + (Math.random()<0.5?-1:1)));
@@ -4250,96 +3790,73 @@ async function runScenSA(scen) {
   };
   const evalState = async (st) => {
     const base = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
-    const merged = { ...base, ...(st.common || {}), [PS.thr.key]: st.thr, [PS.trail.key]: st.trail };
-    const pct = Math.max(0.01, merged.partialPct/100); // anti-parziale zero
-    const P = { ...merged, riskPct: merged.riskPct/100, partialPct: pct, fixedRisk: true };
+    const P = { ...base, [PS.thr.key]: st.thr, [PS.trail.key]: st.trail,
+      riskPct: base.riskPct/100, partialPct: base.partialPct/100, fixedRisk: true };
     if (st.w) P.weights = { [scen]: st.w };
     const res = await btRun(M.mode, maxBars, useScen, P, null);
     return btStats(res.trades, res.startCap);
   };
+  const obj = (st) => {
+    if (!st) return -1e9;
+    const pf = st.pf==='∞' ? 10 : parseFloat(st.pf);
+    let o = st.pnl + Math.min(pf,3)*1500 - st.maxDD*200;
+    if (st.n < 15) o -= 800*(15-st.n);
+    if (pf < 1.05) o -= 5000;
+    return o;
+  };
 
   try {
-    progText.textContent = `🔥 ${M.icon} ${M.label}: baseline isolata...`;
+    progText.textContent = `🔥 ${M.icon} ${M.label}: baseline...`;
     await new Promise(r=>setTimeout(r,30));
-    const baseLive = liveState();
-    const baseSt = await evalState(baseLive);
-    const baseObj = saObjective(baseSt);
-    let cur = JSON.parse(JSON.stringify(baseLive));
-    let curObj = baseObj, curSt = baseSt;
+    let cur = liveState();
+    const baseSt = await evalState(cur);
+    let curObj = obj(baseSt);
     let best = JSON.parse(JSON.stringify(cur)), bestSt = baseSt, bestObj = curObj;
 
     for (let k = 0; k < iters; k++) {
       const temp = 1 - k/iters;
       const cand = neighbor(cur, temp);
       const st = await evalState(cand);
-      const o = saObjective(st);
-      const accept = o > curObj || Math.random() < Math.exp((o-curObj)/(Math.max(temp,0.02)*3000));
-      if (accept) { cur = cand; curObj = o; curSt = st; }
+      const o = obj(st);
+      if (o > curObj || Math.random() < Math.exp((o-curObj)/(temp*3000+1))) { cur = cand; curObj = o; }
       if (o > bestObj) { best = JSON.parse(JSON.stringify(cand)); bestSt = st; bestObj = o; }
       const el = (Date.now()-t0)/1000;
       const eta = el/(k+1)*(iters-k-1);
       progBar.style.width = Math.round((k+1)/iters*100)+'%';
-      progText.textContent = `🔥 ${M.icon} ${M.label} · iter ${k+1}/${iters} · ${accept?'accettata':'scartata'} · corrente ${saStatLine(curSt)} · BEST isolato ${saDeltaLine(bestSt, baseSt)} · fine ~${etaClock(eta)}`;
+      progText.textContent = `🔥 ${M.icon} ${M.label} · iter ${k+1}/${iters} · best €${bestSt?bestSt.pnl:0} (PF ${bestSt?bestSt.pf:'–'}) · fine ~${etaClock(eta)}`;
       await new Promise(r=>setTimeout(r,0));
     }
 
-    progText.textContent = `🔎 ${M.label}: verifica post-annealing scenario-only...`;
-    const scenarioOnly = { ...baseLive, thr: best.thr, trail: best.trail, w: best.w ? { ...best.w } : null };
-    const scenarioOnlySt = await evalState(scenarioOnly);
-    const scenarioOnlyImproved = saImproves(scenarioOnlySt, baseSt, { minTrades:10, minPf:1.05, requirePnl:true });
+    const basePnl = baseSt ? baseSt.pnl : -1e9;
+    const finPnl  = bestSt ? bestSt.pnl : -1e9;
+    const finPf   = bestSt ? (bestSt.pf==='∞'?10:parseFloat(bestSt.pf)) : 0;
+    const improved = finPnl > basePnl && finPf >= 1.05 && (bestSt?.n||0) >= 10;
 
-    progText.textContent = `🔎 ${M.label}: validazione portafoglio completo per i parametri comuni...`;
-    const scenUpdates = { [PS.thr.key]: best.thr, [PS.trail.key]: best.trail };
-    const commonUpdates = { ...(best.common || {}) };
-    const fullUpdates = { ...commonUpdates, ...scenUpdates };
-    const weightOverride = best.w ? { [scen]: best.w } : null;
-    let portfolioBaseSt = null, portfolioFullSt = null, portfolioImproved = false, portfolioError = null;
-    try {
-      portfolioBaseSt = await evalPortfolioStatsV83({}, null, { maxBars:5000 });
-      portfolioFullSt = await evalPortfolioStatsV83(fullUpdates, weightOverride, { maxBars:5000 });
-      portfolioImproved = saImproves(portfolioFullSt, portfolioBaseSt, { minTrades:10, minPf:1.05, requirePnl:true });
-    } catch(e) { portfolioError = e.message; }
-
-    const applyFull = portfolioImproved;
-    const applyScenarioOnly = !applyFull && scenarioOnlyImproved;
-    const finalUpdates = applyFull ? fullUpdates : (applyScenarioOnly ? scenUpdates : {});
-    const applyWeights = (applyFull || applyScenarioOnly) && !!best.w;
-    if (applyFull || applyScenarioOnly) {
-      applyOptimizedParams(finalUpdates, { source: applyFull?'scenario-annealing-v83-portfolio':'scenario-annealing-v83-scenario-only', scenario:scen });
-      if (applyWeights) saveScoreWeightsAndSync(scen, best.w, { source:'scenario-annealing-v83', scenario:scen });
-    }
-
-    const savedSt = applyFull ? (portfolioFullSt || scenarioOnlySt) : (applyScenarioOnly ? scenarioOnlySt : baseSt);
-    saveOptResult(scen, applyFull ? 'sa-full' : (applyScenarioOnly ? 'sa-scenario-only' : 'sa-noapply'), savedSt, { applied: applyFull || applyScenarioOnly });
-    const stLine = (st)=> st ? `${st.n} trade · WR ${st.wr}% · PF ${st.pf} · DD ${st.maxDD}% · Obj ${Math.round(saObjective(st))}` : 'nessun trade';
-    const card = (title, st, base, col='#c0cce0') => `<div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${col}44"><div style="color:${col};font-size:10px;font-weight:800">${title}</div><div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(st)}</div><div style="color:${(st?.pnl||0)>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${st?st.pnl:0}</div>${base?`<div style="color:#94a3b8;font-size:10px">${saDeltaLine(st, base)} vs baseline</div>`:''}</div>`;
-    const commonChanged = Object.keys(commonUpdates).some(k => commonUpdates[k] !== baseLive.common[k]);
-
-    let html = `<div class="card" style="border:2px solid ${(applyFull||applyScenarioOnly)?'#22c55e':'#f0b429'}55">
-      <div style="color:${M.color};font-weight:900;font-size:15px;margin-bottom:8px">🔥 Annealing v8.4 fast ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s</div>
-      <div style="background:#0d1117;border:1px solid #2a3550;border-radius:7px;padding:7px;margin-bottom:8px;color:#94a3b8;font-size:11px">
-        Durante il loop il <b>BEST</b> è il migliore per <b>obiettivo robusto isolato</b>. Dopo il loop la v8.4 fa due conferme: scenario-only senza parametri comuni e portafoglio completo con parametri comuni.
+    saveOptResult(scen, 'sa', improved ? bestSt : baseSt);
+    const stLine = (st)=> st ? `${st.n} trade · WR ${st.wr}% · PF ${st.pf} · DD ${st.maxDD}%` : 'nessun trade';
+    let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55">
+      <div style="color:${M.color};font-weight:800;font-size:15px;margin-bottom:8px">🔥 Annealing ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato, solo parametri suoi)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live)</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(baseSt)}</div>
+          <div style="color:${basePnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${baseSt?baseSt.pnl:0}</div></div>
+        <div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${improved?'#22c55e44':'#2a3550'}"><div style="color:#22c55e;font-size:10px;font-weight:700">MIGLIORE</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(bestSt)}</div>
+          <div style="color:${finPnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${bestSt?bestSt.pnl:0}</div></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-        ${card('BASELINE SCENARIO ISOLATO', baseSt, null, '#94a3b8')}
-        ${card('BEST FULL TROVATO NEL LOOP', bestSt, baseSt, '#22c55e')}
-        ${card('CONFERMA SCENARIO-ONLY', scenarioOnlySt, baseSt, scenarioOnlyImproved?'#22c55e':'#f0b429')}
-        ${portfolioError ? `<div style="background:#141920;border-radius:8px;padding:9px;border:1px solid #f0b42944"><div style="color:#f0b429;font-size:10px;font-weight:800">PORTAFOGLIO COMPLETO</div><div style="color:#f0b429;font-size:12px;margin-top:3px">Non verificato: ${portfolioError}</div></div>` : card('PORTAFOGLIO FULL CANDIDATE', portfolioFullSt, portfolioBaseSt, portfolioImproved?'#22c55e':'#f0b429')}
-      </div>
-      <div style="color:#c0cce0;font-size:12px;margin:8px 0 4px">Soglia: <b style="color:${best.thr!==baseLive.thr?'#f0b429':'#f0f4fa'}">${best.thr}</b> · Trail: <b style="color:${best.trail!==baseLive.trail?'#f0b429':'#f0f4fa'}">${best.trail}×</b>
-        <br>Comuni candidati: ${Object.keys(COMMON_SPACE).map(k=>`${k}=<b style="color:${best.common?.[k]!==baseLive.common?.[k]?'#f0b429':'#f0f4fa'}">${best.common?.[k]}</b>`).join(' · ')}
-        ${best.w?'<br>Pesi candidati: '+WEIGHT_GROUPS.map(g=>`${g}×${best.w[g]??1}`).join(' · '):''}</div>`;
-
-    if (applyFull) {
-      html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:8px;color:#22c55e;font-size:12px;font-weight:800">✅ Applicato FULL: scenario + pesi + parametri comuni, perché migliora anche il portafoglio completo (${saDeltaLine(portfolioFullSt, portfolioBaseSt)}).</div>`;
-    } else if (applyScenarioOnly) {
-      html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:8px;color:#22c55e;font-size:12px;font-weight:800">✅ Applicato SOLO scenario/pesi (${saDeltaLine(scenarioOnlySt, baseSt)}). ${commonChanged?'⚠️ Parametri comuni NON applicati perché non confermati dal portafoglio completo.':''}</div>`;
+      <div style="color:#c0cce0;font-size:12px;margin-bottom:4px">Soglia: <b style="color:${best.thr!==liveState().thr?'#f0b429':'#f0f4fa'}">${best.thr}</b> · Trail: <b style="color:#f0b429">${best.trail}×</b>
+        ${best.w?'<br>Pesi: '+WEIGHT_GROUPS.map(g=>`${g}×${best.w[g]??1}`).join(' · '):''}</div>`;
+    if (improved) {
+      savePaperParams({ [PS.thr.key]: best.thr, [PS.trail.key]: best.trail });
+      if (best.w) saveScoreWeights(scen, best.w);
+      if (typeof syncParamInputs === 'function') syncParamInputs();
+      html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:8px;color:#22c55e;font-size:12px;font-weight:700">✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)}) — parametri e pesi live di ${M.label} AGGIORNATI.</div>`;
     } else {
-      html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:8px;color:#f0b429;font-size:12px">⚪ Nessun auto-apply: il best del loop non supera la conferma scenario-only/portafoglio con criterio robusto.</div>`;
+      html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:8px;color:#f0b429;font-size:12px">⚪ Nessun miglioramento affidabile (P&L > baseline, PF ≥ 1.05, ≥ 10 trade). Live invariato.</div>`;
     }
-    html += `<div style="color:#94a3b8;font-size:10px;margin-top:6px">Regola v8.4: i parametri comuni vengono applicati solo se migliorano il portafoglio; la UI distingue best del loop, scenario-only e portafoglio.</div></div>`;
+    html += `<div style="color:#94a3b8;font-size:10px;margin-top:6px">⚠️ Ottimizzato sul passato — valida col 🛡️ sanity check.</div></div>`;
     resEl.innerHTML = html;
-    progText.textContent = `Annealing ${M.label} completato — ${applyFull?'FULL applicato':applyScenarioOnly?'solo scenario applicato':'nessun auto-apply'}.`;
+    progText.textContent = `Annealing ${M.label} completato.`;
     renderOptHub();
   } catch(e) { progText.textContent = '❌ ' + e.message; }
   btRunning = false;
@@ -4352,7 +3869,7 @@ function etaClock(secRemaining) {
 }
 
 const SCEN_META = {
-  swing: { icon:'📊', label:'Swing', color:'#f0b429', mode:'hybrid5m', thrKey:'thrSwing', trailKey:'trailSwing' },
+  swing: { icon:'📊', label:'Swing', color:'#f0b429', mode:'1h', thrKey:'thrSwing', trailKey:'trailSwing' },
   trend: { icon:'📈', label:'Trend', color:'#22c55e', mode:'1h', thrKey:'thrTrend', trailKey:'trailTrend' },
   scalp: { icon:'⚡', label:'Scalp 1M', color:'#f97316', mode:'1m', thrKey:'thrScalp', trailKey:'trailScalp' },
   bias:  { icon:'⏰', label:'Bias', color:'#a855f7', mode:'1h', thrKey:'thrBias', trailKey:'trailBias' },
@@ -4361,10 +3878,10 @@ const SCEN_META = {
 function loadOptResults() {
   try { return JSON.parse(localStorage.getItem('xauapp_opt_results') || '{}'); } catch(e) { return {}; }
 }
-function saveOptResult(scen, source, st, meta={}) {
+function saveOptResult(scen, source, st) {
   if (!st) return;
   const all = loadOptResults();
-  all[scen] = { ts: Date.now(), source, applied:!!meta.applied, hash:paramBundleHash(), objective:Math.round(saObjective(st)), n: st.n, wr: st.wr, pf: st.pf, dd: st.maxDD, pnl: st.pnl };
+  all[scen] = { ts: Date.now(), source, n: st.n, wr: st.wr, pf: st.pf, dd: st.maxDD, pnl: st.pnl };
   try { localStorage.setItem('xauapp_opt_results', JSON.stringify(all)); } catch(e) {}
   renderOptHub();
 }
@@ -4416,19 +3933,8 @@ function renderOptHub() {
   const host = document.getElementById('opt-hub');
   if (!host) return;
   const results = loadOptResults();
-  const srcLabel = { backtest:'🧪 backtest', scenopt:'🎯 parametri', weights:'🧬 pesi', sa:'🔥 annealing', 'sa-full':'🔥 annealing FULL', 'sa-scenario-only':'🔥 annealing solo scenario', 'sa-noapply':'⚪ annealing non applicato' };
-  let html = `<div style="background:#0d1117;border:1px solid #2a3550;border-radius:9px;padding:8px;margin-bottom:8px">
-    <div style="color:#3b82f6;font-size:11px;font-weight:800;margin-bottom:5px">PARAMETRI LIVE COMUNI / BACKTEST</div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">
-      ${[['minConf',PAPER_PARAMS.minConf],['rischio %',PAPER_PARAMS.riskPct],['BE R',PAPER_PARAMS.beRR],['Trail R',PAPER_PARAMS.trailRR],['TP1 %',PAPER_PARAMS.partialPct],['spread/slip',`${PAPER_PARAMS.spread}/${PAPER_PARAMS.slippage}`]].map(([k,v])=>`<div style="background:#141920;border-radius:6px;padding:5px;text-align:center"><div style="color:#94a3b8;font-size:9px">${k}</div><b style="color:#f0f4fa;font-size:12px">${v}</b></div>`).join('')}
-    </div>
-    <div style="color:#64748b;font-size:10px;margin-top:5px">v8.4: profilo buono 13:45 caricato come baseline; cache runtime per backtest/annealing; ogni CSV esporta snapshot parametri, pesi e hash usati.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px">
-      <button onclick="resetOptResultsAndLoadCsvYesterdayProfile()" style="background:#f0b42920;border:1px solid #f0b42955;color:#f0b429;border-radius:6px;padding:8px 0;font-size:11px;font-weight:900">♻️ Reset risultati + profilo CSV ieri</button>
-      <button onclick="saveUiParamsToLive()" style="background:#3b82f620;border:1px solid #3b82f655;color:#3b82f6;border-radius:6px;padding:8px 0;font-size:11px;font-weight:900">💾 Salva UI → live/backtest/SW</button>
-    </div>
-    ${renderParamSyncStatus()}
-  </div>`;
+  const srcLabel = { backtest:'🧪 backtest', scenopt:'🎯 parametri', weights:'🧬 pesi', sa:'🔥 annealing' };
+  let html = '';
   for (const scen of ['swing','trend','scalp','bias']) {
     const M = SCEN_META[scen];
     const r = results[scen];
@@ -4451,9 +3957,8 @@ function renderOptHub() {
         </div></div>` : `<div style="color:#64748b;font-size:10px;margin-bottom:6px">Bias usa un motore di scoring dedicato (nessun peso interno).</div>`}
       ${r ? `<div style="background:#0d1117;border-radius:7px;padding:7px;margin-bottom:7px">
         <div style="color:#94a3b8;font-size:10px">ULTIMO RISULTATO (${srcLabel[r.source]||r.source} · ${when})</div>
-        <div style="color:#c0cce0;font-size:12px;margin-top:2px">${r.n} trade · WR ${r.wr}% · PF ${r.pf} · DD ${r.dd}% · Obj ${r.objective??'–'}
+        <div style="color:#c0cce0;font-size:12px;margin-top:2px">${r.n} trade · WR ${r.wr}% · PF ${r.pf} · DD ${r.dd}%
           <span style="color:${r.pnl>=0?'#22c55e':'#ef4444'};font-weight:800"> €${r.pnl}</span></div>
-        <div style="color:${r.applied?'#22c55e':'#f0b429'};font-size:10px;margin-top:2px">${r.applied?'APPLICATO':'NON APPLICATO/solo diagnostico'} · hash ${r.hash||'–'}</div>
       </div>` : `<div style="color:#64748b;font-size:11px;margin-bottom:7px">Nessun risultato registrato — lancia un backtest o l'annealing.</div>`}
       <div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:5px">
         <button onclick="scenQuickBacktest('${scen}')" style="background:#1a2332;color:#c0cce0;border:1px solid #2a3550;border-radius:6px;padding:8px 0;font-size:11px;font-weight:700">🧪 Backtest</button>
@@ -4476,12 +3981,6 @@ const SCEN_OPT_SPACE = {
   scalp: [ { key:'thrScalp',  label:'Soglia',      min:55,  max:75,  step:2   },
            { key:'trailScalp',label:'Trail ×ATR',  min:0.4, max:1.6, step:0.1 } ],
 };
-const SCEN_OPT_COMMON = [
-  { key:'minConf',    label:'Min conf',        min:0,   max:75, step:5   },
-  { key:'beRR',       label:'BE trigger R',    min:0.4, max:1.3, step:0.1 },
-  { key:'trailRR',    label:'Trail trigger R', min:0.4, max:1.6, step:0.1 },
-  { key:'partialPct', label:'TP1 parziale %',  min:10,  max:70, step:5   },
-];
 
 async function runScenOptimization() {
   if (btRunning) return;
@@ -4495,10 +3994,9 @@ async function runScenOptimization() {
   progCard.style.display='block'; resEl.innerHTML='';
 
   const scen = document.getElementById('scen-opt-target').value;
-  const space = [...getScenOptSpace(scen), ...getScenOptCommon()];
+  const space = SCEN_OPT_SPACE[scen];
   const maxBars = 5000;
-  const btMode = btModeForScenario(scen);
-  const scenBars = btBarsForScenario(scen, maxBars);
+  const btMode = scen === 'scalp' ? '1m' : '1h';
   // Scenario ISOLATO: attribuzione pulita dei risultati al solo scenario in esame
   const useScen = { swing:false, trend:false, bias:false, scalp:false };
   useScen[scen] = true;
@@ -4526,7 +4024,7 @@ async function runScenOptimization() {
   try {
     // ── Baseline: parametri live, scenario isolato ─────────
     await tick('baseline');
-    const baseRes = await btRun(btMode, scenBars, useScen, paramsFor({}), null);
+    const baseRes = await btRun(btMode, maxBars, useScen, paramsFor({}), null);
     const baseSt  = btStats(baseRes.trades, baseRes.startCap);
 
     // ── Coordinate descent: line search per parametro ──────
@@ -4538,7 +4036,7 @@ async function runScenOptimization() {
       for (let v = p.min; v <= p.max + 1e-9; v += p.step) {
         const vv = +v.toFixed(3);
         await tick(`${p.label} = ${vv}`);
-        const res = await btRun(btMode, scenBars, useScen, paramsFor({ ...current, [p.key]: vv }), null);
+        const res = await btRun(btMode, maxBars, useScen, paramsFor({ ...current, [p.key]: vv }), null);
         const st = btStats(res.trades, res.startCap);
         rows.push({ v: vv, st });
         const pnl = st ? st.pnl : -Infinity;
@@ -4551,7 +4049,7 @@ async function runScenOptimization() {
     }
 
     // ── Valutazione finale combinata ───────────────────────
-    const finalRes = await btRun(btMode, scenBars, useScen, paramsFor(current), null);
+    const finalRes = await btRun(btMode, maxBars, useScen, paramsFor(current), null);
     const finalSt  = btStats(finalRes.trades, finalRes.startCap);
     progBar.style.width='100%';
 
@@ -4588,11 +4086,12 @@ async function runScenOptimization() {
       html += `</div>`;
     });
 
-    saveOptResult(scen, 'scenopt', improved ? finalSt : baseSt, { applied: improved });
+    saveOptResult(scen, 'scenopt', improved ? finalSt : baseSt);
     if (improved) {
-      applyOptimizedParams(current, { source:'scenario-coordinate', scenario:scen });
+      savePaperParams(current);
+      if (typeof syncParamInputs === 'function') syncParamInputs();
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:10px;color:#22c55e;font-size:12px;font-weight:700">
-        ✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)} vs baseline) — SNAPSHOT COMPLETO PARAMETRI LIVE/BACKTEST AGGIORNATO DA ${scenNames[scen].toUpperCase()}: ${Object.entries(current).map(([k,v])=>k+'='+v).join(' · ')}</div>`;
+        ✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)} vs baseline) — PARAMETRI LIVE DI ${scenNames[scen].toUpperCase()} AGGIORNATI: ${Object.entries(current).map(([k,v])=>k+'='+v).join(' · ')}</div>`;
     } else {
       html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:10px;color:#f0b429;font-size:12px">
         ⚪ Nessun miglioramento affidabile (serve: P&L > baseline, PF ≥ 1.05, ≥ 10 trade). Parametri live invariati.</div>`;
@@ -4644,22 +4143,11 @@ async function runSanityCheck() {
     await new Promise(r=>setTimeout(r,0));
   };
   const pfN = (st) => st ? (st.pf==='∞'?10:parseFloat(st.pf)) : 0;
-  const hasSwing5m = useScen.swing && !!(await histLoad('xauusd_5m'))?.candles?.length;
   const runAt = async (range, pOver) => {
     const P = { ...liveP(), ...(pOver||{}) };
     if (range) P._range = range;
-    let all = [];
-    if (hasSwing5m) {
-      const rs = await btRun('hybrid5m', btBarsFor5mEquivalent(maxBars), { swing:true, trend:false, bias:false, scalp:false }, P, null);
-      all = all.concat(rs.trades);
-    }
-    const use1h = { swing: useScen.swing && !hasSwing5m, trend: useScen.trend, bias: useScen.bias, scalp:false };
-    if (use1h.swing || use1h.trend || use1h.bias) {
-      const r1 = await btRun('1h', maxBars, use1h, P, null);
-      all = all.concat(r1.trades);
-    }
-    all.sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
-    return btStats(all, 10000);
+    const res = await btRun('1h', maxBars, useScen, P, null);
+    return btStats(res.trades, res.startCap);
   };
 
   try {
@@ -4802,7 +4290,7 @@ async function runSanityCheck() {
 
 // ── OTTIMIZZAZIONE PESI INTERNI dello scoring, per scenario ──
 const WEIGHT_GROUPS = ['macro','mtf','adx','rsi','pivot','pullback','specific','sess'];
-const WEIGHT_VALUES_BASE = [0, 0.5, 0.75, 1, 1.25, 1.5, 2];
+const WEIGHT_VALUES = [0, 0.5, 0.75, 1, 1.25, 1.5, 2];
 
 async function runWeightOptimization() {
   if (btRunning) return;
@@ -4817,14 +4305,12 @@ async function runWeightOptimization() {
 
   const scen = document.getElementById('wopt-target').value;
   const maxBars = 5000;
-  const btMode = btModeForScenario(scen);
-  const scenBars = btBarsForScenario(scen, maxBars);
+  const btMode = scen === 'scalp' ? '1m' : '1h';
   const useScen = { swing:false, trend:false, bias:false, scalp:false };
   useScen[scen] = true;
   const scenNames = { swing:'📊 Swing', trend:'📈 Trend', scalp:'⚡ Scalp (1M)' };
 
-  const weightValues = getWeightValues();
-  const totalRuns = 1 + WEIGHT_GROUPS.length * weightValues.length + 1;
+  const totalRuns = 1 + WEIGHT_GROUPS.length * WEIGHT_VALUES.length + 1;
   let runCount = 0;
   const t0 = Date.now();
   const baseP = () => {
@@ -4843,7 +4329,7 @@ async function runWeightOptimization() {
   try {
     // Baseline: pesi live correnti
     await tick('baseline');
-    const baseRes = await btRun(btMode, scenBars, useScen, { ...baseP(), weights: mkWeights({}) }, null);
+    const baseRes = await btRun(btMode, maxBars, useScen, { ...baseP(), weights: mkWeights({}) }, null);
     const baseSt  = btStats(baseRes.trades, baseRes.startCap);
 
     // Coordinate descent: per ogni gruppo, prova tutti i valori, fissa il migliore
@@ -4852,9 +4338,9 @@ async function runWeightOptimization() {
     const perGroup = [];
     for (const g of WEIGHT_GROUPS) {
       let bestV = current[g] ?? 1, bestPnl = -Infinity, rows = [];
-      for (const v of weightValues) {
+      for (const v of WEIGHT_VALUES) {
         await tick(`${g} = ${v}`);
-        const res = await btRun(btMode, scenBars, useScen,
+        const res = await btRun(btMode, maxBars, useScen,
           { ...baseP(), weights: mkWeights({ ...current, [g]: v }) }, null);
         const st = btStats(res.trades, res.startCap);
         rows.push({ v, st });
@@ -4868,7 +4354,7 @@ async function runWeightOptimization() {
 
     // Run finale combinato
     await tick('finale');
-    const finalRes = await btRun(btMode, scenBars, useScen, { ...baseP(), weights: mkWeights(current) }, null);
+    const finalRes = await btRun(btMode, maxBars, useScen, { ...baseP(), weights: mkWeights(current) }, null);
     const finalSt  = btStats(finalRes.trades, finalRes.startCap);
     progBar.style.width='100%';
 
@@ -4903,12 +4389,11 @@ async function runWeightOptimization() {
       html += `</div>`;
     });
 
-    saveOptResult(scen, 'weights', improved ? finalSt : baseSt, { applied: improved });
+    saveOptResult(scen, 'weights', improved ? finalSt : baseSt);
     if (improved) {
-      saveScoreWeightsAndSync(scen, current, { source:'scenario-weights', scenario:scen });
-      applyOptimizedParams({}, { source:'scenario-weights', scenario:scen }); // riscrive lo snapshot completo dei parametri correnti per allineare live/backtest/SW
+      saveScoreWeights(scen, current);
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:10px;color:#22c55e;font-size:12px;font-weight:700">
-        ✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)}) — PESI LIVE DI ${scenNames[scen].toUpperCase()} AGGIORNATI e snapshot completo parametri live/backtest risincronizzato:<br>
+        ✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)}) — PESI LIVE DI ${scenNames[scen].toUpperCase()} AGGIORNATI:<br>
         <span style="font-weight:400">${Object.entries(current).map(([k,v])=>k+'×'+v).join(' · ')}</span></div>`;
     } else {
       html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:10px;color:#f0b429;font-size:12px">
@@ -4948,12 +4433,9 @@ async function runBtSweep() {
   const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
   const useScen = (mode === '5m' || mode === '1m')
     ? { scalp:true, swing:false, trend:false, bias:false }
-    : mode === 'hybrid5m'
-      ? { swing: document.getElementById('bt-scen-swing').checked, trend:false, bias:false, scalp:false }
-      : { swing: document.getElementById('bt-scen-swing').checked,
-          trend: document.getElementById('bt-scen-trend').checked,
-          bias:  document.getElementById('bt-scen-bias').checked, scalp:false };
-  const sweepBars = mode === 'hybrid5m' ? btBarsFor5mEquivalent(maxBars) : maxBars;
+    : { swing: document.getElementById('bt-scen-swing').checked,
+        trend: document.getElementById('bt-scen-trend').checked,
+        bias:  document.getElementById('bt-scen-bias').checked, scalp:false };
 
   const values = [];
   for (let v = vFrom; v <= vTo + 1e-9; v += vStep) values.push(+v.toFixed(3));
@@ -4969,7 +4451,7 @@ async function runBtSweep() {
       progText.textContent = `Sweep ${param}=${values[k]} (${k+1}/${values.length}) · fine ~${k>0?etaClock(eta):'…'}`;
       progBar.style.width = Math.round(k/values.length*100)+'%';
       await new Promise(r=>setTimeout(r,0));
-      const res = await btRun(mode, sweepBars, useScen, P, null);
+      const res = await btRun(mode, maxBars, useScen, P, null);
       const st = btStats(res.trades, res.startCap);
       rows.push({ v: values[k], st, n: res.trades.length });
     }
@@ -5009,8 +4491,7 @@ function btStats(trades, startCap) {
   const pf     = grossL > 0 ? grossW / grossL : (grossW > 0 ? Infinity : 0);
   let peak = startCap, maxDD = 0, cap = startCap;
   trades.forEach(t => {
-    const portfolioAfter = Number(t.portfolioCapitalAfter ?? t.capitalAfter);
-    cap = Number.isFinite(portfolioAfter) ? portfolioAfter : cap + (t.pnlTotal || 0);
+    cap += t.pnlTotal;
     peak = Math.max(peak, cap);
     maxDD = Math.max(maxDD, (peak - cap) / peak * 100);
   });
@@ -5088,13 +4569,8 @@ function renderBtResults() {
 function exportBtCsv() {
   const r = state.btResults;
   if (!r?.trades?.length) { alert('Nessun risultato da esportare.'); return; }
-  const tradeHead = ['openedAt','closedAt','scenario','bias','direction','entry','slInitial','slFinal','tp1Initial','tp2Initial','tp2Final','lotsInitial','lots','riskEur','spread','slippage','exitReason','exitPrice','partialClosedAt','partialLots','partialExitPrice','partialPnl','finalPnl','pnlEur','pnlTotal','rrFinal','rr','confidence','capitalBefore','capitalBeforeClose','capitalAfter','portfolioCapitalAfter','legCapitalAfter','standaloneCapitalAfter','reconciliationDelta'];
-  const head = [...tradeHead, ...paramCsvHeaders()];
-  const snap = r.paramSnapshot || csvParamSnapshot('backtest_export_current', btGetParams());
-  const rows = r.trades.map(t => [...tradeHead.map(k => t[k] ?? ''), ...paramCsvRow(snap)].map(v => {
-    const out = String(v === null || v === undefined ? '' : v);
-    return (out.includes(',') || out.includes('\\n')) ? `"${out.replace(/"/g, "'")}"` : out;
-  }).join(','));
+  const head = ['openedAt','closedAt','scenario','bias','direction','entry','sl','tp1','tp2','lots','exitReason','exitPrice','partialPnl','pnlEur','pnlTotal','rr','confidence','capitalAfter'];
+  const rows = r.trades.map(t => head.map(k => t[k] ?? '').join(','));
   const csv = head.join(',') + String.fromCharCode(10) + rows.join(String.fromCharCode(10));
   const blob = new Blob([csv], { type:'text/csv' });
   const url = URL.createObjectURL(blob);
@@ -5117,7 +4593,6 @@ const HIST_JOBS = [
   { symbol:'TNX',     interval:'1h',   key:'tnx_1h'    },
 ];
 const HIST_PREFIX = 'xauapp_hist_';
-const HIST_MEM_CACHE = new Map();
 let histDownloading = false;
 
 function histLog(msg, color='#94a3b8') {
@@ -5173,8 +4648,6 @@ function idbReq(mode, fn) {
 }
 
 async function histSave(key, payload) {
-  HIST_MEM_CACHE.set(key, payload);
-  try { if (typeof BT_PREP_CACHE !== 'undefined') BT_PREP_CACHE.clear(); } catch(e) {}
   const raw = JSON.stringify(payload);
   // Prova prima IndexedDB (spazio grande)
   const ok = await idbReq('readwrite', st => st.put(raw, key));
@@ -5194,21 +4667,17 @@ async function histSave(key, payload) {
 }
 
 async function histLoad(key) {
-  if (HIST_MEM_CACHE.has(key)) return HIST_MEM_CACHE.get(key);
   const fromIdb = await idbReq('readonly', st => st.get(key));
   if (fromIdb && typeof fromIdb === 'string') {
-    try { const parsed = JSON.parse(fromIdb); HIST_MEM_CACHE.set(key, parsed); return parsed; } catch(e) {}
+    try { return JSON.parse(fromIdb); } catch(e) {}
   }
   try {
     const raw = localStorage.getItem(HIST_PREFIX + key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw); HIST_MEM_CACHE.set(key, parsed); return parsed;
+    return raw ? JSON.parse(raw) : null;
   } catch(e) { return null; }
 }
 
 async function histDelete(key) {
-  HIST_MEM_CACHE.delete(key);
-  try { if (typeof BT_PREP_CACHE !== 'undefined') BT_PREP_CACHE.clear(); } catch(e) {}
   await idbReq('readwrite', st => st.delete(key));
   try { localStorage.removeItem(HIST_PREFIX + key); } catch(e) {}
 }
@@ -5432,7 +4901,7 @@ async function clearHistData() {
 }
 
 function syncParamInputs() {
-  const map = { 'btp-risk':'riskPct','btp-minconf':'minConf','btp-thr-swing':'thrSwing','btp-thr-trend':'thrTrend','btp-thr-scalp':'thrScalp','btp-thr-bias':'thrBias','btp-berr':'beRR','btp-trailrr':'trailRR','btp-trail-swing':'trailSwing','btp-trail-trend':'trailTrend','btp-trail-scalp':'trailScalp','btp-trail-bias':'trailBias','btp-partial':'partialPct','btp-spread':'spread','btp-slippage':'slippage' };
+  const map = { 'btp-risk':'riskPct','btp-minconf':'minConf','btp-thr-swing':'thrSwing','btp-thr-trend':'thrTrend','btp-thr-scalp':'thrScalp','btp-thr-bias':'thrBias','btp-berr':'beRR','btp-trailrr':'trailRR','btp-trail-swing':'trailSwing','btp-trail-trend':'trailTrend','btp-trail-scalp':'trailScalp','btp-partial':'partialPct' };
   Object.entries(map).forEach(([id, key]) => {
     const el = document.getElementById(id);
     if (el) el.value = PAPER_PARAMS[key];
@@ -5505,7 +4974,7 @@ async function handleSetup(){
       try { await doScalpFetch(); } catch(e) { console.warn('[setup] scalp:', e.message); }
       try { await fetchTrendCandles(); } catch(e) { console.warn('[setup] trend:', e.message); }
       renderRecapScreen();
-      evaluateAutoEntry();
+      if(!state.paper.openTrade) evaluateAutoEntry();
     })();
 
     if(state.fetchTimer)clearInterval(state.fetchTimer);
@@ -6310,7 +5779,7 @@ async function doScalpFetch() {
   if (curPrice) {
     evaluateAutoExit(curPrice);
     // Solo se non c'è già un trade aperto
-    evaluateAutoEntry();
+    if (!state.paper.openTrade) evaluateAutoEntry();
   }
 
   // Aggiorna Score se visibile
@@ -6728,7 +6197,7 @@ function renderPaperWidgetIn(el) {
   const pnlTotal = +(p.capital - p.initialCapital).toFixed(2);
   const wins = p.trades.filter(t=>t.isWin).length;
   const wr = p.trades.length ? Math.round(wins/p.trades.length*100) : 0;
-  const dd = +(currentDrawdown(p) * 100).toFixed(1);
+  const dd = +((p.initialCapital - p.capital) / p.initialCapital * 100).toFixed(1);
   el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="color:#f0b429;font-weight:800;font-size:17px">🤖 Paper Trading</div>
@@ -6746,74 +6215,34 @@ function renderPaperWidgetIn(el) {
 
 // ── Helper functions per scoring (globali) ──────────────────
 // ── Parametri LIVE del paper trading (persistenti, ottimizzabili) ──
-const PARAM_PROFILE_ID = 'v8-4-good-params-2026-07-06-1345';
-const PARAM_RESET_EPOCH = '2026-07-06-v8-4-fast-good-params-seed';
-const GOOD_PARAM_PRESETS = {
-  main_1345_scalp1m: {
-    label: '13:45 — gamba Scalp 1M inclusa',
-    stats: { trades:197, wr:73, pf:3.80, dd:4.7, pnl:19914.91 },
-    params: { thrSwing:70, thrTrend:66, thrBias:69, minConf:35, beRR:0.4, trailRR:1.3, trailSwing:2, trailTrend:2, partialPct:65, thrScalp:56, trailScalp:0.4 }
-  },
-  backup_1305: {
-    label: '13:05 — annealing 250 iterazioni',
-    stats: { trades:169, wr:54, pf:1.89, dd:17.8, pnl:61924.16 },
-    params: { thrSwing:54, thrTrend:75, thrBias:54, minConf:60, beRR:1, trailRR:1.3, trailSwing:1.2, trailTrend:1, partialPct:30, thrScalp:55, trailScalp:0.8 }
-  },
-  aggressive_1948: {
-    label: '19:48 — aggressivo, DD alto',
-    stats: { trades:147, wr:59, pf:2.19, dd:16, pnl:73199.17 },
-    params: { thrSwing:58, thrTrend:58, thrBias:78, minConf:5, beRR:1.3, trailRR:1, trailSwing:1.4, trailTrend:1.6, partialPct:30, thrScalp:70, trailScalp:0.4 }
-  }
-};
 const PAPER_PARAMS_DEFAULTS = {
-  _v: 6, // v6: profilo buono 13:45 + cache runtime backtest/annealing
-  _profile: PARAM_PROFILE_ID,
-  // Profilo live iniziale scelto dagli screenshot: 13:45 — gamba Scalp 1M inclusa.
-  thrSwing: 70, thrTrend: 66, thrScalp: 56, thrBias: 69,
-  minConf: 35, riskPct: 5.0, beRR: 0.4, trailRR: 1.3,
-  trailSwing: 2, trailTrend: 2, trailScalp: 0.4, trailBias: 1.0,
-  partialPct: 65,
-  spread: 0.04,
-  slippage: 0.02,
+  _v: 3, // v3: Trend ricalibrato dagli sweep (zona stabile 72-77 → 74; trail 1.3-1.5 → 1.4)
+  thrSwing: 54, thrTrend: 74, thrScalp: 62, thrBias: 72,
+  minConf: 60, riskPct: 5.0, beRR: 0.4, trailRR: 0.4,
+  trailSwing: 2.7, trailTrend: 1.4, trailScalp: 0.8, trailBias: 1.0,
+  partialPct: 15,
 };
-const RESET_OPT_KEYS = ['xauapp_opt_results','xauapp_param_apply_log'];
-function resetOptimizationArtifacts(reason='reset') {
-  try { RESET_OPT_KEYS.forEach(k => localStorage.removeItem(k)); localStorage.setItem('xauapp_last_opt_reset', JSON.stringify({ ts:Date.now(), reason, build:APP_BUILD })); } catch(e) {}
-}
-const PARAM_NEEDS_RESET = (() => {
-  try { return localStorage.getItem('xauapp_param_seed_epoch') !== PARAM_RESET_EPOCH; } catch(e) { return false; }
-})();
-if (PARAM_NEEDS_RESET) {
-  resetOptimizationArtifacts('auto-reset-v8.4-fast-good-params');
-  try { localStorage.setItem('xauapp_live_params', JSON.stringify({ ...PAPER_PARAMS_DEFAULTS, _seededAt:Date.now() })); } catch(e) {}
-  try { localStorage.setItem('xauapp_param_seed_epoch', PARAM_RESET_EPOCH); } catch(e) {}
-}
 let PAPER_PARAMS = (() => {
   try {
     const saved = JSON.parse(localStorage.getItem('xauapp_live_params') || 'null');
-    // v8.3.1: accetta solo parametri della stessa versione/profilo; altrimenti riparte dal profilo CSV ieri.
-    const compatible = saved && saved._v === PAPER_PARAMS_DEFAULTS._v && saved._profile === PARAM_PROFILE_ID;
-    const fresh = compatible ? { ...PAPER_PARAMS_DEFAULTS, ...saved, _v: PAPER_PARAMS_DEFAULTS._v, _profile:PARAM_PROFILE_ID } : { ...PAPER_PARAMS_DEFAULTS };
+    // Se il salvataggio è di una versione precedente, i nuovi default vincono
+    if (saved && saved._v === PAPER_PARAMS_DEFAULTS._v) return { ...PAPER_PARAMS_DEFAULTS, ...saved };
+    const fresh = { ...PAPER_PARAMS_DEFAULTS };
     try { localStorage.setItem('xauapp_live_params', JSON.stringify(fresh)); } catch(e) {}
     return fresh;
   } catch(e) { return { ...PAPER_PARAMS_DEFAULTS }; }
 })();
 // ── Pesi INTERNI dello scoring, per scenario (moltiplicatori, 1.0 = default) ──
 const SCORE_WEIGHTS_DEFAULTS = {
-  _v: 3,
-  _profile: PARAM_PROFILE_ID,
+  _v: 1,
   swing: { macro:1, mtf:1, adx:1, rsi:1, pivot:1, pullback:1, specific:1, sess:1 },
   trend: { macro:1, mtf:1, adx:1, rsi:1, pivot:1, pullback:1, specific:1, sess:1 },
-  // Screenshot pesi interni Scalp 1M: macro×2, mtf×0, adx×0, rsi×2, pivot×1.25.
-  scalp: { macro:2, mtf:0, adx:0, rsi:2, pivot:1.25, pullback:1, specific:1, sess:1 },
+  scalp: { macro:1, mtf:1, adx:1, rsi:1, pivot:1, pullback:1, specific:1, sess:1 },
 };
-if (PARAM_NEEDS_RESET) {
-  try { localStorage.setItem('xauapp_score_weights', JSON.stringify(SCORE_WEIGHTS_DEFAULTS)); } catch(e) {}
-}
 let SCORE_WEIGHTS = (() => {
   try {
     const saved = JSON.parse(localStorage.getItem('xauapp_score_weights') || 'null');
-    if (saved && saved._v === SCORE_WEIGHTS_DEFAULTS._v && saved._profile === PARAM_PROFILE_ID) {
+    if (saved && saved._v === SCORE_WEIGHTS_DEFAULTS._v) {
       return { ...SCORE_WEIGHTS_DEFAULTS, ...saved,
         swing:{...SCORE_WEIGHTS_DEFAULTS.swing,...(saved.swing||{})},
         trend:{...SCORE_WEIGHTS_DEFAULTS.trend,...(saved.trend||{})},
@@ -6825,140 +6254,7 @@ let SCORE_WEIGHTS = (() => {
 function saveScoreWeights(scen, w) {
   SCORE_WEIGHTS[scen] = { ...SCORE_WEIGHTS[scen], ...w };
   SCORE_WEIGHTS._v = SCORE_WEIGHTS_DEFAULTS._v;
-  SCORE_WEIGHTS._profile = PARAM_PROFILE_ID;
   try { localStorage.setItem('xauapp_score_weights', JSON.stringify(SCORE_WEIGHTS)); } catch(e) {}
-}
-
-
-const PARAM_SYNC_KEYS = ['thrSwing','thrTrend','thrScalp','thrBias','minConf','riskPct','beRR','trailRR','trailSwing','trailTrend','trailScalp','trailBias','partialPct','spread','slippage'];
-let lastSwPong = null;
-function stableSortObj(x) {
-  if (Array.isArray(x)) return x.map(stableSortObj);
-  if (x && typeof x === 'object') return Object.keys(x).sort().reduce((o,k)=>(o[k]=stableSortObj(x[k]),o),{});
-  return x;
-}
-function stableStringify(x) { return JSON.stringify(stableSortObj(x)); }
-function simpleHash(str) {
-  let h = 2166136261;
-  for (let i=0; i<str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return ('00000000' + (h >>> 0).toString(16)).slice(-8);
-}
-function paramsOnly(p=PAPER_PARAMS) {
-  const out = { _profile: PARAM_PROFILE_ID, _v: PAPER_PARAMS_DEFAULTS._v };
-  PARAM_SYNC_KEYS.forEach(k => out[k] = Number(p?.[k] ?? PAPER_PARAMS_DEFAULTS[k]));
-  return out;
-}
-function weightsOnly(w=SCORE_WEIGHTS) {
-  return {
-    _profile: PARAM_PROFILE_ID,
-    _v: SCORE_WEIGHTS_DEFAULTS._v,
-    swing:{...SCORE_WEIGHTS_DEFAULTS.swing,...(w?.swing||{})},
-    trend:{...SCORE_WEIGHTS_DEFAULTS.trend,...(w?.trend||{})},
-    scalp:{...SCORE_WEIGHTS_DEFAULTS.scalp,...(w?.scalp||{})},
-  };
-}
-function paramBundle(p=PAPER_PARAMS, w=SCORE_WEIGHTS) {
-  return { build:APP_BUILD, profile:PARAM_PROFILE_ID, params:paramsOnly(p), weights:weightsOnly(w) };
-}
-function paramBundleHash(p=PAPER_PARAMS, w=SCORE_WEIGHTS) { return simpleHash(stableStringify(paramBundle(p,w))); }
-function btParamsAsPercentParams(bp) {
-  const base = paramsOnly(PAPER_PARAMS);
-  if (!bp) return base;
-  return {
-    ...base,
-    riskPct:    +(Number(bp.riskPct ?? 0) * 100).toFixed(6),
-    partialPct: +(Number(bp.partialPct ?? 0) * 100).toFixed(6),
-    minConf:    Number(bp.minConf ?? base.minConf),
-    thrSwing:   Number(bp.thrSwing ?? base.thrSwing),
-    thrTrend:   Number(bp.thrTrend ?? base.thrTrend),
-    thrScalp:   Number(bp.thrScalp ?? base.thrScalp),
-    thrBias:    Number(bp.thrBias ?? base.thrBias),
-    beRR:       Number(bp.beRR ?? base.beRR),
-    trailRR:    Number(bp.trailRR ?? base.trailRR),
-    trailSwing: Number(bp.trailSwing ?? base.trailSwing),
-    trailTrend: Number(bp.trailTrend ?? base.trailTrend),
-    trailScalp: Number(bp.trailScalp ?? base.trailScalp),
-    trailBias:  Number(bp.trailBias ?? base.trailBias),
-    spread:     Number(bp.spread ?? base.spread),
-    slippage:   Number(bp.slippage ?? base.slippage),
-  };
-}
-function csvParamSnapshot(source='live', btParams=null) {
-  const params = btParams ? btParamsAsPercentParams(btParams) : paramsOnly(PAPER_PARAMS);
-  const weights = weightsOnly(SCORE_WEIGHTS);
-  const bundle = { build:APP_BUILD, profile:PARAM_PROFILE_ID, source, params, weights };
-  return { ...bundle, hash:simpleHash(stableStringify(bundle)) };
-}
-function paramCsvHeaders() {
-  const wKeys = ['macro','mtf','adx','rsi','pivot','pullback','specific','sess'];
-  return [
-    'paramBuild','paramProfile','paramHash','paramSource',
-    ...PARAM_SYNC_KEYS.map(k => 'param_' + k),
-    ...['swing','trend','scalp'].flatMap(s => wKeys.map(k => `weight_${s}_${k}`)),
-    'paramsJSON','weightsJSON'
-  ];
-}
-function paramCsvRow(snap) {
-  const s = snap || csvParamSnapshot('missing_snapshot_fallback');
-  const params = s.params || {};
-  const weights = s.weights || {};
-  const wKeys = ['macro','mtf','adx','rsi','pivot','pullback','specific','sess'];
-  return [
-    s.build || APP_BUILD, s.profile || PARAM_PROFILE_ID, s.hash || simpleHash(stableStringify(s)), s.source || '',
-    ...PARAM_SYNC_KEYS.map(k => params[k] ?? ''),
-    ...['swing','trend','scalp'].flatMap(sc => wKeys.map(k => weights?.[sc]?.[k] ?? '')),
-    stableStringify(params), stableStringify(weights)
-  ];
-}
-function uiParamsSnapshotRaw() {
-  const map = { 'btp-risk':'riskPct','btp-minconf':'minConf','btp-thr-swing':'thrSwing','btp-thr-trend':'thrTrend','btp-thr-scalp':'thrScalp','btp-thr-bias':'thrBias','btp-berr':'beRR','btp-trailrr':'trailRR','btp-trail-swing':'trailSwing','btp-trail-trend':'trailTrend','btp-trail-scalp':'trailScalp','btp-trail-bias':'trailBias','btp-partial':'partialPct','btp-spread':'spread','btp-slippage':'slippage' };
-  const out = { ...paramsOnly(PAPER_PARAMS) };
-  Object.entries(map).forEach(([id,k]) => { const el=document.getElementById(id); const v=el?parseFloat(el.value):NaN; if (Number.isFinite(v)) out[k]=v; });
-  return out;
-}
-function localStorageParamsSnapshot() {
-  try { return paramsOnly(JSON.parse(localStorage.getItem('xauapp_live_params') || 'null') || {}); } catch(e) { return null; }
-}
-function syncHashes() {
-  const liveH = paramBundleHash(PAPER_PARAMS, SCORE_WEIGHTS);
-  let lsH = 'ERR', uiH = 'N/D', btH = 'N/D';
-  try { lsH = paramBundleHash(JSON.parse(localStorage.getItem('xauapp_live_params')||'{}'), JSON.parse(localStorage.getItem('xauapp_score_weights')||'{}')); } catch(e) {}
-  try { uiH = simpleHash(stableStringify({ profile:PARAM_PROFILE_ID, params:uiParamsSnapshotRaw(), weights:weightsOnly(SCORE_WEIGHTS) })); } catch(e) {}
-  try { const bp = btGetParams(); const raw = { ...paramsOnly(PAPER_PARAMS), riskPct: +(bp.riskPct*100).toFixed(6), partialPct:+(bp.partialPct*100).toFixed(6), minConf:bp.minConf, thrSwing:bp.thrSwing, thrTrend:bp.thrTrend, thrScalp:bp.thrScalp, thrBias:bp.thrBias, beRR:bp.beRR, trailRR:bp.trailRR, trailSwing:bp.trailSwing, trailTrend:bp.trailTrend, trailScalp:bp.trailScalp, trailBias:bp.trailBias, spread:bp.spread, slippage:bp.slippage }; btH = simpleHash(stableStringify({ profile:PARAM_PROFILE_ID, params:raw, weights:weightsOnly(SCORE_WEIGHTS) })); } catch(e) {}
-  return { liveH, lsH, uiH, btH, swH:lastSwPong?.paramHash || 'N/D' };
-}
-function renderParamSyncStatus() {
-  const h = syncHashes();
-  const okLocal = h.liveH === h.lsH;
-  const okUi = h.uiH === h.btH; // UI e backtest leggono gli stessi input
-  const okSw = h.swH === 'N/D' ? null : h.swH === h.liveH;
-  const chip = (label, val, ok) => `<span style="display:inline-block;background:${ok===null?'#1e2535':ok?'#22c55e18':'#ef444418'};border:1px solid ${ok===null?'#2a3550':ok?'#22c55e55':'#ef444455'};color:${ok===null?'#c0cce0':ok?'#22c55e':'#ef4444'};border-radius:6px;padding:3px 6px;margin:2px;font-size:10px;font-weight:800">${label}: ${val}</span>`;
-  return `<div style="background:#080b10;border:1px solid ${(okLocal&&okUi&&(okSw!==false))?'#22c55e44':'#f0b42955'};border-radius:8px;padding:7px;margin-top:7px">
-    <div style="color:#fde68a;font-size:10px;font-weight:900;margin-bottom:3px">🔒 SYNC PARAMETRI v8.4 — profilo ${PARAM_PROFILE_ID}</div>
-    ${chip('live',h.liveH,true)}${chip('localStorage',h.lsH,okLocal)}${chip('UI',h.uiH,okUi)}${chip('backtest',h.btH,okUi)}${chip('SW',h.swH,okSw)}
-    <div style="color:#94a3b8;font-size:10px;margin-top:4px">Se i codici coincidono, parametri live, storage, input backtest e service worker sono allineati. Da v8.4 il CSV esporta parametri, pesi e hash: ogni backtest è auditabile anche dopo nuove ottimizzazioni.</div>
-  </div>`;
-}
-function syncAllParameterLayers(reason='sync') {
-  try { localStorage.setItem('xauapp_live_params', JSON.stringify(PAPER_PARAMS)); } catch(e) {}
-  try { localStorage.setItem('xauapp_score_weights', JSON.stringify(SCORE_WEIGHTS)); } catch(e) {}
-  try { if (typeof syncParamInputs === 'function') syncParamInputs(); } catch(e) {}
-  try { if (typeof sendToSW === 'function') sendToSW({ type:'UPDATE_CONFIG', tdKey:state.tdKey, config:LS.get('alert_config')||{}, paperEnabled:state.paper.enabled, paperCapital:state.paper.capital, openTrade:state.paper.openTrade, openTrades:state.paper.openTrades||{}, paperParams:PAPER_PARAMS, scoreWeights:SCORE_WEIGHTS, paramHash:paramBundleHash() }); } catch(e) {}
-  try { localStorage.setItem('xauapp_param_last_sync', JSON.stringify({ ts:Date.now(), reason, hash:paramBundleHash(), build:APP_BUILD })); } catch(e) {}
-}
-function resetOptResultsAndLoadCsvYesterdayProfile() {
-  PAPER_PARAMS = { ...PAPER_PARAMS_DEFAULTS, _seededAt:Date.now() };
-  SCORE_WEIGHTS = JSON.parse(JSON.stringify(SCORE_WEIGHTS_DEFAULTS));
-  resetOptimizationArtifacts('manual-reset-v8.4-fast-good-params');
-  try { localStorage.setItem('xauapp_param_seed_epoch', PARAM_RESET_EPOCH); } catch(e) {}
-  syncAllParameterLayers('manual-reset-v8.4-fast-good-params');
-  try { if (typeof renderOptHub === 'function') renderOptHub(); } catch(e) {}
-  alert('Risultati ottimizzazioni azzerati. Profilo parametri buoni v8.4 ricaricato e sincronizzato su live, backtest, localStorage e SW.');
-}
-function saveUiParamsToLive() {
-  PAPER_PARAMS = { ...PAPER_PARAMS, ...uiParamsSnapshotRaw(), _v:PAPER_PARAMS_DEFAULTS._v, _profile:PARAM_PROFILE_ID };
-  syncAllParameterLayers('manual-ui-to-live');
-  try { if (typeof renderOptHub === 'function') renderOptHub(); } catch(e) {}
 }
 
 function paperSlots() {
@@ -6973,36 +6269,10 @@ function syncLegacyOpen() {
   const p = state.paper, s = p.openTrades || {};
   p.openTrade = s.swing || s.trend || s.scalp || s.bias || null;
 }
-function hasAnyPaperTrade() {
-  return Object.values(paperSlots()).some(Boolean);
-}
-function hasOpenScenario(scenario) {
-  return !!paperSlots()[scenario || 'swing'];
-}
 
-function paperParamsSnapshot(overrides={}) {
-  // Snapshot COMPLETO: ogni auto-apply salva tutto il set parametri, non solo il delta.
-  // In questo modo live, backtest UI e service worker restano sempre allineati.
-  return { ...PAPER_PARAMS_DEFAULTS, ...PAPER_PARAMS, ...(overrides || {}), _v: PAPER_PARAMS_DEFAULTS._v, _profile: PARAM_PROFILE_ID };
-}
-
-function savePaperParams(p, reason='savePaperParams') {
-  PAPER_PARAMS = paperParamsSnapshot(p);
-  syncAllParameterLayers(reason);
-  try { if (typeof renderOptHub === 'function') renderOptHub(); } catch(e) {}
-}
-
-function applyOptimizedParams(overrides={}, meta={}) {
-  const before = paperParamsSnapshot();
-  const after = paperParamsSnapshot(overrides);
-  savePaperParams(after, meta.source || 'optimization');
-  const hash = paramBundleHash(after, SCORE_WEIGHTS);
-  try {
-    const hist = JSON.parse(localStorage.getItem('xauapp_param_apply_log') || '[]');
-    hist.push({ ts:Date.now(), source:meta.source||'optimization', scenario:meta.scenario||null, changed:Object.keys(overrides||{}), before, after, hash, profile:PARAM_PROFILE_ID, build:APP_BUILD });
-    localStorage.setItem('xauapp_param_apply_log', JSON.stringify(hist.slice(-50)));
-  } catch(e) {}
-  return after;
+function savePaperParams(p) {
+  PAPER_PARAMS = { ...PAPER_PARAMS, ...p, _v: PAPER_PARAMS_DEFAULTS._v };
+  try { localStorage.setItem('xauapp_live_params', JSON.stringify(PAPER_PARAMS)); } catch(e) {}
 }
 
 // nowRef: in backtest restituisce l'ora storica simulata, altrimenti l'ora reale
@@ -7025,9 +6295,10 @@ function structuralSL(candles, dir, atr, nBars=8) {
 function isChasing(price, ema20, atr) {
   return ema20 && Math.abs(price - ema20) > atr * 3.5;
 }
-// Guard sessione XAU: true quando il mercato è chiuso o in pre-gap weekend.
+// Weekend guard: no entry da venerdì 20:00 UTC a domenica 22:00 UTC
 function isWeekendRisk() {
-  return !xauMarketOpen(nowRef());
+  const d = nowRef(), day = d.getUTCDay(), h = d.getUTCHours();
+  return (day === 5 && h >= 20) || day === 6 || (day === 0 && h < 22);
 }
 function distPct(price, level) { return level ? Math.abs(price-level)/level*100 : 999; }
 
@@ -7545,7 +6816,7 @@ function computeAllScenarios() {
     }
 
     if (scenario==="swing") {
-      // MACD 1H: tesi swing resta su struttura alta
+      // MACD 1H
       if (last1h && cc1h.length>=3) {
         const macd=last1h.macd||0, prev=cc1h[cc1h.length-2]?.macd||0;
         const cross=(isBuy && prev<0 && macd>0)||(!isBuy && prev>0 && macd<0);
@@ -7553,17 +6824,6 @@ function computeAllScenarios() {
         if (cross)  {score+=8; R.push(`✅ MACD cross ${dir}`);}
         else if (slOk){score+=5;R.push(`⚡ MACD ${dir}`);}
         else if ((isBuy&&macd<0&&macd<prev)||(!isBuy&&macd>0&&macd>prev)) {score-=5; P.push(`❌ MACD contro ${dir}`);}
-      }
-      // Trigger operativo 5M: non cambia la tesi, ma affina ingresso e backtest ogni 5 minuti
-      if (cc5m.length >= 8) {
-        const sl3_5m = slopePct(cc5m, 3);
-        const trigOk = (isBuy && sl3_5m > 0) || (!isBuy && sl3_5m < 0);
-        const last5 = cc5m[cc5m.length-1];
-        const rsi5 = last5?.rsi ?? 50;
-        if (trigOk) { score += 6; R.push(`✅ Trigger 5M conferma ${dir}`); }
-        else        { score -= 3; P.push(`⚠️ Trigger 5M non conferma ${dir}`); }
-        if (isBuy && rsi5 >= 38 && rsi5 <= 68)       { score += 2; R.push(`⚡ RSI 5M sano ${rsi5}`); }
-        else if (!isBuy && rsi5 >= 32 && rsi5 <= 62) { score += 2; R.push(`⚡ RSI 5M sano ${rsi5}`); }
       }
       // Regime: ranging favorisce swing su pivot
       if (regime==="RANGING") {score+=3; R.push("⚡ Ranging — swing su pivot valido");}
@@ -7596,19 +6856,16 @@ function computeAllScenarios() {
     let finalScore = Math.max(0, Math.min(100, Math.round(rawScore * cohMult)));
 
     // Setup per quella direzione — SL strutturale, R:R minimo, anti-chase
-    const has5mTrigger = scenario==="swing" && cc5m.length >= 8 && last5m;
-    const entry = scenario==="scalp" ? (last5m?.c || last1h?.c || 0)
-                : has5mTrigger ? last5m.c
-                : (last1h?.c || 0);
+    const entry=last1h?.c||0;
     const atrMult = scenario==="trend"?2.0:scenario==="scalp"?1.2:1.5;
     const tpMult1 = scenario==="trend"?3.0:scenario==="scalp"?1.5:2.0;
     const tpMult2 = scenario==="trend"?5.0:scenario==="scalp"?2.5:3.5;
     let setup = null;
     if (entry) {
-      // SL: strutturale su TF operativo. Swing usa 5M quando disponibile, ma resta filtrato da H1/4H/Daily.
-      const scCandles = scenario==="scalp" ? (cc5m.length?cc5m:cc1h) : has5mTrigger ? cc5m : cc1h;
-      const scAtr     = scenario==="scalp" ? (last5m?.atr||atr1h*0.3) : has5mTrigger ? (last5m?.atr||atr1h*0.35) : atr1h;
-      const slStruct  = structuralSL(scCandles, dir, scAtr, scenario==="scalp"?6:has5mTrigger?12:8);
+      // SL: strutturale (swing) se ragionevole, altrimenti ATR
+      const scCandles = scenario==="scalp" ? (cc5m.length?cc5m:cc1h) : cc1h;
+      const scAtr     = scenario==="scalp" ? (last5m?.atr||atr1h*0.3) : atr1h;
+      const slStruct  = structuralSL(scCandles, dir, scAtr, scenario==="scalp"?6:8);
       const slAtr     = isBuy ? +(entry-scAtr*atrMult).toFixed(2) : +(entry+scAtr*atrMult).toFixed(2);
       // Usa lo strutturale se non troppo lontano (max 1.5x della distanza ATR)
       let sl = slAtr;
@@ -7623,7 +6880,6 @@ function computeAllScenarios() {
       // Anti-chase: se prezzo esteso dall'EMA20, marca il setup
       const e20 = ema20_1h.length ? ema20_1h[ema20_1h.length-1] : null;
       if (isChasing(entry, e20, atr1h)) { setup.chasing = true; }
-      if (has5mTrigger) setup.triggerTf = '5m';
     }
     // Penalità score se chasing o weekend
     let finalAdj = 0;
@@ -7648,7 +6904,7 @@ function computeAllScenarios() {
   };
 
   const scores = [
-    makeScenario("swing","📊 Swing", "#f0b429", cc5m.length?"5M trigger · H1/4H":"1H/4H", THRESHOLDS.swing),
+    makeScenario("swing","📊 Swing", "#f0b429","1H/4H",      THRESHOLDS.swing),
     makeScenario("scalp","⚡ Scalp",  "#f97316","1M/5M",      THRESHOLDS.scalp),
     makeScenario("trend","📈 Trend",  "#22c55e","Daily/4H/1H",THRESHOLDS.trend),
     computeBiasScenario(cc1h, last1h, atr1h, d1t, adx, regime),
@@ -7707,7 +6963,7 @@ function renderRecapScreen() {
       <div style="text-align:right">
         <div style="color:#fde68a;font-size:22px;font-weight:800">$${fmtP(lastXau?.c)}</div>
         <div style="color:${pnlTot>=0?"#22c55e":"#ef4444"};font-size:16px;font-weight:700">🤖 ${pnlTot>=0?"+":""}€${pnlTot.toFixed(0)}</div>
-        <div style="color:${p.enabled?"#22c55e":"#c0cce0"};font-size:16px">${p.enabled?"● Auto ON":"○ Auto OFF"}${hasAnyPaperTrade()?" · Slot aperti "+Object.values(p.openTrades||{}).filter(Boolean).length:""}</div>
+        <div style="color:${p.enabled?"#22c55e":"#c0cce0"};font-size:16px">${p.enabled?"● Auto ON":"○ Auto OFF"}${p.openTrade?" · Trade "+p.openTrade.direction:""}</div>
       </div>
     </div>
     ${sess.nextEvent?`<div style="background:#1e2740;border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between">
@@ -7781,9 +7037,9 @@ function renderRecapScreen() {
           ).join("")}
         </div>
       </div>
-      ${!hasOpenScenario(s.id)?`<button onclick="launchPaperFromRecap(${JSON.stringify({direction:s.bestDir,entry:s.setup.entry,sl:s.setup.sl,tp1:s.setup.tp1,tp2:s.setup.tp2,confidence:s.bestScore,scenario:s.id,label:s.label}).replace(/"/g,"&quot;")})" style="width:100%;background:${s.bestDir==="BUY"?"#22c55e":"#ef4444"};color:#000;border-radius:8px;padding:9px 0;font-size:16px;font-weight:800;border:none">
+      ${!p.openTrade?`<button onclick="launchPaperFromRecap(${JSON.stringify({direction:s.bestDir,entry:s.setup.entry,sl:s.setup.sl,tp1:s.setup.tp1,tp2:s.setup.tp2,confidence:s.bestScore,scenario:s.id,label:s.label}).replace(/"/g,"&quot;")})" style="width:100%;background:${s.bestDir==="BUY"?"#22c55e":"#ef4444"};color:#000;border-radius:8px;padding:9px 0;font-size:16px;font-weight:800;border:none">
         ${s.bestDir==="BUY"?"▲":"▼"} Apri Paper Trade ${s.bestDir}
-      </button>`:`<div style="background:#f0b42912;border:1px solid #f0b42933;border-radius:7px;padding:7px;font-size:17px;color:#f0b429;text-align:center">Slot ${s.label} già aperto — gestione auto attiva</div>`}
+      </button>`:p.openTrade&&isBest?`<div style="background:#f0b42912;border:1px solid #f0b42933;border-radius:7px;padding:7px;font-size:17px;color:#f0b429;text-align:center">Trade aperto — gestione auto attiva</div>`:""}
       ` : ""}
     </div>`;
   });
@@ -7791,14 +7047,14 @@ function renderRecapScreen() {
   // ── 3. Paper trading panel ────────────────────────────────
   const wins  = p.trades.filter(t=>t.isWin).length;
   const wr    = p.trades.length ? Math.round(wins/p.trades.length*100) : 0;
-  const dd    = +(currentDrawdown(p)*100).toFixed(1);
+  const dd    = +((( p.initialCapital||10000)-p.capital)/(p.initialCapital||10000)*100).toFixed(1);
   const ddReached = dd >= MAX_DD*100;
 
   html += `<div class="card" style="border:2px solid ${p.enabled?"#22c55e44":"#f0b42944"}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div>
         <div style="color:#f0b429;font-weight:800;font-size:16px">🤖 Paper Trading Automatico</div>
-        <div style="color:#cbd5e1;font-size:16px">Leva 1:100 · spread $${paperSpread()} · slip $${paperSlippage()} · rischio ${PAPER_PARAMS.riskPct}%</div>
+        <div style="color:#cbd5e1;font-size:16px">Leva 1:100 · $${SPREAD} spread · 1% rischio · max 5%</div>
       </div>
       <button onclick="togglePaperTrading()" style="background:${p.enabled?"#ef4444":"#22c55e"};color:#000;border-radius:8px;padding:8px 14px;font-size:16px;font-weight:700;border:none">${p.enabled?"⏹ Stop":"▶ Avvia"}</button>
     </div>
@@ -7882,64 +7138,47 @@ function renderRecapScreen() {
 
 function launchPaperFromRecap(tradeData) {
   const p = state.paper;
-  const scenarioId = tradeData.scenario || 'swing';
-  if (hasOpenScenario(scenarioId)) { alert('Hai già un trade aperto per questo scenario. Chiudi prima quello slot.'); return; }
-  const dd = currentDrawdown(p);
+  if (p.openTrade) { alert('Chiudi prima il trade aperto nel diario 🤖 Auto.'); return; }
+  const dd = (p.initialCapital - p.capital) / p.initialCapital;
   if (dd >= MAX_DD) { alert('Drawdown massimo raggiunto. Resetta il paper trading.'); return; }
   if (!p.enabled) p.enabled = true;
 
-  const entry = entryFill(tradeData.entry, tradeData.direction);
-  const lots = calcLotSize(p.capital, entry, tradeData.sl);
-  const riskEur = +(Math.abs(entry - tradeData.sl) * lots * 100).toFixed(2);
+  const lots = calcLotSize(p.capital, tradeData.entry, tradeData.sl);
+  const riskEur = +(Math.abs(tradeData.entry - tradeData.sl) * lots * 100).toFixed(2);
 
   const trade = {
     id: Date.now(),
     direction: tradeData.direction,
-    entry,
+    entry: tradeData.entry,
     sl: tradeData.sl,
-    slInitial: tradeData.sl,
-    slOrig: tradeData.sl,
     tp1: tradeData.tp1,
-    tp1Initial: tradeData.tp1,
     tp2: tradeData.tp2,
-    tp2Initial: tradeData.tp2,
-    lots, lotsInitial: lots, riskEur,
+    lots, riskEur,
     confidence: tradeData.confidence,
     openedAt: new Date().toISOString(),
     capitalAtOpen: p.capital,
-    capitalBefore: p.capital,
-    spread: paperSpread(),
-    slippage: paperSlippage(),
+    spread: SPREAD,
     pattern: `Scenario ${tradeData.label}`,
     macroDir: '–',
     atrAtEntry: 0,
-    scenario: scenarioId,
-    managementLog: [],
-    trailingActive: false,
-    breakEvenSet: false,
-    partialDone: false,
-    partialPnl: 0,
-    maxFavorable: tradeData.entry,
+    scenario: tradeData.scenario,
   };
 
-  if (!p.openTrades) p.openTrades = {};
-  p.openTrades[scenarioId] = trade;
-  syncLegacyOpen();
+  p.openTrade = trade;
   p.lastSignalTs = Date.now();
   savePaperState();
-  sendToSW({ type:'PAPER_TRADE_OPEN', trade, capital:p.capital, openTrades:p.openTrades || {}, paperParams:PAPER_PARAMS, tdKey:state.tdKey }).catch(()=>{});
 
   // Notifica
   if ('serviceWorker' in navigator && Notification.permission === 'granted') {
     navigator.serviceWorker.ready.then(reg => {
       reg.showNotification(`🤖 Paper Trade Aperto [${tradeData.label}]`, {
-        body: `${tradeData.direction} XAU @ $${fmtP(entry)} · SL $${fmtP(tradeData.sl)} · TP $${fmtP(tradeData.tp1)}`,
+        body: `${tradeData.direction} XAU @ $${fmtP(tradeData.entry)} · SL $${fmtP(tradeData.sl)} · TP $${fmtP(tradeData.tp1)}`,
         icon: '/icon-192.png', tag: 'paper-recap', vibrate: [200,100,200,100,200],
       });
     }).catch(()=>{});
   }
 
-  alert(`✅ Trade ${tradeData.direction} aperto @ $${fmtP(entry)}\nSL: $${fmtP(tradeData.sl)} · TP1: $${fmtP(tradeData.tp1)}\nVisualizza nel Diario → 🤖 Auto`);
+  alert(`✅ Trade ${tradeData.direction} aperto @ $${fmtP(tradeData.entry)}\nSL: $${fmtP(tradeData.sl)} · TP1: $${fmtP(tradeData.tp1)}\nVisualizza nel Diario → 🤖 Auto`);
   renderRecapScreen();
 }
 
@@ -8007,7 +7246,7 @@ function setMode(mode) {
         await Promise.allSettled(fetches);
         renderRecapScreen();
       }
-      evaluateAutoEntry();
+      if (!state.paper.openTrade) evaluateAutoEntry();
     };
     loadAndRender();
     // Auto-refresh ogni 60s: fetch + score + auto-entry/exit
@@ -8016,7 +7255,7 @@ function setMode(mode) {
       if (curPrice) evaluateAutoExit(curPrice);
       await Promise.all([doFetch(), doScalpFetch(), fetchTrendCandles()]);
       renderRecapScreen();
-      evaluateAutoEntry();
+      if (!state.paper.openTrade) evaluateAutoEntry();
     }, 60000);
   } else if (mode === 'hist') {
     tfBar.style.display='none';
@@ -8045,7 +7284,7 @@ async function registerSW() {
   try {
     // Calcola path relativo alla pagina corrente (funziona su GitHub Pages subpath)
     const base   = window.location.href.replace(/\/[^\/]*$/, '/');
-    const swPath = base + 'sw.js?v=' + encodeURIComponent(APP_BUILD);
+    const swPath = base + 'sw.js';
     const scope  = base;
     swReg = await navigator.serviceWorker.register(swPath, { scope });
     console.log('[PWA] SW registered:', swReg.scope);
@@ -8087,24 +7326,21 @@ function handleSwMessage(e) {
       lastEl.textContent = `Check: ${new Date(d.ts).toLocaleTimeString('it-IT')} · XAU $${d.price?.toFixed(2)||'–'} · RSI ${d.rsi||'–'}`;
     }
     // Valuta exit con prezzo dal SW (funziona anche in background)
-    if (d.price && (state.paper?.openTrade || Object.keys(state.paper?.openTrades || {}).length)) {
+    if (d.price && state.paper?.openTrade) {
       try { evaluateAutoExit(d.price); } catch(e) { console.warn('[SW→exit]', e.message); }
     }
   }
 
   // SW ha rilevato exit condition in background
   if (d.type === 'BG_EXIT_SIGNAL') {
-    if ((state.paper?.openTrade || Object.keys(state.paper?.openTrades || {}).length) && d.price) {
+    if (state.paper?.openTrade && d.price) {
       try { evaluateAutoExit(d.price); } catch(e) {}
     }
   }
 
   // SW aggiorna SL (trailing/BE) calcolato in background
-  if (d.type === 'BG_UPDATE_SL') {
-    const slots = paperSlots();
-    const key = d.scenario || state.paper.openTrade?.scenario || 'swing';
-    const t = slots[key] || state.paper.openTrade;
-    if (!t) return;
+  if (d.type === 'BG_UPDATE_SL' && state.paper?.openTrade) {
+    const t = state.paper.openTrade;
     const dir = t.direction;
     if ((dir==='BUY' && d.newSL > t.sl) || (dir==='SELL' && d.newSL < t.sl)) {
       t.sl = d.newSL;
@@ -8112,8 +7348,7 @@ function handleSwMessage(e) {
       t.trailingActive = d.trailingActive || t.trailingActive;
       if (!t.managementLog) t.managementLog = [];
       t.managementLog.push({ ts: d.ts, action: d.action, price: d.price, scenario: t.scenario, profRR: 0 });
-      slots[key] = t;
-      syncLegacyOpen();
+      state.paper.openTrade = t;
       savePaperState();
       if (state.mode === 'recap') renderRecapScreen();
     }
@@ -8137,8 +7372,6 @@ function handleSwMessage(e) {
   // Trade aperto dal SW in background
   if (d.type === 'BG_TRADE_OPENED' && d.trade) {
     state.paper.openTrade    = d.trade;
-    if (!state.paper.openTrades) state.paper.openTrades = {};
-    state.paper.openTrades[d.trade.scenario || 'swing'] = d.trade;
     state.paper.lastSignalTs = d.ts || Date.now();
     if (!state.paper.enabled) state.paper.enabled = true;
     savePaperState();
@@ -8149,9 +7382,6 @@ function handleSwMessage(e) {
   // Trade aggiornato (trailing/BE) dal SW
   if (d.type === 'BG_TRADE_UPDATE' && d.trade) {
     state.paper.openTrade = d.trade;
-    if (!state.paper.openTrades) state.paper.openTrades = {};
-    state.paper.openTrades[d.trade.scenario || 'swing'] = d.trade;
-    syncLegacyOpen();
     savePaperState();
     if (state.mode === 'recap') renderRecapScreen();
   }
@@ -8269,7 +7499,7 @@ function updateNotifDebug() {
 async function saveAlertConfig() {
   const cfg = getAlertConfig();
   LS.set('alert_config', cfg);
-  await sendToSW({ type: 'UPDATE_CONFIG', tdKey: state.tdKey, config: cfg, paperParams: PAPER_PARAMS });
+  await sendToSW({ type: 'UPDATE_CONFIG', tdKey: state.tdKey, config: cfg });
   const btn = event.target;
   const orig = btn.textContent;
   btn.textContent = '✅ Salvato!';
@@ -8316,10 +7546,6 @@ async function toggleBackground() {
     paperCapital:  state.paper.capital,
     paperTrades:   state.paper.trades,
     openTrade:     state.paper.openTrade,
-    openTrades:    state.paper.openTrades || {},
-    paperParams:   PAPER_PARAMS,
-    scoreWeights:  SCORE_WEIGHTS,
-    paramHash:     paramBundleHash(),
   });
 
   if (!ok) {
@@ -8367,10 +7593,6 @@ async function restoreBgState() {
       paperCapital: state.paper.capital,
       paperTrades:  state.paper.trades,
       openTrade:    state.paper.openTrade,
-      openTrades:   state.paper.openTrades || {},
-      paperParams:  PAPER_PARAMS,
-      scoreWeights: SCORE_WEIGHTS,
-      paramHash:    paramBundleHash(),
     });
     if (ok) {
       updateBgUI(true);
@@ -8402,7 +7624,7 @@ async function restoreBgState() {
       try { await doScalpFetch(); } catch(e) { console.warn('[init] scalp:', e.message); }
       try { await fetchTrendCandles(); } catch(e) { console.warn('[init] trend:', e.message); }
       renderRecapScreen();
-      evaluateAutoEntry();
+      if (!state.paper.openTrade) evaluateAutoEntry();
     })();
 
     if (state.fetchTimer) clearInterval(state.fetchTimer);
