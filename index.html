@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#f0b429"/>
 <link rel="manifest" href="manifest.json"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
-<title>XAU/USD Analyzer · v8.1 evidente</title>
+<title>XAU/USD Analyzer · v8.3 coerenza annealing</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:#080b10;color:#fde68a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;font-size:17px}
@@ -66,14 +66,14 @@ button{cursor:pointer}
 <body>
 
 <div id="version-visible-banner" style="position:sticky;top:0;z-index:999999;background:linear-gradient(90deg,#16a34a,#f0b429);color:#06110a;text-align:center;font-weight:900;font-size:15px;padding:8px 10px;border-bottom:2px solid #fde68a;box-shadow:0 4px 18px #0008">
-  ✅ VERSIONE NUOVA CARICATA — <span style="font-size:17px">v8.1 EVIDENTE</span> — annealing esplorativo + cache aggiornata
+  ✅ VERSIONE NUOVA CARICATA — <span style="font-size:17px">v8.3 COERENZA ANNEALING</span> — best corrente e auto-apply verificati
 </div>
 
 <!-- ══ SETUP SCREEN ══════════════════════════════════════════ -->
 <div id="setup-screen" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px">
   <div style="font-size:48px;margin-bottom:14px">🥇</div>
   <div style="color:#f0b429;font-weight:800;font-size:22px;margin-bottom:6px">XAU/USD Analyzer</div>
-  <div style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e66;border-radius:8px;padding:6px 10px;font-size:15px;font-weight:900;margin-bottom:10px">✅ v8.1 EVIDENTE — se vedi questo, il deploy è aggiornato</div>
+  <div style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e66;border-radius:8px;padding:6px 10px;font-size:15px;font-weight:900;margin-bottom:10px">✅ v8.3 COERENZA — se vedi questo, annealing/backtest/auto-apply sono controllati</div>
   <div style="color:#f0f4fa;font-size:17px;text-align:center;margin-bottom:28px;line-height:1.6">App standalone con dati live.<br>Configura le API key per iniziare.</div>
   <div style="width:100%;margin-bottom:10px">
     <div style="color:#f0b429;font-size:17px;font-weight:700;margin-bottom:5px">TWELVE DATA API KEY <span style="color:#ef4444">*</span></div>
@@ -108,7 +108,7 @@ button{cursor:pointer}
           <span id="hdr-chg" style="font-size:17px;font-weight:600"></span>
         </div>
         <div id="hdr-sub" style="color:#f0f4fa;font-size:16px;margin-top:1px"></div>
-        <div id="build-badge" style="display:inline-block;background:#22c55e22;color:#22c55e;border:1px solid #22c55e77;border-radius:8px;padding:5px 8px;font-size:14px;font-weight:900;margin-top:5px;letter-spacing:.2px">✅ NUOVA VERSIONE · v8.1 EVIDENTE · 2026-07-06</div>
+        <div id="build-badge" style="display:inline-block;background:#22c55e22;color:#22c55e;border:1px solid #22c55e77;border-radius:8px;padding:5px 8px;font-size:14px;font-weight:900;margin-top:5px;letter-spacing:.2px">✅ NUOVA VERSIONE · v8.3 COERENZA ANNEALING · 2026-07-06</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
         <span id="mtf-badge" style="background:#c0cce020;color:#f0f4fa;border:1px solid #c0cce044;border-radius:5px;padding:4px 12px;font-size:17px;font-weight:700">–</span>
@@ -429,11 +429,11 @@ button{cursor:pointer}
     <div style="color:#22c55e;font-size:16px;font-weight:900;margin-bottom:4px">🧪 Backtest COMPLESSIVO — tutti gli scenari insieme (multi-slot)</div>
     <div style="color:#c0cce0;font-size:12px;line-height:1.5;margin-bottom:10px">
       Simula il paper trading sul passato usando <b>lo stesso identico scoring e le stesse regole di gestione</b>
-      (soglie, spread, rischio 1%, TP1 parziale configurabile, breakeven, trailing per scenario, exit a orario).
+      (soglie, spread, rischio 1%, TP1 parziale configurabile, breakeven, trailing per scenario, exit a orario; Swing può essere testato con trigger/gestione 5M).
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
       <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px">
-        <span style="color:#c0cce0;font-size:13px">Barre 1H da testare</span>
+        <span style="color:#c0cce0;font-size:13px">Profondità backtest</span>
         <label style="display:flex;align-items:center;gap:5px;background:#141920;border-radius:7px;padding:6px 9px;cursor:pointer;margin-right:6px">
           <input type="checkbox" id="bt-fixedrisk" checked style="width:15px;height:15px;accent-color:#3b82f6"/>
           <span style="color:#c0cce0;font-size:11px;font-weight:700">Rischio fisso<br><span style="color:#94a3b8;font-weight:400;font-size:9px">P&L additivi tra scenari</span></span>
@@ -466,7 +466,8 @@ button{cursor:pointer}
     <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:6px">
       <span style="color:#c0cce0;font-size:13px">Modalità</span>
       <select id="bt-mode" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
-        <option value="1h" selected>1H — Swing/Trend/Bias</option>
+        <option value="hybrid5m" selected>Ibrido — Swing 5M + Trend/Bias 1H</option>
+        <option value="1h">1H puro — Swing/Trend/Bias</option>
         <option value="5m">5M — Scalp (approssimato)</option>
         <option value="1m">1M — Scalp (reale, richiede 1M profondo)</option>
       </select>
@@ -491,7 +492,7 @@ button{cursor:pointer}
     <details open style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
       <summary style="color:#a855f7;font-size:13px;font-weight:700;cursor:pointer">🔥 Ottimizzazione (Simulated Annealing)</summary>
       <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
-        Cerca i parametri migliori su 5000 barre 1H partendo dai valori live.
+        Cerca i parametri migliori partendo dai valori live. In modalità ibrida lo Swing viene valutato su 5M, mentre Trend/Bias restano su 1H.
         Se il risultato batte la baseline (P&L superiore, PF ≥ 1.05, ≥ 10 trade),
         <b style="color:#22c55e">i parametri live vengono sostituiti automaticamente</b>.
       </div>
@@ -671,7 +672,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-const APP_BUILD = '2026-07-06-live-scenarios-v8-1-versione-evidente';
+const APP_BUILD = '2026-07-06-live-scenarios-v8-3-annealing-coherence';
 // ══ STORAGE ══════════════════════════════════════════════════
 const LS = {
   get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch{return null;} },
@@ -3394,6 +3395,19 @@ function btSliceByTime(candles, t) {
   return candles.slice(0, hi);
 }
 
+function btBarsFor5mEquivalent(maxBars) {
+  // Se l'utente sceglie 5.000 barre 1H, lo Swing 5M usa ~60.000 barre per coprire lo stesso periodo.
+  // Se sceglie già una profondità molto alta, capiamo che vuole un test profondo ma lo limitiamo per non bloccare il telefono.
+  const n = Number.isFinite(maxBars) ? maxBars : 5000;
+  return Math.max(500, Math.min(200000, n <= 10000 ? n * 12 : n));
+}
+function btModeForScenario(scen) {
+  return scen === 'scalp' ? '1m' : scen === 'swing' ? 'hybrid5m' : '1h';
+}
+function btBarsForScenario(scen, maxBars) {
+  return scen === 'swing' ? btBarsFor5mEquivalent(maxBars) : maxBars;
+}
+
 // Legge i parametri dalla UI (con default = valori live del paper)
 function btGetParams() {
   const gv = (id, dflt) => {
@@ -3425,11 +3439,13 @@ function btGetParams() {
 
 // ── Core: esegue un backtest e ritorna i risultati (no UI) ────
 async function btRun(mode, maxBars, useScen, P, onProgress) {
-  const isScalp = mode === '5m' || mode === '1m';
   const is1m = mode === '1m';
-  const seriesKey = is1m ? 'xauusd_1m' : isScalp ? 'xauusd_5m' : 'xauusd_1h';
+  const isHybrid5m = mode === 'hybrid5m' || mode === 'swing5m';
+  const isScalp = mode === '5m' || mode === '1m';
+  const is5mDriven = mode === '5m' || isHybrid5m;
+  const seriesKey = is1m ? 'xauusd_1m' : is5mDriven ? 'xauusd_5m' : 'xauusd_1h';
   const raw = await histLoad(seriesKey);
-  if (!raw?.candles?.length) throw new Error(`Serve lo storico ${is1m?'XAU 1M (usa "1M profondo")':isScalp?'XAU 5M':'XAU 1H'} — scaricalo prima.`);
+  if (!raw?.candles?.length) throw new Error(`Serve lo storico ${is1m?'XAU 1M (usa "1M profondo")':is5mDriven?'XAU 5M':'XAU 1H'} — scaricalo prima.`);
 
   let src = raw.candles.slice(-maxBars);
   if (P._range) {
@@ -3457,7 +3473,7 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
     full1h = btEnrich(btAggregate(src, 1));
     full4h = btEnrich(btAggregate(src, 4));
     full1d = btEnrich(btAggregate(src, 24));
-  } else if (isScalp) {
+  } else if (is5mDriven) {
     full5m = fullBase;
     full1h = btEnrich(btAggregate(src, 1));
     full4h = btEnrich(btAggregate(src, 4));
@@ -3468,8 +3484,8 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
     full4h = btEnrich(btAggregate(src, 4));
     full1d = btEnrich(btAggregate(src, 24));
   }
-  const corrKey = isScalp ? 'eurusd_5m' : 'eurusd_1h';  // per 1m: le 5m sono il meglio disponibile
-  const tnxKey  = isScalp ? 'tnx_5m'    : 'tnx_1h';
+  const corrKey = (is1m || is5mDriven) ? 'eurusd_5m' : 'eurusd_1h';  // per 1m/5m: le 5m sono il meglio disponibile
+  const tnxKey  = (is1m || is5mDriven) ? 'tnx_5m'    : 'tnx_1h';
   const eurRaw = await histLoad(corrKey), tnxRaw = await histLoad(tnxKey);
   const fullEur = eurRaw?.candles?.length ? btEnrich(eurRaw.candles.slice(-maxBars)) : [];
   const fullTnx = tnxRaw?.candles?.length ? btEnrich(tnxRaw.candles.slice(-maxBars)) : [];
@@ -3526,8 +3542,10 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
         if (!closed && ((isBuy && cd.h >= tr.tp2) || (!isBuy && cd.l <= tr.tp2))) {
           closed = true; exitReason = 'TP2'; exitPrice = tr.tp2;
         }
-        if (!closed && !tr.partialDone && ((isBuy && cd.h >= tr.tp1) || (!isBuy && cd.l <= tr.tp1))) {
+        if (!closed && !tr.partialDone && P.partialPct > 0.001 && ((isBuy && cd.h >= tr.tp1) || (!isBuy && cd.l <= tr.tp1))) {
           const partLots = tr.lots * P.partialPct;
+          if (partLots < 0.01) { tr.partialDone = true; }
+          else {
           const exitHalf = exitFill(tr.tp1, dir, tr.spread ?? P.spread, tr.slippage ?? P.slippage);
           const pnlHalf  = (isBuy ? exitHalf - tr.entry : tr.entry - exitHalf) * partLots * 100;
           const capBeforePartial = capital;
@@ -3544,6 +3562,7 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
           const beSL = isBuy ? tr.entry + (tr.spread ?? P.spread) : tr.entry - (tr.spread ?? P.spread);
           if ((isBuy && beSL > tr.sl) || (!isBuy && beSL < tr.sl)) tr.sl = beSL;
           tr.breakEvenSet = true;
+          }
         }
 
         if (!closed) {
@@ -3598,6 +3617,9 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
         if (is1m) {
           const s1m = full1mArr.slice(Math.max(0, i-119), i+1);
           state.candles = { '1m': s1m, '5m': btSliceByTime(full5m, t).slice(-60), '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
+        } else if (isHybrid5m) {
+          const s5m = full5m.slice(Math.max(0, i-119), i+1);
+          state.candles = { '5m': s5m, '1m': [], '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
         } else if (isScalp) {
           const s5m = full5m.slice(Math.max(0, i-119), i+1);
           state.candles = { '5m': s5m, '1m': s5m.slice(-30), '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
@@ -3634,7 +3656,7 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
             const riskEur = sizeBase * P.riskPct;
             const slDist  = Math.abs(setup.entry - setup.sl);
             const lots = slDist ? Math.max(0.01, +Math.min(riskEur/(slDist*100), (sizeBase*0.05)/((setup.entry/100)*100)).toFixed(2)) : 0.01;
-            const atrNow = (isScalp ? full5m : fullBase)[i]?.atr || 15;
+            const atrNow = (is5mDriven ? full5m : fullBase)[i]?.atr || 15;
             slots[best.scen] = {
               direction: best.dir,
               entry: entryFill(setup.entry, best.dir, P.spread, P.slippage),
@@ -3692,40 +3714,44 @@ async function runBacktest() {
       });
       state.btResults = res;
     } else {
-      // COMPLESSIVO a doppia gamba: 1H (Swing/Trend/Bias) + gamba Scalp 1M se spuntata
-      const useScen = {
-        swing: document.getElementById('bt-scen-swing').checked,
-        trend: document.getElementById('bt-scen-trend').checked,
-        bias:  document.getElementById('bt-scen-bias').checked,
-        scalp: false,
-      };
-      const any1h = useScen.swing || useScen.trend || useScen.bias;
+      // COMPLESSIVO multi-gamba:
+      // - Swing su 5M operativo, con contesto H1/4H/Daily
+      // - Trend/Bias su 1H
+      // - Scalp su 1M opzionale
+      const swingOn = document.getElementById('bt-scen-swing').checked;
+      const trendOn = document.getElementById('bt-scen-trend').checked;
+      const biasOn  = document.getElementById('bt-scen-bias').checked;
+      const preferSwing5m = mode === 'hybrid5m';
+      const has5m = preferSwing5m && swingOn && !!(await histLoad('xauusd_5m'))?.candles?.length;
       const has1m = scalpChecked && !!(await histLoad('xauusd_1m'))?.candles?.length;
+      if (preferSwing5m && swingOn && !has5m) progText.textContent = '⚠️ Swing 5M richiesto ma storico 5M assente — uso fallback 1H';
       if (scalpChecked && !has1m) progText.textContent = '⚠️ Scalp richiesto ma 1M assente — procedo senza';
 
       let trades = [], startCap = 10000;
-      if (any1h) {
-        const r1 = await btRun('1h', Math.min(maxBars, 5000), useScen, btGetParams(), (pct, n, cap) => {
-          progBar.style.width = Math.round(pct*(has1m?0.5:1)) + '%';
-          progText.textContent = `Gamba 1H ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
+      const legs = [];
+      if (swingOn && has5m) legs.push({ label:'📊 Swing 5M', mode:'hybrid5m', bars:btBarsFor5mEquivalent(maxBars), scen:{ swing:true, trend:false, bias:false, scalp:false } });
+      const use1h = { swing:swingOn && !has5m, trend:trendOn, bias:biasOn, scalp:false };
+      if (use1h.swing || use1h.trend || use1h.bias) legs.push({ label: has5m?'1H Trend/Bias':'1H Swing/Trend/Bias', mode:'1h', bars:Math.min(maxBars, 5000), scen:use1h });
+      if (has1m) legs.push({ label:'⚡ Scalp 1M', mode:'1m', bars:60000, scen:{ scalp:true, swing:false, trend:false, bias:false } });
+      if (!legs.length) throw new Error('Nessuno scenario selezionato o storico richiesto assente');
+
+      for (let li=0; li<legs.length; li++) {
+        const leg = legs[li];
+        const r = await btRun(leg.mode, leg.bars, leg.scen, btGetParams(), (pct, n, cap) => {
+          const globalPct = Math.round((li/legs.length)*100 + pct/legs.length);
+          progBar.style.width = globalPct + '%';
+          progText.textContent = `Gamba ${leg.label} ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
         });
-        trades = r1.trades; startCap = r1.startCap;
+        trades = [...trades, ...r.trades].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
+        startCap = r.startCap;
       }
-      if (has1m) {
-        const r2 = await btRun('1m', 60000, { scalp:true, swing:false, trend:false, bias:false }, btGetParams(), (pct, n, cap) => {
-          progBar.style.width = Math.round((has1m&&any1h?50:0) + pct*(any1h?0.5:1)) + '%';
-          progText.textContent = `Gamba ⚡Scalp 1M ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
-        });
-        trades = [...trades, ...r2.trades].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
-      }
-      if (!any1h && !has1m) throw new Error('Nessuno scenario selezionato (o dati 1M assenti per Scalp)');
       const st = btStats(trades, startCap);
       const period = trades.length
         ? { from: trades.reduce((a,t)=>a<t.openedAt?a:t.openedAt, trades[0].openedAt),
             to:   trades.reduce((a,t)=>a>t.closedAt?a:t.closedAt, trades[0].closedAt) }
         : { from: new Date().toISOString(), to: new Date().toISOString() };
       state.btResults = { trades, startCap, endCap: startCap + (st?.pnl||0), period,
-        mode: has1m && any1h ? '1h+1m' : (has1m ? '1m' : '1h') };
+        mode: has5m && has1m ? 'swing5m+1h+1m' : has5m ? 'swing5m+1h' : (has1m ? '1h+1m' : '1h') };
     }
     progBar.style.width='100%';
     progText.textContent = `Completato: ${state.btResults.trades.length} trade`;
@@ -3827,6 +3853,80 @@ function saObjective(st) {
   return obj;
 }
 
+
+function saNum(x, fallback=0) {
+  const n = Number(x);
+  return Number.isFinite(n) ? n : fallback;
+}
+function saPfNum(st) {
+  if (!st) return 0;
+  return st.pf === '∞' ? 10 : saNum(st.pf, 0);
+}
+function saStatLine(st) {
+  return st ? `${st.n||0} trade · WR ${st.wr??'–'}% · PF ${st.pf??'–'} · DD ${st.maxDD??'–'}% · Obj ${Math.round(saObjective(st))}` : 'nessun risultato';
+}
+function saDeltaLine(a, b) {
+  if (!a || !b) return '';
+  const dp = saNum(a.pnl) - saNum(b.pnl);
+  const dobj = saObjective(a) - saObjective(b);
+  return `${dp>=0?'+':''}€${dp.toFixed(0)} · Obj ${dobj>=0?'+':''}${Math.round(dobj)}`;
+}
+function saImproves(a, b, opts={}) {
+  if (!a || !b) return false;
+  const minTrades = opts.minTrades ?? 10;
+  const minPf = opts.minPf ?? 1.05;
+  const requirePnl = opts.requirePnl ?? true;
+  return saObjective(a) > saObjective(b) && (!requirePnl || saNum(a.pnl) > saNum(b.pnl)) && saPfNum(a) >= minPf && (a.n||0) >= minTrades;
+}
+function btParamsFromSnapshot(overrides={}, weightOverrides=null) {
+  const merged = paperParamsSnapshot(overrides);
+  const P = { ...merged, riskPct: merged.riskPct/100, partialPct: Math.max(0, (merged.partialPct||0)/100), fixedRisk:true };
+  if (weightOverrides) {
+    P.weights = {
+      swing: { ...(SCORE_WEIGHTS.swing||{}), ...(weightOverrides.swing||{}) },
+      trend: { ...(SCORE_WEIGHTS.trend||{}), ...(weightOverrides.trend||{}) },
+      scalp: { ...(SCORE_WEIGHTS.scalp||{}), ...(weightOverrides.scalp||{}) },
+    };
+  }
+  return P;
+}
+async function evalPortfolioStatsV83(overrides={}, weightOverrides=null, opts={}) {
+  const maxBars = opts.maxBars || 5000;
+  const P = btParamsFromSnapshot(overrides, weightOverrides);
+  let trades = [];
+  let startCap = 10000;
+  const has5m = !!(await histLoad('xauusd_5m'))?.candles?.length;
+  const has1m = !!(await histLoad('xauusd_1m'))?.candles?.length;
+  if (has5m) {
+    const rs = await btRun('hybrid5m', btBarsFor5mEquivalent(maxBars), { swing:true, trend:false, bias:false, scalp:false }, P, null);
+    trades = trades.concat(rs.trades);
+    startCap = rs.startCap;
+  } else {
+    const rSwing = await btRun('1h', maxBars, { swing:true, trend:false, bias:false, scalp:false }, P, null);
+    trades = trades.concat(rSwing.trades);
+    startCap = rSwing.startCap;
+  }
+  const r1 = await btRun('1h', maxBars, { swing:false, trend:true, bias:true, scalp:false }, P, null);
+  trades = trades.concat(r1.trades);
+  if (has1m) {
+    const r2 = await btRun('1m', 60000, { swing:false, trend:false, bias:false, scalp:true }, P, null);
+    trades = trades.concat(r2.trades);
+  }
+  trades.sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
+  return btStats(trades, startCap);
+}
+function saveScoreWeightsAndSync(scen, w, meta={}) {
+  if (!w || scen === 'bias') return;
+  const before = JSON.parse(JSON.stringify(SCORE_WEIGHTS));
+  saveScoreWeights(scen, w);
+  try {
+    const hist = JSON.parse(localStorage.getItem('xauapp_param_apply_log') || '[]');
+    hist.push({ ts:Date.now(), source:meta.source||'weights', scenario:scen, changed:['scoreWeights'], beforeWeights:before, afterWeights:JSON.parse(JSON.stringify(SCORE_WEIGHTS)) });
+    localStorage.setItem('xauapp_param_apply_log', JSON.stringify(hist.slice(-30)));
+  } catch(e) {}
+  try { savePaperParams(PAPER_PARAMS); } catch(e) {}
+}
+
 function saNeighbor(p, temp, space=SA_SPACE) {
   const q = { ...p };
   const keys = Object.keys(space);
@@ -3870,13 +3970,23 @@ async function runSaOptimization() {
     // proseguiamo senza scalp, lo segnaliamo nel report
   }
   const scalpSkipped = !!document.getElementById('bt-scen-scalp')?.checked && !includeScalp;
+  const hasSwing5m = useScen.swing && !!(await histLoad('xauusd_5m'))?.candles?.length;
   const evalCombined = async (P) => {
-    const r1 = await btRun('1h', maxBars, useScen, P, null);
-    let all = r1.trades;
+    let all = [];
+    if (hasSwing5m) {
+      const rs = await btRun('hybrid5m', btBarsFor5mEquivalent(maxBars), { swing:true, trend:false, bias:false, scalp:false }, P, null);
+      all = all.concat(rs.trades);
+    }
+    const use1h = { swing: useScen.swing && !hasSwing5m, trend: useScen.trend, bias: useScen.bias, scalp:false };
+    if (use1h.swing || use1h.trend || use1h.bias) {
+      const r1 = await btRun('1h', maxBars, use1h, P, null);
+      all = all.concat(r1.trades);
+    }
     if (includeScalp) {
       const r2 = await btRun('1m', maxBars, { swing:false, trend:false, bias:false, scalp:true }, P, null);
-      all = [...r1.trades, ...r2.trades].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
+      all = all.concat(r2.trades);
     }
+    all.sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
     return btStats(all, 10000);
   };
 
@@ -3893,7 +4003,8 @@ async function runSaOptimization() {
     const baseParams = Object.fromEntries(Object.keys(saSpace).map(k => [k, PAPER_PARAMS[k]]));
     const baseSt  = await evalCombined(fullP(baseParams));
     let current = { ...baseParams };
-    let currentObj = saObjective(baseSt);
+    const baseObj = saObjective(baseSt);
+    let currentObj = baseObj, currentSt = baseSt;
     let best = { ...current }, bestObj = currentObj, bestSt = baseSt;
 
     log(`Baseline: ${baseSt?baseSt.n:0} trade · P&L €${baseSt?baseSt.pnl:0} · PF ${baseSt?baseSt.pf:'–'}`);
@@ -3908,14 +4019,14 @@ async function runSaOptimization() {
 
       const accept = obj > currentObj ||
         Math.random() < Math.exp((obj - currentObj) / (Math.max(temp, 0.02) * 3000));
-      if (accept) { current = cand; currentObj = obj; }
+      if (accept) { current = cand; currentObj = obj; currentSt = st; }
       if (obj > bestObj) { best = { ...cand }; bestObj = obj; bestSt = st; }
 
       const pct = Math.round(((k+1)/iters)*100);
       progBar.style.width = pct + '%';
       const elapsed = (Date.now()-t0)/1000;
       const eta = Math.round(elapsed/(k+1)*(iters-k-1));
-      log(`Iter ${k+1}/${iters} · T=${temp.toFixed(2)} · best: €${bestSt?bestSt.pnl:0} (PF ${bestSt?bestSt.pf:'–'}, ${bestSt?bestSt.n:0} trade) · fine ~${etaClock(eta)}`);
+      log(`Iter ${k+1}/${iters} · T=${temp.toFixed(2)} · ${accept?'accettata':'scartata'} · corrente ${saStatLine(currentSt)} · BEST ${saDeltaLine(bestSt, baseSt)} · fine ~${etaClock(eta)}`);
       await new Promise(r => setTimeout(r, 0));
     }
 
@@ -3923,17 +4034,18 @@ async function runSaOptimization() {
     const basePnl = baseSt ? baseSt.pnl : -1e9;
     const bestPnl = bestSt ? bestSt.pnl : -1e9;
     const bestPf  = bestSt ? (bestSt.pf==='∞'?10:parseFloat(bestSt.pf)) : 0;
-    const improved = bestObj > currentObj*0 && bestPnl > basePnl && bestPf >= 1.05 && (bestSt?.n||0) >= 10;
+    const improved = saImproves(bestSt, baseSt, { minTrades:10, minPf:1.05, requirePnl:true });
 
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55;margin-bottom:10px">
-      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s · ${spaceSummary(saSpace)}${includeScalp?' · gamba ⚡Scalp 1M inclusa':''}</div>
+      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing v8.3 — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s · ${spaceSummary(saSpace)}${includeScalp?' · gamba ⚡Scalp 1M inclusa':''}</div>
+      <div style="background:#0d1117;border:1px solid #2a3550;border-radius:7px;padding:7px;margin-bottom:8px;color:#94a3b8;font-size:11px">Migliore mostrato = migliore per <b>obiettivo robusto</b>, non solo P&L. Delta best vs baseline: <b style="color:${bestObj>=baseObj?'#22c55e':'#ef4444'}">${saDeltaLine(bestSt, baseSt)}</b></div>
       ${scalpSkipped?`<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:7px;padding:7px;margin-bottom:8px;color:#f0b429;font-size:11px">⚠️ Scalp richiesto ma dati 1M assenti — ottimizzazione eseguita senza. Scarica il "1M profondo".</div>`:''}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
         <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live attuali)</div>
-          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${baseSt?baseSt.n:0} trade · WR ${baseSt?baseSt.wr:'–'}%<br>PF ${baseSt?baseSt.pf:'–'} · DD ${baseSt?baseSt.maxDD:'–'}%</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${baseSt?baseSt.n:0} trade · WR ${baseSt?baseSt.wr:'–'}%<br>PF ${baseSt?baseSt.pf:'–'} · DD ${baseSt?baseSt.maxDD:'–'}%<br>Obj ${Math.round(baseObj)}</div>
           <div style="color:${(baseSt?.pnl||0)>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900;margin-top:3px">€${baseSt?baseSt.pnl:0}</div></div>
-        <div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${improved?'#22c55e44':'#2a3550'}"><div style="color:#22c55e;font-size:10px;font-weight:700">MIGLIORE TROVATO</div>
-          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${bestSt?bestSt.n:0} trade · WR ${bestSt?bestSt.wr:'–'}%<br>PF ${bestSt?bestSt.pf:'–'} · DD ${bestSt?bestSt.maxDD:'–'}%</div>
+        <div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${improved?'#22c55e44':'#2a3550'}"><div style="color:#22c55e;font-size:10px;font-weight:700">MIGLIORE TROVATO PER OBIETTIVO</div>
+          <div style="color:#c0cce0;font-size:12px;margin-top:4px">${bestSt?bestSt.n:0} trade · WR ${bestSt?bestSt.wr:'–'}%<br>PF ${bestSt?bestSt.pf:'–'} · DD ${bestSt?bestSt.maxDD:'–'}%<br>Obj ${Math.round(bestObj)} · ${saDeltaLine(bestSt, baseSt)}</div>
           <div style="color:${bestPnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900;margin-top:3px">€${bestSt?bestSt.pnl:0}</div></div>
       </div>
       <div style="color:#f0f4fa;font-size:12px;font-weight:700;margin-bottom:4px">Parametri migliori:</div>
@@ -3944,7 +4056,7 @@ async function runSaOptimization() {
     if (improved) {
       applyOptimizedParams(best, { source:'global-annealing' });
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;color:#22c55e;font-size:12px;font-weight:700">
-        ✅ Migliorativo (+€${(bestPnl-basePnl).toFixed(0)} vs baseline) — SNAPSHOT COMPLETO PARAMETRI LIVE/BACKTEST AGGIORNATO.<br>
+        ✅ Migliorativo secondo obiettivo robusto (${saDeltaLine(bestSt, baseSt)} vs baseline) — SNAPSHOT COMPLETO PARAMETRI LIVE/BACKTEST AGGIORNATO.<br>
         <span style="color:#c0cce0;font-weight:400;font-size:11px">Il paper trading userà questi valori da subito. I valori in giallo sono quelli cambiati.</span></div>`;
     } else {
       html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;color:#f0b429;font-size:12px">
@@ -4002,18 +4114,17 @@ async function runScenSA(scen) {
   const progBar  = document.getElementById('bt-progress-bar');
   const progText = document.getElementById('bt-progress-text');
   const resEl    = document.getElementById('bt-results');
-  progCard.style.display='block'; resEl.innerHTML='';
+  progCard.style.display='block'; resEl.innerHTML=''; progBar.style.width='0%';
 
   const M = SCEN_META[scen];
   const PS = getScenSaParamSpace(scen);
   const COMMON_SPACE = getScenSaCommonSpace();
   const canWeights = scen !== 'bias'; // bias non ha pesi interni
-  const iters = getOptIters('scen-sa-iters', scen === 'scalp' ? 40 : 60); // scelto da UI
-  const maxBars = M.mode === '1m' ? 60000 : 5000;
+  const iters = getOptIters('scen-sa-iters', scen === 'scalp' ? 40 : 60);
+  const maxBars = M.mode === '1m' ? 60000 : (M.mode === 'hybrid5m' ? btBarsFor5mEquivalent(5000) : 5000);
   const useScen = { swing:false, trend:false, bias:false, scalp:false }; useScen[scen] = true;
   const t0 = Date.now();
 
-  // Stato = parametri dello scenario + parametri comuni di gestione + pesi dello scenario.
   const liveState = () => ({
     thr: PAPER_PARAMS[PS.thr.key],
     trail: PAPER_PARAMS[PS.trail.key],
@@ -4051,73 +4162,95 @@ async function runScenSA(scen) {
   const evalState = async (st) => {
     const base = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
     const merged = { ...base, ...(st.common || {}), [PS.thr.key]: st.thr, [PS.trail.key]: st.trail };
-    const P = { ...merged, riskPct: merged.riskPct/100, partialPct: merged.partialPct/100, fixedRisk: true };
+    const pct = Math.max(0.01, merged.partialPct/100); // anti-parziale zero
+    const P = { ...merged, riskPct: merged.riskPct/100, partialPct: pct, fixedRisk: true };
     if (st.w) P.weights = { [scen]: st.w };
     const res = await btRun(M.mode, maxBars, useScen, P, null);
     return btStats(res.trades, res.startCap);
   };
-  const obj = (st) => {
-    if (!st) return -1e9;
-    const pf = st.pf==='∞' ? 10 : parseFloat(st.pf);
-    let o = st.pnl + Math.min(pf,3)*1500 - st.maxDD*200;
-    if (st.n < 15) o -= 800*(15-st.n);
-    if (pf < 1.05) o -= 5000;
-    return o;
-  };
 
   try {
-    progText.textContent = `🔥 ${M.icon} ${M.label}: baseline...`;
+    progText.textContent = `🔥 ${M.icon} ${M.label}: baseline isolata...`;
     await new Promise(r=>setTimeout(r,30));
-    let cur = liveState();
-    const baseSt = await evalState(cur);
-    let curObj = obj(baseSt);
+    const baseLive = liveState();
+    const baseSt = await evalState(baseLive);
+    const baseObj = saObjective(baseSt);
+    let cur = JSON.parse(JSON.stringify(baseLive));
+    let curObj = baseObj, curSt = baseSt;
     let best = JSON.parse(JSON.stringify(cur)), bestSt = baseSt, bestObj = curObj;
 
     for (let k = 0; k < iters; k++) {
       const temp = 1 - k/iters;
       const cand = neighbor(cur, temp);
       const st = await evalState(cand);
-      const o = obj(st);
-      if (o > curObj || Math.random() < Math.exp((o-curObj)/(temp*3000+1))) { cur = cand; curObj = o; }
+      const o = saObjective(st);
+      const accept = o > curObj || Math.random() < Math.exp((o-curObj)/(Math.max(temp,0.02)*3000));
+      if (accept) { cur = cand; curObj = o; curSt = st; }
       if (o > bestObj) { best = JSON.parse(JSON.stringify(cand)); bestSt = st; bestObj = o; }
       const el = (Date.now()-t0)/1000;
       const eta = el/(k+1)*(iters-k-1);
       progBar.style.width = Math.round((k+1)/iters*100)+'%';
-      progText.textContent = `🔥 ${M.icon} ${M.label} · iter ${k+1}/${iters} · best €${bestSt?bestSt.pnl:0} (PF ${bestSt?bestSt.pf:'–'}) · fine ~${etaClock(eta)}`;
+      progText.textContent = `🔥 ${M.icon} ${M.label} · iter ${k+1}/${iters} · ${accept?'accettata':'scartata'} · corrente ${saStatLine(curSt)} · BEST isolato ${saDeltaLine(bestSt, baseSt)} · fine ~${etaClock(eta)}`;
       await new Promise(r=>setTimeout(r,0));
     }
 
-    const basePnl = baseSt ? baseSt.pnl : -1e9;
-    const finPnl  = bestSt ? bestSt.pnl : -1e9;
-    const finPf   = bestSt ? (bestSt.pf==='∞'?10:parseFloat(bestSt.pf)) : 0;
-    const improved = finPnl > basePnl && finPf >= 1.05 && (bestSt?.n||0) >= 10;
+    progText.textContent = `🔎 ${M.label}: verifica post-annealing scenario-only...`;
+    const scenarioOnly = { ...baseLive, thr: best.thr, trail: best.trail, w: best.w ? { ...best.w } : null };
+    const scenarioOnlySt = await evalState(scenarioOnly);
+    const scenarioOnlyImproved = saImproves(scenarioOnlySt, baseSt, { minTrades:10, minPf:1.05, requirePnl:true });
 
-    saveOptResult(scen, 'sa', improved ? bestSt : baseSt);
-    const stLine = (st)=> st ? `${st.n} trade · WR ${st.wr}% · PF ${st.pf} · DD ${st.maxDD}%` : 'nessun trade';
-    let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55">
-      <div style="color:${M.color};font-weight:800;font-size:15px;margin-bottom:8px">🔥 Annealing ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s · ${spaceSummary({[PS.thr.key]:PS.thr,[PS.trail.key]:PS.trail,...COMMON_SPACE})} (scenario isolato + parametri comuni)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
-        <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live)</div>
-          <div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(baseSt)}</div>
-          <div style="color:${basePnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${baseSt?baseSt.pnl:0}</div></div>
-        <div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${improved?'#22c55e44':'#2a3550'}"><div style="color:#22c55e;font-size:10px;font-weight:700">MIGLIORE</div>
-          <div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(bestSt)}</div>
-          <div style="color:${finPnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${bestSt?bestSt.pnl:0}</div></div>
-      </div>
-      <div style="color:#c0cce0;font-size:12px;margin-bottom:4px">Soglia: <b style="color:${best.thr!==liveState().thr?'#f0b429':'#f0f4fa'}">${best.thr}</b> · Trail: <b style="color:${best.trail!==liveState().trail?'#f0b429':'#f0f4fa'}">${best.trail}×</b>
-        <br>Comuni: ${Object.keys(COMMON_SPACE).map(k=>`${k}=<b style="color:${best.common?.[k]!==liveState().common?.[k]?'#f0b429':'#f0f4fa'}">${best.common?.[k]}</b>`).join(' · ')}
-        ${best.w?'<br>Pesi: '+WEIGHT_GROUPS.map(g=>`${g}×${best.w[g]??1}`).join(' · '):''}</div>`;
-    if (improved) {
-      const allUpdates = { ...(best.common || {}), [PS.thr.key]: best.thr, [PS.trail.key]: best.trail };
-      applyOptimizedParams(allUpdates, { source:'scenario-annealing', scenario:scen });
-      if (best.w) saveScoreWeights(scen, best.w);
-      html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:8px;color:#22c55e;font-size:12px;font-weight:700">✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)}) — snapshot COMPLETO parametri live/backtest aggiornato per ${M.label}: ${Object.entries(allUpdates).map(([k,v])=>k+'='+v).join(' · ')}.</div>`;
-    } else {
-      html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:8px;color:#f0b429;font-size:12px">⚪ Nessun miglioramento affidabile (P&L > baseline, PF ≥ 1.05, ≥ 10 trade). Live invariato.</div>`;
+    progText.textContent = `🔎 ${M.label}: validazione portafoglio completo per i parametri comuni...`;
+    const scenUpdates = { [PS.thr.key]: best.thr, [PS.trail.key]: best.trail };
+    const commonUpdates = { ...(best.common || {}) };
+    const fullUpdates = { ...commonUpdates, ...scenUpdates };
+    const weightOverride = best.w ? { [scen]: best.w } : null;
+    let portfolioBaseSt = null, portfolioFullSt = null, portfolioImproved = false, portfolioError = null;
+    try {
+      portfolioBaseSt = await evalPortfolioStatsV83({}, null, { maxBars:5000 });
+      portfolioFullSt = await evalPortfolioStatsV83(fullUpdates, weightOverride, { maxBars:5000 });
+      portfolioImproved = saImproves(portfolioFullSt, portfolioBaseSt, { minTrades:10, minPf:1.05, requirePnl:true });
+    } catch(e) { portfolioError = e.message; }
+
+    const applyFull = portfolioImproved;
+    const applyScenarioOnly = !applyFull && scenarioOnlyImproved;
+    const finalUpdates = applyFull ? fullUpdates : (applyScenarioOnly ? scenUpdates : {});
+    const applyWeights = (applyFull || applyScenarioOnly) && !!best.w;
+    if (applyFull || applyScenarioOnly) {
+      applyOptimizedParams(finalUpdates, { source: applyFull?'scenario-annealing-v83-portfolio':'scenario-annealing-v83-scenario-only', scenario:scen });
+      if (applyWeights) saveScoreWeightsAndSync(scen, best.w, { source:'scenario-annealing-v83', scenario:scen });
     }
-    html += `<div style="color:#94a3b8;font-size:10px;margin-top:6px">⚠️ Ottimizzato sul passato — valida col 🛡️ sanity check.</div></div>`;
+
+    const savedSt = applyFull ? (portfolioFullSt || scenarioOnlySt) : (applyScenarioOnly ? scenarioOnlySt : baseSt);
+    saveOptResult(scen, 'sa', savedSt);
+    const stLine = (st)=> st ? `${st.n} trade · WR ${st.wr}% · PF ${st.pf} · DD ${st.maxDD}% · Obj ${Math.round(saObjective(st))}` : 'nessun trade';
+    const card = (title, st, base, col='#c0cce0') => `<div style="background:#141920;border-radius:8px;padding:9px;border:1px solid ${col}44"><div style="color:${col};font-size:10px;font-weight:800">${title}</div><div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(st)}</div><div style="color:${(st?.pnl||0)>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${st?st.pnl:0}</div>${base?`<div style="color:#94a3b8;font-size:10px">${saDeltaLine(st, base)} vs baseline</div>`:''}</div>`;
+    const commonChanged = Object.keys(commonUpdates).some(k => commonUpdates[k] !== baseLive.common[k]);
+
+    let html = `<div class="card" style="border:2px solid ${(applyFull||applyScenarioOnly)?'#22c55e':'#f0b429'}55">
+      <div style="color:${M.color};font-weight:900;font-size:15px;margin-bottom:8px">🔥 Annealing v8.3 ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s</div>
+      <div style="background:#0d1117;border:1px solid #2a3550;border-radius:7px;padding:7px;margin-bottom:8px;color:#94a3b8;font-size:11px">
+        Durante il loop il <b>BEST</b> è il migliore per <b>obiettivo robusto isolato</b>. Dopo il loop la v8.3 fa due conferme: scenario-only senza parametri comuni e portafoglio completo con parametri comuni.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        ${card('BASELINE SCENARIO ISOLATO', baseSt, null, '#94a3b8')}
+        ${card('BEST FULL TROVATO NEL LOOP', bestSt, baseSt, '#22c55e')}
+        ${card('CONFERMA SCENARIO-ONLY', scenarioOnlySt, baseSt, scenarioOnlyImproved?'#22c55e':'#f0b429')}
+        ${portfolioError ? `<div style="background:#141920;border-radius:8px;padding:9px;border:1px solid #f0b42944"><div style="color:#f0b429;font-size:10px;font-weight:800">PORTAFOGLIO COMPLETO</div><div style="color:#f0b429;font-size:12px;margin-top:3px">Non verificato: ${portfolioError}</div></div>` : card('PORTAFOGLIO FULL CANDIDATE', portfolioFullSt, portfolioBaseSt, portfolioImproved?'#22c55e':'#f0b429')}
+      </div>
+      <div style="color:#c0cce0;font-size:12px;margin:8px 0 4px">Soglia: <b style="color:${best.thr!==baseLive.thr?'#f0b429':'#f0f4fa'}">${best.thr}</b> · Trail: <b style="color:${best.trail!==baseLive.trail?'#f0b429':'#f0f4fa'}">${best.trail}×</b>
+        <br>Comuni candidati: ${Object.keys(COMMON_SPACE).map(k=>`${k}=<b style="color:${best.common?.[k]!==baseLive.common?.[k]?'#f0b429':'#f0f4fa'}">${best.common?.[k]}</b>`).join(' · ')}
+        ${best.w?'<br>Pesi candidati: '+WEIGHT_GROUPS.map(g=>`${g}×${best.w[g]??1}`).join(' · '):''}</div>`;
+
+    if (applyFull) {
+      html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:8px;color:#22c55e;font-size:12px;font-weight:800">✅ Applicato FULL: scenario + pesi + parametri comuni, perché migliora anche il portafoglio completo (${saDeltaLine(portfolioFullSt, portfolioBaseSt)}).</div>`;
+    } else if (applyScenarioOnly) {
+      html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:8px;color:#22c55e;font-size:12px;font-weight:800">✅ Applicato SOLO scenario/pesi (${saDeltaLine(scenarioOnlySt, baseSt)}). ${commonChanged?'⚠️ Parametri comuni NON applicati perché non confermati dal portafoglio completo.':''}</div>`;
+    } else {
+      html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:8px;color:#f0b429;font-size:12px">⚪ Nessun auto-apply: il best del loop non supera la conferma scenario-only/portafoglio con criterio robusto.</div>`;
+    }
+    html += `<div style="color:#94a3b8;font-size:10px;margin-top:6px">Regola v8.3: i parametri comuni vengono applicati solo se migliorano il portafoglio; la UI distingue best del loop, scenario-only e portafoglio.</div></div>`;
     resEl.innerHTML = html;
-    progText.textContent = `Annealing ${M.label} completato.`;
+    progText.textContent = `Annealing ${M.label} completato — ${applyFull?'FULL applicato':applyScenarioOnly?'solo scenario applicato':'nessun auto-apply'}.`;
     renderOptHub();
   } catch(e) { progText.textContent = '❌ ' + e.message; }
   btRunning = false;
@@ -4130,7 +4263,7 @@ function etaClock(secRemaining) {
 }
 
 const SCEN_META = {
-  swing: { icon:'📊', label:'Swing', color:'#f0b429', mode:'1h', thrKey:'thrSwing', trailKey:'trailSwing' },
+  swing: { icon:'📊', label:'Swing', color:'#f0b429', mode:'hybrid5m', thrKey:'thrSwing', trailKey:'trailSwing' },
   trend: { icon:'📈', label:'Trend', color:'#22c55e', mode:'1h', thrKey:'thrTrend', trailKey:'trailTrend' },
   scalp: { icon:'⚡', label:'Scalp 1M', color:'#f97316', mode:'1m', thrKey:'thrScalp', trailKey:'trailScalp' },
   bias:  { icon:'⏰', label:'Bias', color:'#a855f7', mode:'1h', thrKey:'thrBias', trailKey:'trailBias' },
@@ -4269,7 +4402,8 @@ async function runScenOptimization() {
   const scen = document.getElementById('scen-opt-target').value;
   const space = [...getScenOptSpace(scen), ...getScenOptCommon()];
   const maxBars = 5000;
-  const btMode = scen === 'scalp' ? '1m' : '1h';
+  const btMode = btModeForScenario(scen);
+  const scenBars = btBarsForScenario(scen, maxBars);
   // Scenario ISOLATO: attribuzione pulita dei risultati al solo scenario in esame
   const useScen = { swing:false, trend:false, bias:false, scalp:false };
   useScen[scen] = true;
@@ -4297,7 +4431,7 @@ async function runScenOptimization() {
   try {
     // ── Baseline: parametri live, scenario isolato ─────────
     await tick('baseline');
-    const baseRes = await btRun(btMode, maxBars, useScen, paramsFor({}), null);
+    const baseRes = await btRun(btMode, scenBars, useScen, paramsFor({}), null);
     const baseSt  = btStats(baseRes.trades, baseRes.startCap);
 
     // ── Coordinate descent: line search per parametro ──────
@@ -4309,7 +4443,7 @@ async function runScenOptimization() {
       for (let v = p.min; v <= p.max + 1e-9; v += p.step) {
         const vv = +v.toFixed(3);
         await tick(`${p.label} = ${vv}`);
-        const res = await btRun(btMode, maxBars, useScen, paramsFor({ ...current, [p.key]: vv }), null);
+        const res = await btRun(btMode, scenBars, useScen, paramsFor({ ...current, [p.key]: vv }), null);
         const st = btStats(res.trades, res.startCap);
         rows.push({ v: vv, st });
         const pnl = st ? st.pnl : -Infinity;
@@ -4322,7 +4456,7 @@ async function runScenOptimization() {
     }
 
     // ── Valutazione finale combinata ───────────────────────
-    const finalRes = await btRun(btMode, maxBars, useScen, paramsFor(current), null);
+    const finalRes = await btRun(btMode, scenBars, useScen, paramsFor(current), null);
     const finalSt  = btStats(finalRes.trades, finalRes.startCap);
     progBar.style.width='100%';
 
@@ -4415,11 +4549,22 @@ async function runSanityCheck() {
     await new Promise(r=>setTimeout(r,0));
   };
   const pfN = (st) => st ? (st.pf==='∞'?10:parseFloat(st.pf)) : 0;
+  const hasSwing5m = useScen.swing && !!(await histLoad('xauusd_5m'))?.candles?.length;
   const runAt = async (range, pOver) => {
     const P = { ...liveP(), ...(pOver||{}) };
     if (range) P._range = range;
-    const res = await btRun('1h', maxBars, useScen, P, null);
-    return btStats(res.trades, res.startCap);
+    let all = [];
+    if (hasSwing5m) {
+      const rs = await btRun('hybrid5m', btBarsFor5mEquivalent(maxBars), { swing:true, trend:false, bias:false, scalp:false }, P, null);
+      all = all.concat(rs.trades);
+    }
+    const use1h = { swing: useScen.swing && !hasSwing5m, trend: useScen.trend, bias: useScen.bias, scalp:false };
+    if (use1h.swing || use1h.trend || use1h.bias) {
+      const r1 = await btRun('1h', maxBars, use1h, P, null);
+      all = all.concat(r1.trades);
+    }
+    all.sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
+    return btStats(all, 10000);
   };
 
   try {
@@ -4577,7 +4722,8 @@ async function runWeightOptimization() {
 
   const scen = document.getElementById('wopt-target').value;
   const maxBars = 5000;
-  const btMode = scen === 'scalp' ? '1m' : '1h';
+  const btMode = btModeForScenario(scen);
+  const scenBars = btBarsForScenario(scen, maxBars);
   const useScen = { swing:false, trend:false, bias:false, scalp:false };
   useScen[scen] = true;
   const scenNames = { swing:'📊 Swing', trend:'📈 Trend', scalp:'⚡ Scalp (1M)' };
@@ -4602,7 +4748,7 @@ async function runWeightOptimization() {
   try {
     // Baseline: pesi live correnti
     await tick('baseline');
-    const baseRes = await btRun(btMode, maxBars, useScen, { ...baseP(), weights: mkWeights({}) }, null);
+    const baseRes = await btRun(btMode, scenBars, useScen, { ...baseP(), weights: mkWeights({}) }, null);
     const baseSt  = btStats(baseRes.trades, baseRes.startCap);
 
     // Coordinate descent: per ogni gruppo, prova tutti i valori, fissa il migliore
@@ -4613,7 +4759,7 @@ async function runWeightOptimization() {
       let bestV = current[g] ?? 1, bestPnl = -Infinity, rows = [];
       for (const v of weightValues) {
         await tick(`${g} = ${v}`);
-        const res = await btRun(btMode, maxBars, useScen,
+        const res = await btRun(btMode, scenBars, useScen,
           { ...baseP(), weights: mkWeights({ ...current, [g]: v }) }, null);
         const st = btStats(res.trades, res.startCap);
         rows.push({ v, st });
@@ -4627,7 +4773,7 @@ async function runWeightOptimization() {
 
     // Run finale combinato
     await tick('finale');
-    const finalRes = await btRun(btMode, maxBars, useScen, { ...baseP(), weights: mkWeights(current) }, null);
+    const finalRes = await btRun(btMode, scenBars, useScen, { ...baseP(), weights: mkWeights(current) }, null);
     const finalSt  = btStats(finalRes.trades, finalRes.startCap);
     progBar.style.width='100%';
 
@@ -4707,9 +4853,12 @@ async function runBtSweep() {
   const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
   const useScen = (mode === '5m' || mode === '1m')
     ? { scalp:true, swing:false, trend:false, bias:false }
-    : { swing: document.getElementById('bt-scen-swing').checked,
-        trend: document.getElementById('bt-scen-trend').checked,
-        bias:  document.getElementById('bt-scen-bias').checked, scalp:false };
+    : mode === 'hybrid5m'
+      ? { swing: document.getElementById('bt-scen-swing').checked, trend:false, bias:false, scalp:false }
+      : { swing: document.getElementById('bt-scen-swing').checked,
+          trend: document.getElementById('bt-scen-trend').checked,
+          bias:  document.getElementById('bt-scen-bias').checked, scalp:false };
+  const sweepBars = mode === 'hybrid5m' ? btBarsFor5mEquivalent(maxBars) : maxBars;
 
   const values = [];
   for (let v = vFrom; v <= vTo + 1e-9; v += vStep) values.push(+v.toFixed(3));
@@ -4725,7 +4874,7 @@ async function runBtSweep() {
       progText.textContent = `Sweep ${param}=${values[k]} (${k+1}/${values.length}) · fine ~${k>0?etaClock(eta):'…'}`;
       progBar.style.width = Math.round(k/values.length*100)+'%';
       await new Promise(r=>setTimeout(r,0));
-      const res = await btRun(mode, maxBars, useScen, P, null);
+      const res = await btRun(mode, sweepBars, useScen, P, null);
       const st = btStats(res.trades, res.startCap);
       rows.push({ v: values[k], st, n: res.trades.length });
     }
@@ -7122,7 +7271,7 @@ function computeAllScenarios() {
     }
 
     if (scenario==="swing") {
-      // MACD 1H
+      // MACD 1H: tesi swing resta su struttura alta
       if (last1h && cc1h.length>=3) {
         const macd=last1h.macd||0, prev=cc1h[cc1h.length-2]?.macd||0;
         const cross=(isBuy && prev<0 && macd>0)||(!isBuy && prev>0 && macd<0);
@@ -7130,6 +7279,17 @@ function computeAllScenarios() {
         if (cross)  {score+=8; R.push(`✅ MACD cross ${dir}`);}
         else if (slOk){score+=5;R.push(`⚡ MACD ${dir}`);}
         else if ((isBuy&&macd<0&&macd<prev)||(!isBuy&&macd>0&&macd>prev)) {score-=5; P.push(`❌ MACD contro ${dir}`);}
+      }
+      // Trigger operativo 5M: non cambia la tesi, ma affina ingresso e backtest ogni 5 minuti
+      if (cc5m.length >= 8) {
+        const sl3_5m = slopePct(cc5m, 3);
+        const trigOk = (isBuy && sl3_5m > 0) || (!isBuy && sl3_5m < 0);
+        const last5 = cc5m[cc5m.length-1];
+        const rsi5 = last5?.rsi ?? 50;
+        if (trigOk) { score += 6; R.push(`✅ Trigger 5M conferma ${dir}`); }
+        else        { score -= 3; P.push(`⚠️ Trigger 5M non conferma ${dir}`); }
+        if (isBuy && rsi5 >= 38 && rsi5 <= 68)       { score += 2; R.push(`⚡ RSI 5M sano ${rsi5}`); }
+        else if (!isBuy && rsi5 >= 32 && rsi5 <= 62) { score += 2; R.push(`⚡ RSI 5M sano ${rsi5}`); }
       }
       // Regime: ranging favorisce swing su pivot
       if (regime==="RANGING") {score+=3; R.push("⚡ Ranging — swing su pivot valido");}
@@ -7162,16 +7322,19 @@ function computeAllScenarios() {
     let finalScore = Math.max(0, Math.min(100, Math.round(rawScore * cohMult)));
 
     // Setup per quella direzione — SL strutturale, R:R minimo, anti-chase
-    const entry=last1h?.c||0;
+    const has5mTrigger = scenario==="swing" && cc5m.length >= 8 && last5m;
+    const entry = scenario==="scalp" ? (last5m?.c || last1h?.c || 0)
+                : has5mTrigger ? last5m.c
+                : (last1h?.c || 0);
     const atrMult = scenario==="trend"?2.0:scenario==="scalp"?1.2:1.5;
     const tpMult1 = scenario==="trend"?3.0:scenario==="scalp"?1.5:2.0;
     const tpMult2 = scenario==="trend"?5.0:scenario==="scalp"?2.5:3.5;
     let setup = null;
     if (entry) {
-      // SL: strutturale (swing) se ragionevole, altrimenti ATR
-      const scCandles = scenario==="scalp" ? (cc5m.length?cc5m:cc1h) : cc1h;
-      const scAtr     = scenario==="scalp" ? (last5m?.atr||atr1h*0.3) : atr1h;
-      const slStruct  = structuralSL(scCandles, dir, scAtr, scenario==="scalp"?6:8);
+      // SL: strutturale su TF operativo. Swing usa 5M quando disponibile, ma resta filtrato da H1/4H/Daily.
+      const scCandles = scenario==="scalp" ? (cc5m.length?cc5m:cc1h) : has5mTrigger ? cc5m : cc1h;
+      const scAtr     = scenario==="scalp" ? (last5m?.atr||atr1h*0.3) : has5mTrigger ? (last5m?.atr||atr1h*0.35) : atr1h;
+      const slStruct  = structuralSL(scCandles, dir, scAtr, scenario==="scalp"?6:has5mTrigger?12:8);
       const slAtr     = isBuy ? +(entry-scAtr*atrMult).toFixed(2) : +(entry+scAtr*atrMult).toFixed(2);
       // Usa lo strutturale se non troppo lontano (max 1.5x della distanza ATR)
       let sl = slAtr;
@@ -7186,6 +7349,7 @@ function computeAllScenarios() {
       // Anti-chase: se prezzo esteso dall'EMA20, marca il setup
       const e20 = ema20_1h.length ? ema20_1h[ema20_1h.length-1] : null;
       if (isChasing(entry, e20, atr1h)) { setup.chasing = true; }
+      if (has5mTrigger) setup.triggerTf = '5m';
     }
     // Penalità score se chasing o weekend
     let finalAdj = 0;
@@ -7210,7 +7374,7 @@ function computeAllScenarios() {
   };
 
   const scores = [
-    makeScenario("swing","📊 Swing", "#f0b429","1H/4H",      THRESHOLDS.swing),
+    makeScenario("swing","📊 Swing", "#f0b429", cc5m.length?"5M trigger · H1/4H":"1H/4H", THRESHOLDS.swing),
     makeScenario("scalp","⚡ Scalp",  "#f97316","1M/5M",      THRESHOLDS.scalp),
     makeScenario("trend","📈 Trend",  "#22c55e","Daily/4H/1H",THRESHOLDS.trend),
     computeBiasScenario(cc1h, last1h, atr1h, d1t, adx, regime),

@@ -1,5 +1,5 @@
-// ── XAU/USD Analyzer — Service Worker v8.1 evidente (Live Scenari + Annealing Esplorativo) ─────────
-const CACHE = 'xauapp-v13-live-scenarios-v8-1-evidente';
+// ── XAU/USD Analyzer — Service Worker v8.3 coerenza annealing (Live Scenari + Swing 5M) ─────────
+const CACHE = 'xauapp-v15-live-scenarios-v8-3-annealing-coherence';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-72.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -410,6 +410,8 @@ async function computeSwScores() {
   const c5 = cc5m || [];
   const rsi5 = c5.length > 15 ? calcRSI(c5.map(c=>c.c),14).slice(-1)[0] : rsiNow;
   const slope5 = c5.length >= 4 ? c5[c5.length-1].c - c5[c5.length-4].c : 0;
+  const price5 = c5.length ? c5[c5.length-1].c : price;
+  const atr5 = c5.length >= 15 ? calcATR(c5, 14) : atr1h * 0.35;
   const mkSetup = (dir, atrMult, tp1Mult, tp2Mult, entryPrice=price, atr=atr1h) => {
     const entry = entryPrice;
     const sl = dir === 'BUY' ? +(entry - atr*atrMult).toFixed(2) : +(entry + atr*atrMult).toFixed(2);
@@ -419,23 +421,25 @@ async function computeSwScores() {
       tp2: dir === 'BUY' ? +(entry + risk*tp2Mult).toFixed(2) : +(entry - risk*tp2Mult).toFixed(2),
       risk:+risk.toFixed(2) };
   };
-  const makeScenario = (id, label, threshold, bAdj, sAdj, atrMult, tp1Mult, tp2Mult) => {
+  const makeScenario = (id, label, threshold, bAdj, sAdj, atrMult, tp1Mult, tp2Mult, entryPrice=price, atr=atr1h) => {
     const b = Math.max(0, Math.min(100, Math.round(buyScore + bAdj)));
     const sls = Math.max(0, Math.min(100, Math.round(sellScore + sAdj)));
     const dir = b >= threshold && b >= sls ? 'BUY' : sls >= threshold && sls > b ? 'SELL' : 'WAIT';
     const score = Math.max(b, sls);
     return { id, label, threshold, buyScore:b, sellScore:sls, bestDir:dir, bestScore:score,
-      setup: dir === 'WAIT' ? null : mkSetup(dir, atrMult, tp1Mult, tp2Mult),
-      reasons:[`SW ${label}: BUY ${b} / SELL ${sls}`, `TF ${t1d}/${t4h}/${t1h}`, `Macro ${macroDir} str ${macroStr}`] };
+      setup: dir === 'WAIT' ? null : mkSetup(dir, atrMult, tp1Mult, tp2Mult, entryPrice, atr),
+      reasons:[`SW ${label}: BUY ${b} / SELL ${sls}`, `TF ${t1d}/${t4h}/${t1h}`, `Macro ${macroDir} str ${macroStr}`, id==='swing' ? `Trigger 5M slope ${slope5.toFixed(2)}` : ''] };
   };
   const trendBuyAdj  = [t1d,t4h,t1h].filter(t=>t==='BUY').length >= 2 ? 8 : -10;
   const trendSellAdj = [t1d,t4h,t1h].filter(t=>t==='SELL').length >= 2 ? 8 : -10;
+  const swingBuyAdj  = slope5 > 0 ? 6 : -3;
+  const swingSellAdj = slope5 < 0 ? 6 : -3;
   const scalpBuyAdj  = (slope5 > 0 ? 8 : -4) + (rsi5 < 65 && rsi5 > 35 ? 4 : 0);
   const scalpSellAdj = (slope5 < 0 ? 8 : -4) + (rsi5 < 65 && rsi5 > 35 ? 4 : 0);
   const biasActive = (h>=2&&h<6) || (h>=9&&h<12) || (h>=13.5&&h<16);
   const biasAdj = biasActive ? 6 : -25;
   const scenarios = [
-    makeScenario('swing', 'Swing', Number(paperParams.thrSwing ?? 54), 0, 0, 1.5, 1.5, 3.0),
+    makeScenario('swing', 'Swing', Number(paperParams.thrSwing ?? 54), swingBuyAdj, swingSellAdj, 1.5, 1.5, 3.0, price5, atr5),
     makeScenario('trend', 'Trend', Number(paperParams.thrTrend ?? 74), trendBuyAdj, trendSellAdj, 2.0, 2.0, 4.0),
     makeScenario('scalp', 'Scalp', Number(paperParams.thrScalp ?? 62), scalpBuyAdj, scalpSellAdj, 0.8, 1.2, 2.2),
     makeScenario('bias',  'Bias',  Number(paperParams.thrBias  ?? 72), biasAdj, biasAdj, 1.2, 1.5, 2.5),

@@ -1,7 +1,7 @@
 {
-  "name": "XAU/USD Analyzer v8.1 evidente",
-  "short_name": "XAU v8.1",
-  "description": "XAU/USD Analyzer — v8.1 evidente, annealing esplorativo, cache aggiornata.",
+  "name": "XAU/USD Analyzer v8.3 coerenza annealing",
+  "short_name": "XAU v8.3",
+  "description": "XAU/USD Analyzer — v8.3 coerenza annealing/backtest, swing 5M e auto-apply verificato.",
   "start_url": "./?v=8.1-evidente",
   "scope": "./",
   "display": "standalone",
