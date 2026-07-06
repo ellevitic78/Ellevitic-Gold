@@ -3551,7 +3551,12 @@ async function runBacktest() {
       }
       if (!any1h && !has1m) throw new Error('Nessuno scenario selezionato (o dati 1M assenti per Scalp)');
       const st = btStats(trades, startCap);
-      state.btResults = { trades, startCap, endCap: startCap + (st?.pnl||0), mode: has1m && any1h ? '1h+1m' : (has1m ? '1m' : '1h') };
+      const period = trades.length
+        ? { from: trades.reduce((a,t)=>a<t.openedAt?a:t.openedAt, trades[0].openedAt),
+            to:   trades.reduce((a,t)=>a>t.closedAt?a:t.closedAt, trades[0].closedAt) }
+        : { from: new Date().toISOString(), to: new Date().toISOString() };
+      state.btResults = { trades, startCap, endCap: startCap + (st?.pnl||0), period,
+        mode: has1m && any1h ? '1h+1m' : (has1m ? '1m' : '1h') };
     }
     progBar.style.width='100%';
     progText.textContent = `Completato: ${state.btResults.trades.length} trade`;
