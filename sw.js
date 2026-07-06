@@ -1,6 +1,6 @@
-// ── XAU/USD Analyzer — Service Worker v7 (Live Scenari + Snapshot Parametri) ─────────
-const CACHE = 'xauapp-v10-live-scenarios-v7';
-const ASSETS = ['index.html', 'manifest.json', 'icon-192.png', 'icon-72.png'];
+// ── XAU/USD Analyzer — Service Worker v7 pages-fix (Live Scenari + Snapshot Parametri) ─────────
+const CACHE = 'xauapp-v11-live-scenarios-v7-pagesfix';
+const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-72.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS).catch(()=>{})).then(()=>self.skipWaiting()));
