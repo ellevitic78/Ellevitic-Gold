@@ -103,6 +103,7 @@ button{cursor:pointer}
           <span id="hdr-chg" style="font-size:17px;font-weight:600"></span>
         </div>
         <div id="hdr-sub" style="color:#f0f4fa;font-size:16px;margin-top:1px"></div>
+        <div id="build-badge" style="color:#64748b;font-size:10px;margin-top:2px">build 2026-07-06 · live-scenari v7</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
         <span id="mtf-badge" style="background:#c0cce020;color:#f0f4fa;border:1px solid #c0cce044;border-radius:5px;padding:4px 12px;font-size:17px;font-weight:700">–</span>
@@ -468,7 +469,7 @@ button{cursor:pointer}
 
     <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
       <summary style="color:#f0b429;font-size:13px;font-weight:700;cursor:pointer">⚙️ Parametri (default = valori live)</summary>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Rischio %</div><input type="number" id="btp-risk" value="5" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min confidence</div><input type="number" id="btp-minconf" value="60" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Swing</div><input type="number" id="btp-thr-swing" value="54" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Trend</div><input type="number" id="btp-thr-trend" value="74" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Scalp</div><input type="number" id="btp-thr-scalp" value="62" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Bias</div><input type="number" id="btp-thr-bias" value="72" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">BE trigger (R)</div><input type="number" id="btp-berr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail trigger (R)</div><input type="number" id="btp-trailrr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Swing ×ATR</div><input type="number" id="btp-trail-swing" value="2.7" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Trend ×ATR</div><input type="number" id="btp-trail-trend" value="1.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Scalp ×ATR</div><input type="number" id="btp-trail-scalp" value="0.8" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parziale TP1 %</div><input type="number" id="btp-partial" value="15" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Spread $</div><input type="number" id="btp-spread" value="0.04" step="0.01" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Slippage $</div><input type="number" id="btp-slippage" value="0.02" step="0.01" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Rischio %</div><input type="number" id="btp-risk" value="5" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min confidence</div><input type="number" id="btp-minconf" value="60" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Swing</div><input type="number" id="btp-thr-swing" value="54" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Trend</div><input type="number" id="btp-thr-trend" value="74" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Scalp</div><input type="number" id="btp-thr-scalp" value="62" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Bias</div><input type="number" id="btp-thr-bias" value="72" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">BE trigger (R)</div><input type="number" id="btp-berr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail trigger (R)</div><input type="number" id="btp-trailrr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Swing ×ATR</div><input type="number" id="btp-trail-swing" value="2.7" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Trend ×ATR</div><input type="number" id="btp-trail-trend" value="1.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Scalp ×ATR</div><input type="number" id="btp-trail-scalp" value="0.8" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Bias ×ATR</div><input type="number" id="btp-trail-bias" value="1.0" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parziale TP1 %</div><input type="number" id="btp-partial" value="15" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Spread $</div><input type="number" id="btp-spread" value="0.04" step="0.01" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Slippage $</div><input type="number" id="btp-slippage" value="0.02" step="0.01" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div></div>
     </details>
 
     <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
@@ -501,17 +502,19 @@ button{cursor:pointer}
       <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
         Ottimizza i parametri del singolo scenario in isolamento (soglia, poi trailing) con
         ricerca completa su ogni parametro. Stessa logica dell'Annealing: se il risultato
-        combinato batte la baseline, <b style="color:#22c55e">i parametri live dello scenario vengono aggiornati</b>.
+        combinato batte la baseline, <b style="color:#22c55e">viene aggiornato l’intero snapshot parametri live/backtest</b>.
       </div>
-      <div style="display:flex;gap:6px;align-items:flex-end">
-        <div style="flex:1"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Scenario</div>
+      <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap">
+        <div style="flex:1;min-width:110px"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Scenario</div>
           <select id="scen-opt-target" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:8px;font-size:13px">
             <option value="trend" selected>📈 Trend</option>
             <option value="swing">📊 Swing</option>
             <option value="bias">⏰ Bias</option>
             <option value="scalp">⚡ Scalp (1M profondo)</option>
           </select></div>
-        <button id="scen-opt-btn" onclick="runScenOptimization()" style="flex:1;background:#3b82f6;color:#fff;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🎯 Ottimizza scenario</button>
+        <div style="flex:1;min-width:100px"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Iterazioni annealing scenario</div>
+          <input type="number" id="scen-sa-iters" value="60" min="5" max="300" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:8px;color:#f0f4fa;font-size:13px"/></div>
+        <button id="scen-opt-btn" onclick="runScenOptimization()" style="flex:1;min-width:130px;background:#3b82f6;color:#fff;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🎯 Ottimizza scenario</button>
       </div>
     </details>
 
@@ -520,7 +523,7 @@ button{cursor:pointer}
       <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
         Ottimizza i <b>pesi dei criteri dentro lo score</b> (macro, MTF, ADX, RSI, pivot, pullback,
         criteri specifici, sessione) come moltiplicatori ×0–×2, un criterio alla volta, scenario isolato.
-        Se il risultato batte la baseline, <b style="color:#22c55e">i pesi live dello scenario vengono aggiornati</b>.
+        Se il risultato batte la baseline, <b style="color:#22c55e">pesi e snapshot parametri live/backtest vengono aggiornati</b>.
         ~57 backtest: 3-6 minuti.
       </div>
       <div style="display:flex;gap:6px;align-items:flex-end">
@@ -639,6 +642,7 @@ button{cursor:pointer}
 </div>
 
 <script>
+const APP_BUILD = '2026-07-06-live-scenarios-v7';
 // ══ STORAGE ══════════════════════════════════════════════════
 const LS = {
   get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch{return null;} },
@@ -667,8 +671,9 @@ let state = {
     openTrades: {},          // slot indipendenti per scenario
     trades: [],              // storico trade chiusi
     equity: [10000],         // curva equity nel tempo
-    lastSignalTs: 0,         // timestamp ultimo segnale (evita doppi)
-    cooldownMin: 5,          // minuti minimi tra un trade e il prossimo
+    lastSignalTs: 0,         // timestamp ultimo segnale legacy
+    lastSignalTsByScenario: {}, // cooldown indipendente per scenario
+    cooldownMin: 5,          // minuti minimi tra due trade nello stesso scenario
   },
   corrData: {dxy:[],us10y:[],dxyInverted:false,dxySymbol:'',us10ySymbol:''},
   pivots: {pivot:4330,r1:4360,r2:4390,s1:4300,s2:4270},
@@ -1318,7 +1323,8 @@ async function doFetch(){
     const cur1hPrice = state.candles['1h']?.slice(-1)[0]?.c;
     if(cur1hPrice) {
       evaluateAutoExit(cur1hPrice);
-      if (state.mode === 'recap') evaluateAutoEntry();
+      // Live auto: entry sempre attiva quando il paper è ON, non solo nel tab Score.
+      if (state.paper?.enabled) evaluateAutoEntry();
     }
   }catch(e){
     const msg = e.message||String(e);
@@ -2337,7 +2343,7 @@ function evaluateAutoEntry() {
   const nowTs = Date.now();
   const evalEl = document.getElementById('paper-last-eval');
   if (evalEl) evalEl.textContent = `Ultimo check: ${new Date().toLocaleTimeString('it-IT')}`;
-  if (nowTs - p.lastSignalTs < p.cooldownMin * 60 * 1000) return;
+  if (!p.lastSignalTsByScenario) p.lastSignalTsByScenario = {};
   if (isWeekendRisk()) { console.log('[PAPER] Skip: weekend gap risk'); return; }
 
   // MULTI-SLOT: ogni scenario eleggibile col proprio slot libero apre in parallelo
@@ -2348,14 +2354,17 @@ function evaluateAutoEntry() {
   let openedAny = false;
   for (const s of recap.scores) {
     if (slots[s.id]) continue; // slot già occupato da questo scenario
+    if (nowTs - (p.lastSignalTsByScenario[s.id] || 0) < p.cooldownMin * 60 * 1000) continue; // cooldown per scenario
     const bDir = s.bestDir || 'WAIT';
     if (bDir === 'WAIT') continue;
     const esc = bDir === 'BUY' ? s.buy : s.sell;
     if (!esc || !esc.setup) continue; // bestDir ≠ WAIT già implica soglia superata
     if (esc.score < PAPER_PARAMS.minConf) { console.log('[PAPER]', s.id, 'skip: sotto minConf', esc.score); continue; }
     if (esc.setup.chasing) { console.log('[PAPER]', s.id, 'skip: chasing'); continue; }
-    openPaperTradeFor(s.id, bDir, esc);
-    openedAny = true;
+    if (openPaperTradeFor(s.id, bDir, esc, recap.scores, s.threshold)) {
+      p.lastSignalTsByScenario[s.id] = nowTs;
+      openedAny = true;
+    }
   }
   if (openedAny) {
     p.lastSignalTs = nowTs;
@@ -2366,8 +2375,10 @@ function evaluateAutoEntry() {
 }
 
 // Apre un trade nello slot del SUO scenario
-function openPaperTradeFor(scenarioId, dirIn, esIn) {
+function openPaperTradeFor(scenarioId, dirIn, esIn, allScores=null, threshold=null) {
   const p = state.paper;
+  if (!p.openTrades) p.openTrades = {};
+  if (p.openTrades[scenarioId]) return null; // max 1 trade per scenario
   const es = { score: esIn.score, dir: dirIn, setup: esIn.setup, reasons: esIn.R || [] };
 
   const rawEntry = es.setup.entry;
@@ -2383,7 +2394,7 @@ function openPaperTradeFor(scenarioId, dirIn, esIn) {
     scenario:   scenarioId,
     label:      scenarioId,
     totalScore: es.score,
-    threshold:  null,
+    threshold:  threshold,
     direction:  es.dir,
     reasons:    es.reasons,
     marketSnapshot: {
@@ -2396,7 +2407,11 @@ function openPaperTradeFor(scenarioId, dirIn, esIn) {
       session:  getSessionStatus().sess,
       ts:       new Date().toISOString(),
     },
-    allScores: [],
+    allScores: (allScores||[]).map(x => {
+      const dir = x.bestDir || 'WAIT';
+      const one = dir === 'BUY' ? x.buy : dir === 'SELL' ? x.sell : (x.buy?.score >= (x.sell?.score||0) ? x.buy : x.sell);
+      return { id:x.id, label:x.label, score:x.bestScore || one?.score || 0, dir, eligible:dir!=='WAIT', threshold:x.threshold, reasons:(one?.reasons || one?.R || []).slice(0,5) };
+    }),
   };
 
   const trade = {
@@ -2431,6 +2446,7 @@ function openPaperTradeFor(scenarioId, dirIn, esIn) {
   };
 
   p.openTrades[scenarioId] = trade;
+  syncLegacyOpen();
   console.log('[PAPER] Trade aperto:', scenarioId, trade.direction, '@', entry);
 
   sendToSW({
@@ -2455,6 +2471,7 @@ function openPaperTradeFor(scenarioId, dirIn, esIn) {
       });
     }).catch(()=>{});
   }
+  return trade;
 }
 
 // ── Analisi forza prezzo per gestione trade ──────────────────
@@ -2822,6 +2839,7 @@ function savePaperState() {
   LS.set('paper_equity',   p.equity);
   LS.set('paper_enabled',  p.enabled);
   LS.set('paper_lastSig',  p.lastSignalTs);
+  LS.set('paper_lastSigByScenario', p.lastSignalTsByScenario || {});
 }
 
 function loadPaperState() {
@@ -2835,6 +2853,7 @@ function loadPaperState() {
   p.equity       = LS.get('paper_equity')    ?? [10000];
   p.enabled      = LS.get('paper_enabled')   ?? false;
   p.lastSignalTs = LS.get('paper_lastSig')   ?? 0;
+  p.lastSignalTsByScenario = LS.get('paper_lastSigByScenario') ?? {};
 }
 
 // ══ PAPER TRADING LOG EXPORT ═════════════════════════════════
@@ -2981,6 +3000,7 @@ function resetPaperTrading() {
   p.equity = [10000];
   p.enabled = false;
   p.lastSignalTs = 0;
+  p.lastSignalTsByScenario = {};
   savePaperState();
   renderPaperWidget();
   if (state.diaryTab === 'paper') renderDiary();
@@ -3701,6 +3721,7 @@ const SA_SPACE = {
   partialPct: { min:30, max:70, step:5 },
   thrScalp:   { min:55, max:75, step:2 },
   trailScalp: { min:0.4, max:1.6, step:0.1 },
+  trailBias:  { min:0.6, max:2.0, step:0.2 },
 };
 // riskPct escluso di proposito: col compounding ottimizzarlo significa solo alzarlo — non è un'ottimizzazione, è leva.
 
@@ -3830,10 +3851,9 @@ async function runSaOptimization() {
       </div>`;
 
     if (improved) {
-      savePaperParams(best);
-      syncParamInputs();
+      applyOptimizedParams(best, { source:'global-annealing' });
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;color:#22c55e;font-size:12px;font-weight:700">
-        ✅ Migliorativo (+€${(bestPnl-basePnl).toFixed(0)} vs baseline) — PARAMETRI LIVE AGGIORNATI.<br>
+        ✅ Migliorativo (+€${(bestPnl-basePnl).toFixed(0)} vs baseline) — SNAPSHOT COMPLETO PARAMETRI LIVE/BACKTEST AGGIORNATO.<br>
         <span style="color:#c0cce0;font-weight:400;font-size:11px">Il paper trading userà questi valori da subito. I valori in giallo sono quelli cambiati.</span></div>`;
     } else {
       html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;color:#f0b429;font-size:12px">
@@ -3856,6 +3876,15 @@ const SCEN_SA_PARAM_SPACE = {
   scalp: { thr:{key:'thrScalp',min:55,max:75,step:2}, trail:{key:'trailScalp',min:0.4,max:1.6,step:0.1} },
   bias:  { thr:{key:'thrBias', min:50,max:80,step:3}, trail:{key:'trailBias', min:0.6,max:2.0,step:0.2} },
 };
+// Parametri comuni di gestione che l'annealing per scenario può ottimizzare.
+// riskPct resta escluso: ottimizzarlo significa quasi sempre aumentare leva/rischio.
+// spread/slippage sono costi di mercato, non edge: si impostano, non si ottimizzano.
+const SCEN_SA_COMMON_SPACE = {
+  minConf:    { min:0,   max:75, step:5   },
+  beRR:       { min:0.4, max:1.3, step:0.1 },
+  trailRR:    { min:0.4, max:1.6, step:0.1 },
+  partialPct: { min:10,  max:70, step:5   },
+};
 
 async function runScenSA(scen) {
   if (btRunning) return;
@@ -3869,21 +3898,23 @@ async function runScenSA(scen) {
   const M = SCEN_META[scen];
   const PS = SCEN_SA_PARAM_SPACE[scen];
   const canWeights = scen !== 'bias'; // bias non ha pesi interni
-  const iters = scen === 'scalp' ? 40 : 60; // 1M più pesante
+  const iters = Math.max(5, Math.min(300, parseInt(document.getElementById('scen-sa-iters')?.value, 10) || (scen === 'scalp' ? 40 : 60))); // scelto da UI
   const maxBars = M.mode === '1m' ? 60000 : 5000;
   const useScen = { swing:false, trend:false, bias:false, scalp:false }; useScen[scen] = true;
   const t0 = Date.now();
 
-  // Stato = { thr, trail, w: {8 moltiplicatori} } — SOLO cose di questo scenario
+  // Stato = parametri dello scenario + parametri comuni di gestione + pesi dello scenario.
   const liveState = () => ({
-    thr: PAPER_PARAMS[PS.thr.key], trail: PAPER_PARAMS[PS.trail.key],
+    thr: PAPER_PARAMS[PS.thr.key],
+    trail: PAPER_PARAMS[PS.trail.key],
+    common: Object.fromEntries(Object.keys(SCEN_SA_COMMON_SPACE).map(k => [k, PAPER_PARAMS[k]])),
     w: canWeights ? { ...SCORE_WEIGHTS[scen] } : null,
   });
   const snap = (v,s) => Math.round(v/s)*s;
   const W_VALS = [0, 0.5, 0.75, 1, 1.25, 1.5, 2];
   const neighbor = (st, temp) => {
-    const n = { thr: st.thr, trail: st.trail, w: st.w ? { ...st.w } : null };
-    const dims = ['thr','trail', ...(canWeights ? WEIGHT_GROUPS : [])];
+    const n = { thr: st.thr, trail: st.trail, common: { ...(st.common || {}) }, w: st.w ? { ...st.w } : null };
+    const dims = ['thr','trail', ...Object.keys(SCEN_SA_COMMON_SPACE).map(k=>'common:'+k), ...(canWeights ? WEIGHT_GROUPS : [])];
     const k = 1 + (Math.random() < temp ? 1 : 0);
     for (let x=0; x<k; x++) {
       const d = dims[Math.floor(Math.random()*dims.length)];
@@ -3893,6 +3924,12 @@ async function runScenSA(scen) {
       } else if (d === 'trail') {
         const amp = Math.max(1, Math.round(3*temp)) * PS.trail.step;
         n.trail = +Math.min(PS.trail.max, Math.max(PS.trail.min, snap(n.trail + (Math.random()<0.5?-amp:amp), PS.trail.step))).toFixed(2);
+      } else if (d.startsWith('common:')) {
+        const key = d.slice(7);
+        const sp = SCEN_SA_COMMON_SPACE[key];
+        const amp = Math.max(1, Math.round(3*temp)) * sp.step;
+        const raw = (n.common[key] ?? PAPER_PARAMS[key]) + (Math.random()<0.5?-amp:amp);
+        n.common[key] = +Math.min(sp.max, Math.max(sp.min, snap(raw, sp.step))).toFixed(3);
       } else if (n.w) {
         const cur = W_VALS.indexOf(n.w[d] ?? 1);
         const idx = Math.min(W_VALS.length-1, Math.max(0, (cur<0?3:cur) + (Math.random()<0.5?-1:1)));
@@ -3903,8 +3940,8 @@ async function runScenSA(scen) {
   };
   const evalState = async (st) => {
     const base = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
-    const P = { ...base, [PS.thr.key]: st.thr, [PS.trail.key]: st.trail,
-      riskPct: base.riskPct/100, partialPct: base.partialPct/100, fixedRisk: true };
+    const merged = { ...base, ...(st.common || {}), [PS.thr.key]: st.thr, [PS.trail.key]: st.trail };
+    const P = { ...merged, riskPct: merged.riskPct/100, partialPct: merged.partialPct/100, fixedRisk: true };
     if (st.w) P.weights = { [scen]: st.w };
     const res = await btRun(M.mode, maxBars, useScen, P, null);
     return btStats(res.trades, res.startCap);
@@ -3948,7 +3985,7 @@ async function runScenSA(scen) {
     saveOptResult(scen, 'sa', improved ? bestSt : baseSt);
     const stLine = (st)=> st ? `${st.n} trade · WR ${st.wr}% · PF ${st.pf} · DD ${st.maxDD}%` : 'nessun trade';
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55">
-      <div style="color:${M.color};font-weight:800;font-size:15px;margin-bottom:8px">🔥 Annealing ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato, solo parametri suoi)</div>
+      <div style="color:${M.color};font-weight:800;font-size:15px;margin-bottom:8px">🔥 Annealing ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato + parametri comuni)</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
         <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live)</div>
           <div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(baseSt)}</div>
@@ -3957,13 +3994,14 @@ async function runScenSA(scen) {
           <div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(bestSt)}</div>
           <div style="color:${finPnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${bestSt?bestSt.pnl:0}</div></div>
       </div>
-      <div style="color:#c0cce0;font-size:12px;margin-bottom:4px">Soglia: <b style="color:${best.thr!==liveState().thr?'#f0b429':'#f0f4fa'}">${best.thr}</b> · Trail: <b style="color:#f0b429">${best.trail}×</b>
+      <div style="color:#c0cce0;font-size:12px;margin-bottom:4px">Soglia: <b style="color:${best.thr!==liveState().thr?'#f0b429':'#f0f4fa'}">${best.thr}</b> · Trail: <b style="color:${best.trail!==liveState().trail?'#f0b429':'#f0f4fa'}">${best.trail}×</b>
+        <br>Comuni: ${Object.keys(SCEN_SA_COMMON_SPACE).map(k=>`${k}=<b style="color:${best.common?.[k]!==liveState().common?.[k]?'#f0b429':'#f0f4fa'}">${best.common?.[k]}</b>`).join(' · ')}
         ${best.w?'<br>Pesi: '+WEIGHT_GROUPS.map(g=>`${g}×${best.w[g]??1}`).join(' · '):''}</div>`;
     if (improved) {
-      savePaperParams({ [PS.thr.key]: best.thr, [PS.trail.key]: best.trail });
+      const allUpdates = { ...(best.common || {}), [PS.thr.key]: best.thr, [PS.trail.key]: best.trail };
+      applyOptimizedParams(allUpdates, { source:'scenario-annealing', scenario:scen });
       if (best.w) saveScoreWeights(scen, best.w);
-      if (typeof syncParamInputs === 'function') syncParamInputs();
-      html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:8px;color:#22c55e;font-size:12px;font-weight:700">✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)}) — parametri e pesi live di ${M.label} AGGIORNATI.</div>`;
+      html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:8px;color:#22c55e;font-size:12px;font-weight:700">✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)}) — snapshot COMPLETO parametri live/backtest aggiornato per ${M.label}: ${Object.entries(allUpdates).map(([k,v])=>k+'='+v).join(' · ')}.</div>`;
     } else {
       html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:8px;color:#f0b429;font-size:12px">⚪ Nessun miglioramento affidabile (P&L > baseline, PF ≥ 1.05, ≥ 10 trade). Live invariato.</div>`;
     }
@@ -4047,7 +4085,13 @@ function renderOptHub() {
   if (!host) return;
   const results = loadOptResults();
   const srcLabel = { backtest:'🧪 backtest', scenopt:'🎯 parametri', weights:'🧬 pesi', sa:'🔥 annealing' };
-  let html = '';
+  let html = `<div style="background:#0d1117;border:1px solid #2a3550;border-radius:9px;padding:8px;margin-bottom:8px">
+    <div style="color:#3b82f6;font-size:11px;font-weight:800;margin-bottom:5px">PARAMETRI LIVE COMUNI / BACKTEST</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">
+      ${[['minConf',PAPER_PARAMS.minConf],['rischio %',PAPER_PARAMS.riskPct],['BE R',PAPER_PARAMS.beRR],['Trail R',PAPER_PARAMS.trailRR],['TP1 %',PAPER_PARAMS.partialPct],['spread/slip',`${PAPER_PARAMS.spread}/${PAPER_PARAMS.slippage}`]].map(([k,v])=>`<div style="background:#141920;border-radius:6px;padding:5px;text-align:center"><div style="color:#94a3b8;font-size:9px">${k}</div><b style="color:#f0f4fa;font-size:12px">${v}</b></div>`).join('')}
+    </div>
+    <div style="color:#64748b;font-size:10px;margin-top:5px">Se un annealing o una ottimizzazione per scenario è migliorativa, viene salvato l’intero snapshot dei parametri live e sincronizzato negli input del backtest.</div>
+  </div>`;
   for (const scen of ['swing','trend','scalp','bias']) {
     const M = SCEN_META[scen];
     const r = results[scen];
@@ -4094,6 +4138,12 @@ const SCEN_OPT_SPACE = {
   scalp: [ { key:'thrScalp',  label:'Soglia',      min:55,  max:75,  step:2   },
            { key:'trailScalp',label:'Trail ×ATR',  min:0.4, max:1.6, step:0.1 } ],
 };
+const SCEN_OPT_COMMON = [
+  { key:'minConf',    label:'Min conf',        min:0,   max:75, step:5   },
+  { key:'beRR',       label:'BE trigger R',    min:0.4, max:1.3, step:0.1 },
+  { key:'trailRR',    label:'Trail trigger R', min:0.4, max:1.6, step:0.1 },
+  { key:'partialPct', label:'TP1 parziale %',  min:10,  max:70, step:5   },
+];
 
 async function runScenOptimization() {
   if (btRunning) return;
@@ -4107,7 +4157,7 @@ async function runScenOptimization() {
   progCard.style.display='block'; resEl.innerHTML='';
 
   const scen = document.getElementById('scen-opt-target').value;
-  const space = SCEN_OPT_SPACE[scen];
+  const space = [...SCEN_OPT_SPACE[scen], ...SCEN_OPT_COMMON];
   const maxBars = 5000;
   const btMode = scen === 'scalp' ? '1m' : '1h';
   // Scenario ISOLATO: attribuzione pulita dei risultati al solo scenario in esame
@@ -4201,10 +4251,9 @@ async function runScenOptimization() {
 
     saveOptResult(scen, 'scenopt', improved ? finalSt : baseSt);
     if (improved) {
-      savePaperParams(current);
-      if (typeof syncParamInputs === 'function') syncParamInputs();
+      applyOptimizedParams(current, { source:'scenario-coordinate', scenario:scen });
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:10px;color:#22c55e;font-size:12px;font-weight:700">
-        ✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)} vs baseline) — PARAMETRI LIVE DI ${scenNames[scen].toUpperCase()} AGGIORNATI: ${Object.entries(current).map(([k,v])=>k+'='+v).join(' · ')}</div>`;
+        ✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)} vs baseline) — SNAPSHOT COMPLETO PARAMETRI LIVE/BACKTEST AGGIORNATO DA ${scenNames[scen].toUpperCase()}: ${Object.entries(current).map(([k,v])=>k+'='+v).join(' · ')}</div>`;
     } else {
       html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:10px;color:#f0b429;font-size:12px">
         ⚪ Nessun miglioramento affidabile (serve: P&L > baseline, PF ≥ 1.05, ≥ 10 trade). Parametri live invariati.</div>`;
@@ -4505,8 +4554,9 @@ async function runWeightOptimization() {
     saveOptResult(scen, 'weights', improved ? finalSt : baseSt);
     if (improved) {
       saveScoreWeights(scen, current);
+      applyOptimizedParams({}, { source:'scenario-weights', scenario:scen }); // riscrive lo snapshot completo dei parametri correnti per allineare live/backtest/SW
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:10px;color:#22c55e;font-size:12px;font-weight:700">
-        ✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)}) — PESI LIVE DI ${scenNames[scen].toUpperCase()} AGGIORNATI:<br>
+        ✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)}) — PESI LIVE DI ${scenNames[scen].toUpperCase()} AGGIORNATI e snapshot completo parametri live/backtest risincronizzato:<br>
         <span style="font-weight:400">${Object.entries(current).map(([k,v])=>k+'×'+v).join(' · ')}</span></div>`;
     } else {
       html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:10px;color:#f0b429;font-size:12px">
@@ -5019,7 +5069,7 @@ async function clearHistData() {
 }
 
 function syncParamInputs() {
-  const map = { 'btp-risk':'riskPct','btp-minconf':'minConf','btp-thr-swing':'thrSwing','btp-thr-trend':'thrTrend','btp-thr-scalp':'thrScalp','btp-thr-bias':'thrBias','btp-berr':'beRR','btp-trailrr':'trailRR','btp-trail-swing':'trailSwing','btp-trail-trend':'trailTrend','btp-trail-scalp':'trailScalp','btp-partial':'partialPct','btp-spread':'spread','btp-slippage':'slippage' };
+  const map = { 'btp-risk':'riskPct','btp-minconf':'minConf','btp-thr-swing':'thrSwing','btp-thr-trend':'thrTrend','btp-thr-scalp':'thrScalp','btp-thr-bias':'thrBias','btp-berr':'beRR','btp-trailrr':'trailRR','btp-trail-swing':'trailSwing','btp-trail-trend':'trailTrend','btp-trail-scalp':'trailScalp','btp-trail-bias':'trailBias','btp-partial':'partialPct','btp-spread':'spread','btp-slippage':'slippage' };
   Object.entries(map).forEach(([id, key]) => {
     const el = document.getElementById(id);
     if (el) el.value = PAPER_PARAMS[key];
@@ -6395,9 +6445,30 @@ function hasOpenScenario(scenario) {
   return !!paperSlots()[scenario || 'swing'];
 }
 
+function paperParamsSnapshot(overrides={}) {
+  // Snapshot COMPLETO: ogni auto-apply salva tutto il set parametri, non solo il delta.
+  // In questo modo live, backtest UI e service worker restano sempre allineati.
+  return { ...PAPER_PARAMS_DEFAULTS, ...PAPER_PARAMS, ...(overrides || {}), _v: PAPER_PARAMS_DEFAULTS._v };
+}
+
 function savePaperParams(p) {
-  PAPER_PARAMS = { ...PAPER_PARAMS, ...p, _v: PAPER_PARAMS_DEFAULTS._v };
+  PAPER_PARAMS = paperParamsSnapshot(p);
   try { localStorage.setItem('xauapp_live_params', JSON.stringify(PAPER_PARAMS)); } catch(e) {}
+  try { if (typeof syncParamInputs === 'function') syncParamInputs(); } catch(e) {}
+  try { if (typeof renderOptHub === 'function') renderOptHub(); } catch(e) {}
+  try { if (typeof sendToSW === 'function') sendToSW({ type:'UPDATE_CONFIG', tdKey:state.tdKey, config:LS.get('alert_config')||{}, paperEnabled:state.paper.enabled, paperCapital:state.paper.capital, openTrade:state.paper.openTrade, openTrades:state.paper.openTrades||{}, paperParams:PAPER_PARAMS }); } catch(e) {}
+}
+
+function applyOptimizedParams(overrides={}, meta={}) {
+  const before = paperParamsSnapshot();
+  const after = paperParamsSnapshot(overrides);
+  savePaperParams(after);
+  try {
+    const hist = JSON.parse(localStorage.getItem('xauapp_param_apply_log') || '[]');
+    hist.push({ ts:Date.now(), source:meta.source||'optimization', scenario:meta.scenario||null, changed:Object.keys(overrides||{}), before, after });
+    localStorage.setItem('xauapp_param_apply_log', JSON.stringify(hist.slice(-30)));
+  } catch(e) {}
+  return after;
 }
 
 // nowRef: in backtest restituisce l'ora storica simulata, altrimenti l'ora reale

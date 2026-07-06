@@ -1,5 +1,5 @@
-// ── XAU/USD Analyzer — Service Worker v5 (Full Auto) ─────────
-const CACHE = 'xauapp-v8-ledger';
+// ── XAU/USD Analyzer — Service Worker v7 (Live Scenari + Snapshot Parametri) ─────────
+const CACHE = 'xauapp-v10-live-scenarios-v7';
 const ASSETS = ['index.html', 'manifest.json', 'icon-192.png', 'icon-72.png'];
 
 self.addEventListener('install', e => {
@@ -53,7 +53,8 @@ const MAX_POS_PCT  = 0.05;
 const MAX_DD       = 0.10;
 const MIN_SCORE    = 62; // conservativo in background    // soglia minima per entry
 const COOL_TRADE   = 15 * 60 * 1000; // 15 min in background // 5 min cooldown tra trade
-let lastTradeTs    = 0;
+let lastTradeTs    = 0; // legacy
+let lastTradeTsByScenario = {};
 const COOL_ALERT   = 15 * 60 * 1000;
 
 function swSpread(t=null) {
@@ -165,7 +166,7 @@ self.addEventListener('message', async e => {
   }
 
   if (d.type === 'PING') {
-    notifyClients({ type: 'PONG', ts: Date.now(), bgActive: !!bgInterval, hasTrade: !!openTrade, paperEnabled });
+    notifyClients({ type: 'PONG', ts: Date.now(), bgActive: !!bgInterval, hasTrade: !!openTrade, openSlots:Object.values(openTrades||{}).filter(Boolean).length, paperEnabled });
   }
 });
 
@@ -405,14 +406,50 @@ async function computeSwScores() {
                   : 'WAIT';
   const bestScore = Math.max(buyScore, sellScore);
 
-  return { buyScore, sellScore, bestDir, bestScore, price, atr1h, rsiNow, macdNow, pivot, r1, s1, macroDir, macroStr, t1h, t4h, t1d, ema20_1h, ema50_1h };
+  const h = new Date().getUTCHours() + new Date().getUTCMinutes()/60;
+  const c5 = cc5m || [];
+  const rsi5 = c5.length > 15 ? calcRSI(c5.map(c=>c.c),14).slice(-1)[0] : rsiNow;
+  const slope5 = c5.length >= 4 ? c5[c5.length-1].c - c5[c5.length-4].c : 0;
+  const mkSetup = (dir, atrMult, tp1Mult, tp2Mult, entryPrice=price, atr=atr1h) => {
+    const entry = entryPrice;
+    const sl = dir === 'BUY' ? +(entry - atr*atrMult).toFixed(2) : +(entry + atr*atrMult).toFixed(2);
+    const risk = Math.abs(entry - sl) || atr;
+    return { direction:dir, entry, sl,
+      tp1: dir === 'BUY' ? +(entry + risk*tp1Mult).toFixed(2) : +(entry - risk*tp1Mult).toFixed(2),
+      tp2: dir === 'BUY' ? +(entry + risk*tp2Mult).toFixed(2) : +(entry - risk*tp2Mult).toFixed(2),
+      risk:+risk.toFixed(2) };
+  };
+  const makeScenario = (id, label, threshold, bAdj, sAdj, atrMult, tp1Mult, tp2Mult) => {
+    const b = Math.max(0, Math.min(100, Math.round(buyScore + bAdj)));
+    const sls = Math.max(0, Math.min(100, Math.round(sellScore + sAdj)));
+    const dir = b >= threshold && b >= sls ? 'BUY' : sls >= threshold && sls > b ? 'SELL' : 'WAIT';
+    const score = Math.max(b, sls);
+    return { id, label, threshold, buyScore:b, sellScore:sls, bestDir:dir, bestScore:score,
+      setup: dir === 'WAIT' ? null : mkSetup(dir, atrMult, tp1Mult, tp2Mult),
+      reasons:[`SW ${label}: BUY ${b} / SELL ${sls}`, `TF ${t1d}/${t4h}/${t1h}`, `Macro ${macroDir} str ${macroStr}`] };
+  };
+  const trendBuyAdj  = [t1d,t4h,t1h].filter(t=>t==='BUY').length >= 2 ? 8 : -10;
+  const trendSellAdj = [t1d,t4h,t1h].filter(t=>t==='SELL').length >= 2 ? 8 : -10;
+  const scalpBuyAdj  = (slope5 > 0 ? 8 : -4) + (rsi5 < 65 && rsi5 > 35 ? 4 : 0);
+  const scalpSellAdj = (slope5 < 0 ? 8 : -4) + (rsi5 < 65 && rsi5 > 35 ? 4 : 0);
+  const biasActive = (h>=2&&h<6) || (h>=9&&h<12) || (h>=13.5&&h<16);
+  const biasAdj = biasActive ? 6 : -25;
+  const scenarios = [
+    makeScenario('swing', 'Swing', Number(paperParams.thrSwing ?? 54), 0, 0, 1.5, 1.5, 3.0),
+    makeScenario('trend', 'Trend', Number(paperParams.thrTrend ?? 74), trendBuyAdj, trendSellAdj, 2.0, 2.0, 4.0),
+    makeScenario('scalp', 'Scalp', Number(paperParams.thrScalp ?? 62), scalpBuyAdj, scalpSellAdj, 0.8, 1.2, 2.2),
+    makeScenario('bias',  'Bias',  Number(paperParams.thrBias  ?? 72), biasAdj, biasAdj, 1.2, 1.5, 2.5),
+  ];
+
+  return { buyScore, sellScore, bestDir, bestScore, price, atr1h, rsiNow, macdNow, pivot, r1, s1, macroDir, macroStr, t1h, t4h, t1d, ema20_1h, ema50_1h, scenarios };
 }
 
 // ═══════════════════════════════════════════════════════════════
 // PAPER TRADE MANAGEMENT IN BACKGROUND
 // ═══════════════════════════════════════════════════════════════
 function calcLotSize(capital, entry, sl) {
-  const riskEur   = capital * RISK_PCT;
+  const riskPct = Number(paperParams?.riskPct ?? (RISK_PCT*100));
+  const riskEur = capital * (Number.isFinite(riskPct) ? riskPct/100 : RISK_PCT);
   const slDist    = Math.abs(entry - sl);
   if (!slDist) return 0.01;
   const lotsByRisk   = riskEur / (slDist * 100);
@@ -422,49 +459,80 @@ function calcLotSize(capital, entry, sl) {
 }
 
 async function tryAutoEntry(scoring) {
-  // Background legacy scorer usa uno slot proprio: non blocca scalp/swing/trend già aperti,
-  // ma non apre più di un trade nello stesso scenario auto-bg.
-  if (!paperEnabled || (openTrades && openTrades['auto-bg'])) return;
-  if (Date.now() - lastTradeTs < COOL_TRADE) return;
-
-  const dd = paperCapitalPeak > 0 ? (paperCapitalPeak - paperCapital) / paperCapitalPeak : 0; // DD da picco equity
-  if (dd >= MAX_DD) { paperEnabled = false; return; }
-
-  const { bestDir, bestScore, price, atr1h } = scoring;
-  if (bestDir === 'WAIT' || bestScore < MIN_SCORE) return;
-  // Guard sessione XAU: no entry su weekend/pre-gap.
+  // Live background: apre e gestisce slot indipendenti per scenario.
+  if (!paperEnabled) return;
+  if (Date.now() - lastTradeTs < 5 * 1000) return; // micro anti-doppio click/timer
   if (!xauMarketOpen(new Date())) return;
 
-  const entry = entryFill(price, bestDir);
-  const sl  = bestDir === 'BUY' ? +(entry - atr1h*1.5).toFixed(2) : +(entry + atr1h*1.5).toFixed(2);
-  const risk = Math.abs(entry - sl);
-  const tp1 = bestDir === 'BUY' ? +(entry + risk*1.5).toFixed(2) : +(entry - risk*1.5).toFixed(2);
-  const tp2 = bestDir === 'BUY' ? +(entry + risk*3.0).toFixed(2) : +(entry - risk*3.0).toFixed(2);
-  const lots    = calcLotSize(paperCapital, entry, sl);
-  const riskEur = +(Math.abs(entry-sl)*lots*100).toFixed(2);
+  const dd = paperCapitalPeak > 0 ? (paperCapitalPeak - paperCapital) / paperCapitalPeak : 0;
+  if (dd >= MAX_DD) { paperEnabled = false; return; }
 
-  openTrade = {
-    id: Date.now(), direction: bestDir, entry, sl, slInitial: sl, slOrig: sl, tp1, tp1Initial: tp1, tp2, tp2Initial: tp2, lots, lotsInitial: lots, riskEur,
-    confidence: bestScore, openedAt: new Date().toISOString(),
-    capitalAtOpen: paperCapital, capitalBefore: paperCapital, spread: swSpread(), slippage: swSlippage(), atrAtEntry: atr1h,
-    scenario: 'auto-bg', pattern: `BG Score ${bestScore}`,
-    managementLog: [], breakEvenSet: false, trailingActive: false,
-    maxFavorable: entry, trailMult: 1.5, warnThresh: 6, partialPnl: 0,
-  };
-  openTrades[openTrade.scenario || 'auto-bg'] = openTrade;
-  lastTradeTs = Date.now();
+  const candidates = Array.isArray(scoring.scenarios) && scoring.scenarios.length
+    ? scoring.scenarios
+    : [{ id:'swing', label:'Swing', bestDir:scoring.bestDir, bestScore:scoring.bestScore, threshold:MIN_SCORE,
+         setup:null, reasons:[`Legacy score ${scoring.bestScore}`] }];
 
-  // Notifica app
-  notifyClients({ type: 'BG_TRADE_OPENED', trade: openTrade, ts: Date.now() });
+  for (const sc of candidates) {
+    const id = sc.id || 'swing';
+    if (openTrades && openTrades[id]) continue; // max 1 trade per scenario
+    if (Date.now() - (lastTradeTsByScenario[id] || 0) < COOL_TRADE) continue;
 
-  await self.registration.showNotification(`🤖 Paper Trade ${bestDir} [BG]`, {
-    body: `${bestDir} XAU @ $${fmtP(entry)} · Score ${bestScore}/100 · SL $${fmtP(sl)} · TP $${fmtP(tp1)}`,
-    icon: '/icon-192.png', tag: 'paper-bg-open', vibrate: [200,100,200,100,200],
-    requireInteraction: true,
-  });
-  console.log('[SW] Trade aperto in background:', openTrade.direction, '@', entry);
+    const bestDir = sc.bestDir || 'WAIT';
+    const bestScore = Number(sc.bestScore || 0);
+    const threshold = Number(sc.threshold ?? MIN_SCORE);
+    if (bestDir === 'WAIT' || bestScore < threshold) continue;
+
+    const setup = sc.setup || (() => {
+      const entry0 = scoring.price;
+      const atr = scoring.atr1h || 15;
+      const sl0 = bestDir === 'BUY' ? +(entry0 - atr*1.5).toFixed(2) : +(entry0 + atr*1.5).toFixed(2);
+      const risk0 = Math.abs(entry0 - sl0);
+      return { entry:entry0, sl:sl0,
+        tp1: bestDir === 'BUY' ? +(entry0 + risk0*1.5).toFixed(2) : +(entry0 - risk0*1.5).toFixed(2),
+        tp2: bestDir === 'BUY' ? +(entry0 + risk0*3.0).toFixed(2) : +(entry0 - risk0*3.0).toFixed(2) };
+    })();
+
+    const entry = entryFill(setup.entry, bestDir);
+    const sl = setup.sl;
+    const risk = Math.abs(entry - sl);
+    const tp1 = setup.tp1;
+    const tp2 = setup.tp2;
+    const lots = calcLotSize(paperCapital, entry, sl);
+    const riskEur = +(risk * lots * 100).toFixed(2);
+
+    const trade = {
+      id: Date.now() + Math.floor(Math.random()*1000), direction: bestDir,
+      entry, sl, slInitial: sl, slOrig: sl, tp1, tp1Initial: tp1, tp2, tp2Initial: tp2,
+      lots, lotsInitial: lots, riskEur,
+      confidence: bestScore, openedAt: new Date().toISOString(),
+      capitalAtOpen: paperCapital, capitalBefore: paperCapital,
+      spread: swSpread(), slippage: swSlippage(), atrAtEntry: scoring.atr1h || 15,
+      scenario: id, pattern: `BG ${sc.label || id} score ${bestScore}`,
+      entryReasons: sc.reasons || [],
+      scoreSnapshot: {
+        scenario:id, label:sc.label || id, totalScore:bestScore, threshold, direction:bestDir,
+        reasons:sc.reasons || [],
+        marketSnapshot:{ price:setup.entry, rsi1h:scoring.rsiNow, macd1h:scoring.macdNow, atr1h:scoring.atr1h, session:new Date().getUTCHours() },
+        allScores: candidates.map(x => ({ id:x.id, label:x.label, score:x.bestScore, dir:x.bestDir, eligible:x.bestDir!=='WAIT', threshold:x.threshold, reasons:x.reasons||[] }))
+      },
+      managementLog: [], breakEvenSet:false, trailingActive:false,
+      maxFavorable: entry, trailMult: Number(paperParams['trail'+id[0].toUpperCase()+id.slice(1)] ?? 1.5), warnThresh: id==='scalp'?3:id==='trend'?8:id==='bias'?5:6,
+      partialPnl: 0,
+    };
+
+    openTrades[id] = trade;
+    syncLegacyOpen();
+    lastTradeTs = Date.now();
+    lastTradeTsByScenario[id] = Date.now();
+
+    notifyClients({ type:'BG_TRADE_OPENED', trade, openTrades, ts:Date.now() });
+    await self.registration.showNotification(`🤖 Paper Trade ${bestDir} [${sc.label || id}]`, {
+      body: `${bestDir} XAU @ $${fmtP(entry)} · Score ${bestScore}/100 · SL $${fmtP(sl)} · TP $${fmtP(tp1)}`,
+      icon:'/icon-192.png', tag:'paper-bg-open-'+id, vibrate:[200,100,200,100,200], requireInteraction:true,
+    });
+    console.log('[SW] Trade aperto background:', id, trade.direction, '@', entry);
+  }
 }
-
 async function hasVisibleClient() {
   const clients = await self.clients.matchAll({ type:'window', includeUncontrolled:true });
   return clients.some(c => c.visibilityState === 'visible');
@@ -638,22 +706,21 @@ async function runAll() {
     // Aggiorna prezzo in app
     notifyClients({ type:'BG_UPDATE', price, rsi:rsiNow, ts:Date.now() });
 
-    // Paper trading: rivalutazione trade aperto O nuovo entry
+    // Paper trading: rivalutazione multi-slot + nuove entry per scenario libero
     syncLegacyOpen();
-    if (openTrade) {
-      // Rivalutazione basata su scoring: se consenso invertito chiudi
-      const tradeDir = openTrade.direction;
+    for (const t of Object.values(openTrades || {}).filter(Boolean)) {
+      const tradeDir = t.direction;
       const oppScore = tradeDir==='BUY' ? scoring.sellScore : scoring.buyScore;
       const ownScore = tradeDir==='BUY' ? scoring.buyScore  : scoring.sellScore;
       if (oppScore >= 72 && oppScore > ownScore + 20) {
-        // Consenso fortemente invertito — segnala all'app
-        notifyClients({ type:'BG_EXIT_SIGNAL', price, exitReason:'CONSENSUS_REV', ts:Date.now() });
+        notifyClients({ type:'BG_EXIT_SIGNAL', price, exitReason:'CONSENSUS_REV', scenario:t.scenario, tradeId:t.id, ts:Date.now() });
         await self.registration.showNotification('⚠️ Segnale inversione consenso', {
-          body: `${tradeDir} in corso ma score ${tradeDir==='BUY'?'SELL':'BUY'} = ${oppScore}/100. Valuta chiusura.`,
-          icon:'/icon-192.png', tag:'paper-consensus', vibrate:[300,100,300], requireInteraction:true,
+          body: `[${t.scenario||'slot'}] ${tradeDir} in corso ma score ${tradeDir==='BUY'?'SELL':'BUY'} = ${oppScore}/100.`,
+          icon:'/icon-192.png', tag:'paper-consensus-'+(t.scenario||'slot'), vibrate:[300,100,300], requireInteraction:true,
         });
       }
-    } else if (paperEnabled) {
+    }
+    if (paperEnabled && !(await hasVisibleClient())) {
       await tryAutoEntry(scoring);
     }
 
