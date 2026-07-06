@@ -1,8 +1,8 @@
 {
-  "name": "XAU/USD Analyzer v8.3.2 parametri nel CSV",
-  "short_name": "XAU v8.3.2",
-  "description": "XAU/USD Analyzer — v8.3.2 export CSV con snapshot parametri, pesi e hash.",
-  "start_url": "./?v=8.3.2-parametri-csv",
+  "name": "XAU/USD Analyzer v8.4 fast good params",
+  "short_name": "XAU v8.4",
+  "description": "XAU/USD Analyzer — v8.4 con parametri buoni 13:45, cache runtime e backtest/annealing più veloci.",
+  "start_url": "./?v=8.4-fast-good-params",
   "scope": "./",
   "display": "standalone",
   "background_color": "#080b10",

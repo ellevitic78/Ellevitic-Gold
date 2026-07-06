@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#f0b429"/>
 <link rel="manifest" href="manifest.json"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
-<title>XAU/USD Analyzer · v8.3.2 parametri nel CSV</title>
+<title>XAU/USD Analyzer · v8.4 fast good params</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:#080b10;color:#fde68a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;font-size:17px}
@@ -66,14 +66,14 @@ button{cursor:pointer}
 <body>
 
 <div id="version-visible-banner" style="position:sticky;top:0;z-index:999999;background:linear-gradient(90deg,#16a34a,#f0b429);color:#06110a;text-align:center;font-weight:900;font-size:15px;padding:8px 10px;border-bottom:2px solid #fde68a;box-shadow:0 4px 18px #0008">
-  ✅ VERSIONE NUOVA CARICATA — <span style="font-size:17px">v8.3.2 PARAMETRI NEL CSV</span> — parametri e hash allineati
+  ✅ VERSIONE NUOVA CARICATA — <span style="font-size:17px">v8.4 FAST · PARAMETRI BUONI</span> — parametri e hash allineati
 </div>
 
 <!-- ══ SETUP SCREEN ══════════════════════════════════════════ -->
 <div id="setup-screen" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px">
   <div style="font-size:48px;margin-bottom:14px">🥇</div>
   <div style="color:#f0b429;font-weight:800;font-size:22px;margin-bottom:6px">XAU/USD Analyzer</div>
-  <div style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e66;border-radius:8px;padding:6px 10px;font-size:15px;font-weight:900;margin-bottom:10px">✅ v8.3.2 — parametri salvati dentro ogni CSV</div>
+  <div style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e66;border-radius:8px;padding:6px 10px;font-size:15px;font-weight:900;margin-bottom:10px">✅ v8.4 — fast backtest + parametri buoni</div>
   <div style="color:#f0f4fa;font-size:17px;text-align:center;margin-bottom:28px;line-height:1.6">App standalone con dati live.<br>Configura le API key per iniziare.</div>
   <div style="width:100%;margin-bottom:10px">
     <div style="color:#f0b429;font-size:17px;font-weight:700;margin-bottom:5px">TWELVE DATA API KEY <span style="color:#ef4444">*</span></div>
@@ -108,7 +108,7 @@ button{cursor:pointer}
           <span id="hdr-chg" style="font-size:17px;font-weight:600"></span>
         </div>
         <div id="hdr-sub" style="color:#f0f4fa;font-size:16px;margin-top:1px"></div>
-        <div id="build-badge" style="display:inline-block;background:#22c55e22;color:#22c55e;border:1px solid #22c55e77;border-radius:8px;padding:5px 8px;font-size:14px;font-weight:900;margin-top:5px;letter-spacing:.2px">✅ NUOVA VERSIONE · v8.3.2 PARAMETRI NEL CSV · 2026-07-06</div>
+        <div id="build-badge" style="display:inline-block;background:#22c55e22;color:#22c55e;border:1px solid #22c55e77;border-radius:8px;padding:5px 8px;font-size:14px;font-weight:900;margin-top:5px;letter-spacing:.2px">✅ NUOVA VERSIONE · v8.4 FAST · PARAMETRI BUONI · 2026-07-06</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
         <span id="mtf-badge" style="background:#c0cce020;color:#f0f4fa;border:1px solid #c0cce044;border-radius:5px;padding:4px 12px;font-size:17px;font-weight:700">–</span>
@@ -672,7 +672,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-const APP_BUILD = '2026-07-06-live-scenarios-v8-3-2-parametri-csv';
+const APP_BUILD = '2026-07-06-v8-4-fast-good-params';
 // ══ STORAGE ══════════════════════════════════════════════════
 const LS = {
   get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch{return null;} },
@@ -3398,13 +3398,109 @@ function btAggregate(cc, hours) {
   return out;
 }
 
-function btSliceByTime(candles, t) {
-  let hi = candles.length;
-  for (let i = candles.length-1; i >= 0; i--) {
-    if (new Date(candles[i].t) <= t) { hi = i+1; break; }
-    if (i === 0) hi = 0;
+const BT_PREP_CACHE = new Map();
+const BT_PREP_CACHE_MAX = 24;
+function btDataVersion(raw) {
+  const c = raw?.candles || [];
+  return `${c.length}:${c[0]?.t||''}:${c[c.length-1]?.t||''}`;
+}
+function btRangeKey(range) {
+  return Array.isArray(range) ? `${range[0]}:${range[1]}` : 'all';
+}
+function btRememberPrepared(key, val) {
+  if (BT_PREP_CACHE.size >= BT_PREP_CACHE_MAX) BT_PREP_CACHE.delete(BT_PREP_CACHE.keys().next().value);
+  BT_PREP_CACHE.set(key, val);
+  return val;
+}
+function btTs(arr) {
+  if (!arr) return [];
+  if (!arr._btTs) {
+    try { Object.defineProperty(arr, '_btTs', { value: arr.map(cd => +new Date(cd.t)), enumerable:false }); }
+    catch(e) { arr._btTs = arr.map(cd => +new Date(cd.t)); }
   }
-  return candles.slice(0, hi);
+  return arr._btTs;
+}
+function btSliceByTime(candles, t) {
+  // Compatibilità: binary search invece della scansione a ritroso O(n) per ogni barra.
+  const ts = btTs(candles);
+  const x = +new Date(t);
+  let lo = 0, hi = ts.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (ts[mid] <= x) lo = mid + 1; else hi = mid;
+  }
+  return candles.slice(0, lo);
+}
+function btMakeSliceCursor(seriesMap) {
+  const pos = {};
+  const tsMap = {};
+  Object.entries(seriesMap).forEach(([k, arr]) => { pos[k] = 0; tsMap[k] = btTs(arr || []); });
+  return function sliceTo(key, t, limit=null) {
+    const arr = seriesMap[key] || [];
+    const ts = tsMap[key] || [];
+    const x = +new Date(t);
+    let p = pos[key] || 0;
+    while (p < ts.length && ts[p] <= x) p++;
+    // Protezione per eventuali chiamate non monotone.
+    while (p > 0 && ts[p-1] > x) p--;
+    pos[key] = p;
+    const start = limit ? Math.max(0, p - limit) : 0;
+    return arr.slice(start, p);
+  };
+}
+async function btPrepareSeries(mode, maxBars, range=null) {
+  const is1m = mode === '1m';
+  const isHybrid5m = mode === 'hybrid5m' || mode === 'swing5m';
+  const isScalp = mode === '5m' || mode === '1m';
+  const is5mDriven = mode === '5m' || isHybrid5m;
+  const seriesKey = is1m ? 'xauusd_1m' : is5mDriven ? 'xauusd_5m' : 'xauusd_1h';
+  const raw = await histLoad(seriesKey);
+  if (!raw?.candles?.length) throw new Error(`Serve lo storico ${is1m?'XAU 1M (usa "1M profondo")':is5mDriven?'XAU 5M':'XAU 1H'} — scaricalo prima.`);
+  const corrKey = (is1m || is5mDriven) ? 'eurusd_5m' : 'eurusd_1h';
+  const tnxKey  = (is1m || is5mDriven) ? 'tnx_5m'    : 'tnx_1h';
+  const eurRaw = await histLoad(corrKey), tnxRaw = await histLoad(tnxKey);
+  const key = [APP_BUILD, mode, maxBars, btRangeKey(range), seriesKey, btDataVersion(raw), corrKey, btDataVersion(eurRaw), tnxKey, btDataVersion(tnxRaw)].join('|');
+  if (BT_PREP_CACHE.has(key)) return BT_PREP_CACHE.get(key);
+
+  let src = raw.candles.slice(-maxBars);
+  if (range) {
+    const a = Math.floor(src.length * range[0]);
+    const b = Math.floor(src.length * range[1]);
+    src = src.slice(a, b);
+  }
+  const fullBase = btEnrich(src);
+
+  let full1h, full4h, full1d, full5m, full1mArr = [];
+  if (is1m) {
+    full1mArr = fullBase;
+    const agg5 = [];
+    let b=null,bk=null;
+    for (const cd of src) {
+      const d=new Date(cd.t);
+      const k=d.toISOString().slice(0,13)+'_'+Math.floor(d.getUTCMinutes()/5);
+      if(k!==bk){if(b)agg5.push(b);b={t:cd.t,o:cd.o,h:cd.h,l:cd.l,c:cd.c,vol:cd.vol||0};bk=k;}
+      else{b.h=Math.max(b.h,cd.h);b.l=Math.min(b.l,cd.l);b.c=cd.c;b.vol+=cd.vol||0;}
+    }
+    if(b)agg5.push(b);
+    full5m = btEnrich(agg5);
+    full1h = btEnrich(btAggregate(src, 1));
+    full4h = btEnrich(btAggregate(src, 4));
+    full1d = btEnrich(btAggregate(src, 24));
+  } else if (is5mDriven) {
+    full5m = fullBase;
+    full1h = btEnrich(btAggregate(src, 1));
+    full4h = btEnrich(btAggregate(src, 4));
+    full1d = btEnrich(btAggregate(src, 24));
+  } else {
+    full1h = fullBase;
+    full5m = [];
+    full4h = btEnrich(btAggregate(src, 4));
+    full1d = btEnrich(btAggregate(src, 24));
+  }
+  const fullEur = eurRaw?.candles?.length ? btEnrich(eurRaw.candles.slice(-maxBars)) : [];
+  const fullTnx = tnxRaw?.candles?.length ? btEnrich(tnxRaw.candles.slice(-maxBars)) : [];
+  [fullBase, full1mArr, full5m, full1h, full4h, full1d, fullEur, fullTnx].forEach(btTs);
+  return btRememberPrepared(key, { is1m, isHybrid5m, isScalp, is5mDriven, fullBase, full1h, full4h, full1d, full5m, full1mArr, fullEur, fullTnx });
 }
 
 function btBarsFor5mEquivalent(maxBars) {
@@ -3451,56 +3547,9 @@ function btGetParams() {
 
 // ── Core: esegue un backtest e ritorna i risultati (no UI) ────
 async function btRun(mode, maxBars, useScen, P, onProgress) {
-  const is1m = mode === '1m';
-  const isHybrid5m = mode === 'hybrid5m' || mode === 'swing5m';
-  const isScalp = mode === '5m' || mode === '1m';
-  const is5mDriven = mode === '5m' || isHybrid5m;
-  const seriesKey = is1m ? 'xauusd_1m' : is5mDriven ? 'xauusd_5m' : 'xauusd_1h';
-  const raw = await histLoad(seriesKey);
-  if (!raw?.candles?.length) throw new Error(`Serve lo storico ${is1m?'XAU 1M (usa "1M profondo")':is5mDriven?'XAU 5M':'XAU 1H'} — scaricalo prima.`);
-
-  let src = raw.candles.slice(-maxBars);
-  if (P._range) {
-    const a = Math.floor(src.length * P._range[0]);
-    const b = Math.floor(src.length * P._range[1]);
-    src = src.slice(a, b);
-  }
-  const fullBase = btEnrich(src);
-
-  // Contesto TF superiori
-  let full1h, full4h, full1d, full5m, full1mArr = [];
-  if (is1m) {
-    full1mArr = fullBase;
-    // Aggrega 5M reali dalle 1M
-    const agg5 = [];
-    let b=null,bk=null;
-    for (const cd of src) {
-      const d=new Date(cd.t);
-      const k=d.toISOString().slice(0,13)+'_'+Math.floor(d.getUTCMinutes()/5);
-      if(k!==bk){if(b)agg5.push(b);b={t:cd.t,o:cd.o,h:cd.h,l:cd.l,c:cd.c,vol:cd.vol||0};bk=k;}
-      else{b.h=Math.max(b.h,cd.h);b.l=Math.min(b.l,cd.l);b.c=cd.c;b.vol+=cd.vol||0;}
-    }
-    if(b)agg5.push(b);
-    full5m = btEnrich(agg5);
-    full1h = btEnrich(btAggregate(src, 1));
-    full4h = btEnrich(btAggregate(src, 4));
-    full1d = btEnrich(btAggregate(src, 24));
-  } else if (is5mDriven) {
-    full5m = fullBase;
-    full1h = btEnrich(btAggregate(src, 1));
-    full4h = btEnrich(btAggregate(src, 4));
-    full1d = btEnrich(btAggregate(src, 24));
-  } else {
-    full1h = fullBase;
-    full5m = [];
-    full4h = btEnrich(btAggregate(src, 4));
-    full1d = btEnrich(btAggregate(src, 24));
-  }
-  const corrKey = (is1m || is5mDriven) ? 'eurusd_5m' : 'eurusd_1h';  // per 1m/5m: le 5m sono il meglio disponibile
-  const tnxKey  = (is1m || is5mDriven) ? 'tnx_5m'    : 'tnx_1h';
-  const eurRaw = await histLoad(corrKey), tnxRaw = await histLoad(tnxKey);
-  const fullEur = eurRaw?.candles?.length ? btEnrich(eurRaw.candles.slice(-maxBars)) : [];
-  const fullTnx = tnxRaw?.candles?.length ? btEnrich(tnxRaw.candles.slice(-maxBars)) : [];
+  const prep = await btPrepareSeries(mode, maxBars, P?._range || null);
+  const { is1m, isHybrid5m, isScalp, is5mDriven, fullBase, full1h, full4h, full1d, full5m, full1mArr, fullEur, fullTnx } = prep;
+  const sliceTo = btMakeSliceCursor({ full1h, full4h, full1d, full5m, fullEur, fullTnx });
 
   const backup = {
     candles: state.candles, candles4h: state.candles4h,
@@ -3628,21 +3677,21 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
         state.btNow = cd.t;
         if (is1m) {
           const s1m = full1mArr.slice(Math.max(0, i-119), i+1);
-          state.candles = { '1m': s1m, '5m': btSliceByTime(full5m, t).slice(-60), '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
+          state.candles = { '1m': s1m, '5m': sliceTo('full5m', t, 60), '1h': sliceTo('full1h', t, 120), '1d': sliceTo('full1d', t, 35) };
         } else if (isHybrid5m) {
           const s5m = full5m.slice(Math.max(0, i-119), i+1);
-          state.candles = { '5m': s5m, '1m': [], '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
+          state.candles = { '5m': s5m, '1m': [], '1h': sliceTo('full1h', t, 120), '1d': sliceTo('full1d', t, 35) };
         } else if (isScalp) {
           const s5m = full5m.slice(Math.max(0, i-119), i+1);
-          state.candles = { '5m': s5m, '1m': s5m.slice(-30), '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
+          state.candles = { '5m': s5m, '1m': s5m.slice(-30), '1h': sliceTo('full1h', t, 120), '1d': sliceTo('full1d', t, 35) };
         } else {
-          state.candles = { '1h': fullBase.slice(Math.max(0, i-119), i+1), '5m': [], '1m': [], '1d': btSliceByTime(full1d, t).slice(-35) };
+          state.candles = { '1h': fullBase.slice(Math.max(0, i-119), i+1), '5m': [], '1m': [], '1d': sliceTo('full1d', t, 35) };
         }
-        state.candles4h = btSliceByTime(full4h, t).slice(-60);
+        state.candles4h = sliceTo('full4h', t, 60);
         state.pivots = calcPivots(state.candles['1d']);
         state.corrData = {
-          dxy: btSliceByTime(fullEur, t).slice(-60), dxyInverted: true,
-          us10y: btSliceByTime(fullTnx, t).slice(-60),
+          dxy: sliceTo('fullEur', t, 60), dxyInverted: true,
+          us10y: sliceTo('fullTnx', t, 60),
         };
 
         let recap = null;
@@ -4031,9 +4080,9 @@ async function runSaOptimization() {
   };
 
   const t0 = Date.now();
-  const fullP = (base) => ({ riskPct: PAPER_PARAMS.riskPct/100, trailBias: PAPER_PARAMS.trailBias,
-    ...Object.fromEntries(Object.keys(saSpace).map(k => [k, base[k] ?? PAPER_PARAMS[k]])),
-    partialPct: (base.partialPct ?? PAPER_PARAMS.partialPct)/100 });
+  const fullP = (base) => btParamsFromSnapshot(
+    Object.fromEntries(Object.keys(saSpace).map(k => [k, base[k] ?? PAPER_PARAMS[k]]))
+  );
 
   const log = (msg) => { progText.innerHTML = msg; };
 
@@ -4077,7 +4126,7 @@ async function runSaOptimization() {
     const improved = saImproves(bestSt, baseSt, { minTrades:10, minPf:1.05, requirePnl:true });
 
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55;margin-bottom:10px">
-      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing v8.3.1 — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s · ${spaceSummary(saSpace)}${includeScalp?' · gamba ⚡Scalp 1M inclusa':''}</div>
+      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing v8.4 fast — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s · ${spaceSummary(saSpace)}${includeScalp?' · gamba ⚡Scalp 1M inclusa':''}</div>
       <div style="background:#0d1117;border:1px solid #2a3550;border-radius:7px;padding:7px;margin-bottom:8px;color:#94a3b8;font-size:11px">Migliore mostrato = migliore per <b>obiettivo robusto</b>, non solo P&L. Delta best vs baseline: <b style="color:${bestObj>=baseObj?'#22c55e':'#ef4444'}">${saDeltaLine(bestSt, baseSt)}</b></div>
       ${scalpSkipped?`<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:7px;padding:7px;margin-bottom:8px;color:#f0b429;font-size:11px">⚠️ Scalp richiesto ma dati 1M assenti — ottimizzazione eseguita senza. Scarica il "1M profondo".</div>`:''}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
@@ -4267,9 +4316,9 @@ async function runScenSA(scen) {
     const commonChanged = Object.keys(commonUpdates).some(k => commonUpdates[k] !== baseLive.common[k]);
 
     let html = `<div class="card" style="border:2px solid ${(applyFull||applyScenarioOnly)?'#22c55e':'#f0b429'}55">
-      <div style="color:${M.color};font-weight:900;font-size:15px;margin-bottom:8px">🔥 Annealing v8.3.1 ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s</div>
+      <div style="color:${M.color};font-weight:900;font-size:15px;margin-bottom:8px">🔥 Annealing v8.4 fast ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s</div>
       <div style="background:#0d1117;border:1px solid #2a3550;border-radius:7px;padding:7px;margin-bottom:8px;color:#94a3b8;font-size:11px">
-        Durante il loop il <b>BEST</b> è il migliore per <b>obiettivo robusto isolato</b>. Dopo il loop la v8.3.1 fa due conferme: scenario-only senza parametri comuni e portafoglio completo con parametri comuni.
+        Durante il loop il <b>BEST</b> è il migliore per <b>obiettivo robusto isolato</b>. Dopo il loop la v8.4 fa due conferme: scenario-only senza parametri comuni e portafoglio completo con parametri comuni.
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
         ${card('BASELINE SCENARIO ISOLATO', baseSt, null, '#94a3b8')}
@@ -4288,7 +4337,7 @@ async function runScenSA(scen) {
     } else {
       html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:8px;color:#f0b429;font-size:12px">⚪ Nessun auto-apply: il best del loop non supera la conferma scenario-only/portafoglio con criterio robusto.</div>`;
     }
-    html += `<div style="color:#94a3b8;font-size:10px;margin-top:6px">Regola v8.3.1: i parametri comuni vengono applicati solo se migliorano il portafoglio; la UI distingue best del loop, scenario-only e portafoglio.</div></div>`;
+    html += `<div style="color:#94a3b8;font-size:10px;margin-top:6px">Regola v8.4: i parametri comuni vengono applicati solo se migliorano il portafoglio; la UI distingue best del loop, scenario-only e portafoglio.</div></div>`;
     resEl.innerHTML = html;
     progText.textContent = `Annealing ${M.label} completato — ${applyFull?'FULL applicato':applyScenarioOnly?'solo scenario applicato':'nessun auto-apply'}.`;
     renderOptHub();
@@ -4373,7 +4422,7 @@ function renderOptHub() {
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">
       ${[['minConf',PAPER_PARAMS.minConf],['rischio %',PAPER_PARAMS.riskPct],['BE R',PAPER_PARAMS.beRR],['Trail R',PAPER_PARAMS.trailRR],['TP1 %',PAPER_PARAMS.partialPct],['spread/slip',`${PAPER_PARAMS.spread}/${PAPER_PARAMS.slippage}`]].map(([k,v])=>`<div style="background:#141920;border-radius:6px;padding:5px;text-align:center"><div style="color:#94a3b8;font-size:9px">${k}</div><b style="color:#f0f4fa;font-size:12px">${v}</b></div>`).join('')}
     </div>
-    <div style="color:#64748b;font-size:10px;margin-top:5px">v8.3.2: risultati ottimizzazione azzerati al primo avvio; profilo CSV ieri/v8.1 caricato come baseline. Ogni CSV esportato contiene snapshot parametri, pesi e hash usati.</div>
+    <div style="color:#64748b;font-size:10px;margin-top:5px">v8.4: profilo buono 13:45 caricato come baseline; cache runtime per backtest/annealing; ogni CSV esporta snapshot parametri, pesi e hash usati.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px">
       <button onclick="resetOptResultsAndLoadCsvYesterdayProfile()" style="background:#f0b42920;border:1px solid #f0b42955;color:#f0b429;border-radius:6px;padding:8px 0;font-size:11px;font-weight:900">♻️ Reset risultati + profilo CSV ieri</button>
       <button onclick="saveUiParamsToLive()" style="background:#3b82f620;border:1px solid #3b82f655;color:#3b82f6;border-radius:6px;padding:8px 0;font-size:11px;font-weight:900">💾 Salva UI → live/backtest/SW</button>
@@ -5068,6 +5117,7 @@ const HIST_JOBS = [
   { symbol:'TNX',     interval:'1h',   key:'tnx_1h'    },
 ];
 const HIST_PREFIX = 'xauapp_hist_';
+const HIST_MEM_CACHE = new Map();
 let histDownloading = false;
 
 function histLog(msg, color='#94a3b8') {
@@ -5123,6 +5173,8 @@ function idbReq(mode, fn) {
 }
 
 async function histSave(key, payload) {
+  HIST_MEM_CACHE.set(key, payload);
+  try { if (typeof BT_PREP_CACHE !== 'undefined') BT_PREP_CACHE.clear(); } catch(e) {}
   const raw = JSON.stringify(payload);
   // Prova prima IndexedDB (spazio grande)
   const ok = await idbReq('readwrite', st => st.put(raw, key));
@@ -5142,17 +5194,21 @@ async function histSave(key, payload) {
 }
 
 async function histLoad(key) {
+  if (HIST_MEM_CACHE.has(key)) return HIST_MEM_CACHE.get(key);
   const fromIdb = await idbReq('readonly', st => st.get(key));
   if (fromIdb && typeof fromIdb === 'string') {
-    try { return JSON.parse(fromIdb); } catch(e) {}
+    try { const parsed = JSON.parse(fromIdb); HIST_MEM_CACHE.set(key, parsed); return parsed; } catch(e) {}
   }
   try {
     const raw = localStorage.getItem(HIST_PREFIX + key);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw); HIST_MEM_CACHE.set(key, parsed); return parsed;
   } catch(e) { return null; }
 }
 
 async function histDelete(key) {
+  HIST_MEM_CACHE.delete(key);
+  try { if (typeof BT_PREP_CACHE !== 'undefined') BT_PREP_CACHE.clear(); } catch(e) {}
   await idbReq('readwrite', st => st.delete(key));
   try { localStorage.removeItem(HIST_PREFIX + key); } catch(e) {}
 }
@@ -6690,18 +6746,33 @@ function renderPaperWidgetIn(el) {
 
 // ── Helper functions per scoring (globali) ──────────────────
 // ── Parametri LIVE del paper trading (persistenti, ottimizzabili) ──
-const PARAM_PROFILE_ID = 'csv-ieri-2026-07-06-v8-1';
-const PARAM_RESET_EPOCH = '2026-07-06-v8-3-1-reset-sync-csv-ieri';
+const PARAM_PROFILE_ID = 'v8-4-good-params-2026-07-06-1345';
+const PARAM_RESET_EPOCH = '2026-07-06-v8-4-fast-good-params-seed';
+const GOOD_PARAM_PRESETS = {
+  main_1345_scalp1m: {
+    label: '13:45 — gamba Scalp 1M inclusa',
+    stats: { trades:197, wr:73, pf:3.80, dd:4.7, pnl:19914.91 },
+    params: { thrSwing:70, thrTrend:66, thrBias:69, minConf:35, beRR:0.4, trailRR:1.3, trailSwing:2, trailTrend:2, partialPct:65, thrScalp:56, trailScalp:0.4 }
+  },
+  backup_1305: {
+    label: '13:05 — annealing 250 iterazioni',
+    stats: { trades:169, wr:54, pf:1.89, dd:17.8, pnl:61924.16 },
+    params: { thrSwing:54, thrTrend:75, thrBias:54, minConf:60, beRR:1, trailRR:1.3, trailSwing:1.2, trailTrend:1, partialPct:30, thrScalp:55, trailScalp:0.8 }
+  },
+  aggressive_1948: {
+    label: '19:48 — aggressivo, DD alto',
+    stats: { trades:147, wr:59, pf:2.19, dd:16, pnl:73199.17 },
+    params: { thrSwing:58, thrTrend:58, thrBias:78, minConf:5, beRR:1.3, trailRR:1, trailSwing:1.4, trailTrend:1.6, partialPct:30, thrScalp:70, trailScalp:0.4 }
+  }
+};
 const PAPER_PARAMS_DEFAULTS = {
-  _v: 5, // v5: reset risultati ottimizzazioni + profilo CSV ieri + sync hash multi-livello
+  _v: 6, // v6: profilo buono 13:45 + cache runtime backtest/annealing
   _profile: PARAM_PROFILE_ID,
-  // Profilo base coerente con la build v8.1 che ha prodotto il CSV di ieri.
-  // Dal CSV si ricavano direttamente riskPct≈5%, spread=0.04, slippage=0.02;
-  // soglie/trailing/pesi non sono presenti nel CSV, quindi vengono fissati al profilo v8.1 incorporato.
-  thrSwing: 54, thrTrend: 74, thrScalp: 62, thrBias: 72,
-  minConf: 60, riskPct: 5.0, beRR: 0.4, trailRR: 0.4,
-  trailSwing: 2.7, trailTrend: 1.4, trailScalp: 0.8, trailBias: 1.0,
-  partialPct: 15,
+  // Profilo live iniziale scelto dagli screenshot: 13:45 — gamba Scalp 1M inclusa.
+  thrSwing: 70, thrTrend: 66, thrScalp: 56, thrBias: 69,
+  minConf: 35, riskPct: 5.0, beRR: 0.4, trailRR: 1.3,
+  trailSwing: 2, trailTrend: 2, trailScalp: 0.4, trailBias: 1.0,
+  partialPct: 65,
   spread: 0.04,
   slippage: 0.02,
 };
@@ -6713,7 +6784,7 @@ const PARAM_NEEDS_RESET = (() => {
   try { return localStorage.getItem('xauapp_param_seed_epoch') !== PARAM_RESET_EPOCH; } catch(e) { return false; }
 })();
 if (PARAM_NEEDS_RESET) {
-  resetOptimizationArtifacts('auto-reset-v8.3.1-load-csv-yesterday-profile');
+  resetOptimizationArtifacts('auto-reset-v8.4-fast-good-params');
   try { localStorage.setItem('xauapp_live_params', JSON.stringify({ ...PAPER_PARAMS_DEFAULTS, _seededAt:Date.now() })); } catch(e) {}
   try { localStorage.setItem('xauapp_param_seed_epoch', PARAM_RESET_EPOCH); } catch(e) {}
 }
@@ -6729,11 +6800,12 @@ let PAPER_PARAMS = (() => {
 })();
 // ── Pesi INTERNI dello scoring, per scenario (moltiplicatori, 1.0 = default) ──
 const SCORE_WEIGHTS_DEFAULTS = {
-  _v: 2,
+  _v: 3,
   _profile: PARAM_PROFILE_ID,
   swing: { macro:1, mtf:1, adx:1, rsi:1, pivot:1, pullback:1, specific:1, sess:1 },
   trend: { macro:1, mtf:1, adx:1, rsi:1, pivot:1, pullback:1, specific:1, sess:1 },
-  scalp: { macro:1, mtf:1, adx:1, rsi:1, pivot:1, pullback:1, specific:1, sess:1 },
+  // Screenshot pesi interni Scalp 1M: macro×2, mtf×0, adx×0, rsi×2, pivot×1.25.
+  scalp: { macro:2, mtf:0, adx:0, rsi:2, pivot:1.25, pullback:1, specific:1, sess:1 },
 };
 if (PARAM_NEEDS_RESET) {
   try { localStorage.setItem('xauapp_score_weights', JSON.stringify(SCORE_WEIGHTS_DEFAULTS)); } catch(e) {}
@@ -6862,9 +6934,9 @@ function renderParamSyncStatus() {
   const okSw = h.swH === 'N/D' ? null : h.swH === h.liveH;
   const chip = (label, val, ok) => `<span style="display:inline-block;background:${ok===null?'#1e2535':ok?'#22c55e18':'#ef444418'};border:1px solid ${ok===null?'#2a3550':ok?'#22c55e55':'#ef444455'};color:${ok===null?'#c0cce0':ok?'#22c55e':'#ef4444'};border-radius:6px;padding:3px 6px;margin:2px;font-size:10px;font-weight:800">${label}: ${val}</span>`;
   return `<div style="background:#080b10;border:1px solid ${(okLocal&&okUi&&(okSw!==false))?'#22c55e44':'#f0b42955'};border-radius:8px;padding:7px;margin-top:7px">
-    <div style="color:#fde68a;font-size:10px;font-weight:900;margin-bottom:3px">🔒 SYNC PARAMETRI v8.3.1 — profilo ${PARAM_PROFILE_ID}</div>
+    <div style="color:#fde68a;font-size:10px;font-weight:900;margin-bottom:3px">🔒 SYNC PARAMETRI v8.4 — profilo ${PARAM_PROFILE_ID}</div>
     ${chip('live',h.liveH,true)}${chip('localStorage',h.lsH,okLocal)}${chip('UI',h.uiH,okUi)}${chip('backtest',h.btH,okUi)}${chip('SW',h.swH,okSw)}
-    <div style="color:#94a3b8;font-size:10px;margin-top:4px">Se i codici coincidono, parametri live, storage, input backtest e service worker sono allineati. Da v8.3.2 il CSV esporta parametri, pesi e hash: ogni backtest è auditabile anche dopo nuove ottimizzazioni.</div>
+    <div style="color:#94a3b8;font-size:10px;margin-top:4px">Se i codici coincidono, parametri live, storage, input backtest e service worker sono allineati. Da v8.4 il CSV esporta parametri, pesi e hash: ogni backtest è auditabile anche dopo nuove ottimizzazioni.</div>
   </div>`;
 }
 function syncAllParameterLayers(reason='sync') {
@@ -6877,11 +6949,11 @@ function syncAllParameterLayers(reason='sync') {
 function resetOptResultsAndLoadCsvYesterdayProfile() {
   PAPER_PARAMS = { ...PAPER_PARAMS_DEFAULTS, _seededAt:Date.now() };
   SCORE_WEIGHTS = JSON.parse(JSON.stringify(SCORE_WEIGHTS_DEFAULTS));
-  resetOptimizationArtifacts('manual-reset-csv-yesterday-profile');
+  resetOptimizationArtifacts('manual-reset-v8.4-fast-good-params');
   try { localStorage.setItem('xauapp_param_seed_epoch', PARAM_RESET_EPOCH); } catch(e) {}
-  syncAllParameterLayers('manual-reset-csv-yesterday-profile');
+  syncAllParameterLayers('manual-reset-v8.4-fast-good-params');
   try { if (typeof renderOptHub === 'function') renderOptHub(); } catch(e) {}
-  alert('Risultati ottimizzazioni azzerati. Profilo parametri CSV ieri/v8.1 ricaricato e sincronizzato su live, backtest, localStorage e SW.');
+  alert('Risultati ottimizzazioni azzerati. Profilo parametri buoni v8.4 ricaricato e sincronizzato su live, backtest, localStorage e SW.');
 }
 function saveUiParamsToLive() {
   PAPER_PARAMS = { ...PAPER_PARAMS, ...uiParamsSnapshotRaw(), _v:PAPER_PARAMS_DEFAULTS._v, _profile:PARAM_PROFILE_ID };

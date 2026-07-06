@@ -1,5 +1,5 @@
-// ── XAU/USD Analyzer — Service Worker v8.3.2 parametri nel CSV ─────────
-const CACHE = 'xauapp-v17-live-scenarios-v8-3-2-parametri-csv';
+// ── XAU/USD Analyzer — Service Worker v8.4 fast good params ─────────
+const CACHE = 'xauapp-v18-v8-4-fast-good-params';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-72.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -41,8 +41,8 @@ let openTrade    = null;
 let openTrades = {};
 let paperCapital = 10000;
 let paperTrades  = [];
-let paperParams  = { spread: 0.04, slippage: 0.02, partialPct: 15, beRR: 0.4, trailRR: 0.4 };
-let scoreWeights = { _profile:'csv-ieri-2026-07-06-v8-1', swing:{macro:1,mtf:1,adx:1,rsi:1,pivot:1,pullback:1,specific:1,sess:1}, trend:{macro:1,mtf:1,adx:1,rsi:1,pivot:1,pullback:1,specific:1,sess:1}, scalp:{macro:1,mtf:1,adx:1,rsi:1,pivot:1,pullback:1,specific:1,sess:1} };
+let paperParams  = { thrSwing:70, thrTrend:66, thrScalp:56, thrBias:69, minConf:35, riskPct:5.0, spread:0.04, slippage:0.02, partialPct:65, beRR:0.4, trailRR:1.3, trailSwing:2, trailTrend:2, trailScalp:0.4, trailBias:1.0 };
+let scoreWeights = { _profile:'v8-4-good-params-2026-07-06-1345', swing:{macro:1,mtf:1,adx:1,rsi:1,pivot:1,pullback:1,specific:1,sess:1}, trend:{macro:1,mtf:1,adx:1,rsi:1,pivot:1,pullback:1,specific:1,sess:1}, scalp:{macro:2,mtf:0,adx:0,rsi:2,pivot:1.25,pullback:1,specific:1,sess:1} };
 let paramHash = '';
 let lastCheckTs  = 0;
 let paperCapitalPeak = 10000;
