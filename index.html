@@ -103,7 +103,7 @@ button{cursor:pointer}
           <span id="hdr-chg" style="font-size:17px;font-weight:600"></span>
         </div>
         <div id="hdr-sub" style="color:#f0f4fa;font-size:16px;margin-top:1px"></div>
-        <div id="build-badge" style="color:#64748b;font-size:10px;margin-top:2px">build 2026-07-06 · live-scenari v7 pages-fix</div>
+        <div id="build-badge" style="color:#64748b;font-size:10px;margin-top:2px">build 2026-07-06 · live-scenari v8 explore</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
         <span id="mtf-badge" style="background:#c0cce020;color:#f0f4fa;border:1px solid #c0cce044;border-radius:5px;padding:4px 12px;font-size:17px;font-weight:700">–</span>
@@ -492,9 +492,33 @@ button{cursor:pointer}
       </div>
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
         <div style="flex:1"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Iterazioni (≈3-6s l'una)</div>
-        <input type="number" id="sa-iters" value="40" min="5" max="300" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+        <input type="number" id="sa-iters" value="40" min="5" max="2000" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
         <button id="sa-run-btn" onclick="runSaOptimization()" style="flex:1;background:#a855f7;color:#fff;border-radius:7px;padding:11px 0;font-size:13px;font-weight:800;border:none;margin-top:14px">🔥 Avvia ottimizzazione</button>
       </div>
+      <details style="background:#0d1117;border:1px solid #2a3550;border-radius:7px;padding:7px;margin-top:8px">
+        <summary style="color:#e9d5ff;font-size:12px;font-weight:700;cursor:pointer">🧭 Spazio di ricerca annealing</summary>
+        <div style="color:#94a3b8;font-size:10px;line-height:1.5;margin:6px 0">
+          Vale sia per l'annealing globale sia per quello per scenario. <b>Standard</b> usa i range vecchi; <b>Largo/Esplorativo/Estremo</b> allargano range, affinano il passo e permettono pesi interni oltre ×2. Rischio overfitting crescente.
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Profilo</div>
+            <select id="opt-search-profile" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:7px;font-size:12px">
+              <option value="standard" selected>Standard sicuro</option>
+              <option value="wide">Largo</option>
+              <option value="explore">Esplorativo</option>
+              <option value="extreme">Estremo</option>
+            </select></div>
+          <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Ampiezza ×</div>
+            <input type="number" id="opt-range-mult" value="1" min="0.5" max="4" step="0.25" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:12px"/></div>
+          <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Passo</div>
+            <select id="opt-step-mode" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:7px;font-size:12px">
+              <option value="normal" selected>Normale</option>
+              <option value="fine">Fine</option>
+              <option value="ultra">Ultra fine</option>
+              <option value="coarse">Grosso</option>
+            </select></div>
+        </div>
+      </details>
     </details>
 
     <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
@@ -513,7 +537,7 @@ button{cursor:pointer}
             <option value="scalp">⚡ Scalp (1M profondo)</option>
           </select></div>
         <div style="flex:1;min-width:100px"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Iterazioni annealing scenario</div>
-          <input type="number" id="scen-sa-iters" value="60" min="5" max="300" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:8px;color:#f0f4fa;font-size:13px"/></div>
+          <input type="number" id="scen-sa-iters" value="60" min="5" max="2000" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:8px;color:#f0f4fa;font-size:13px"/></div>
         <button id="scen-opt-btn" onclick="runScenOptimization()" style="flex:1;min-width:130px;background:#3b82f6;color:#fff;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🎯 Ottimizza scenario</button>
       </div>
     </details>
@@ -642,7 +666,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-const APP_BUILD = '2026-07-06-live-scenarios-v7';
+const APP_BUILD = '2026-07-06-live-scenarios-v8-explore';
 // ══ STORAGE ══════════════════════════════════════════════════
 const LS = {
   get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch{return null;} },
@@ -3708,6 +3732,67 @@ async function runBacktest() {
   btRunning = false;
 }
 
+// ── PROFILI DI ESPLORAZIONE OTTIMIZZATORE ───────────────
+// Standard replica i range originari. Gli altri profili espandono range e raffinano passo.
+function optNum(id, fallback, min=-Infinity, max=Infinity) {
+  const el = document.getElementById(id);
+  const v = el ? parseFloat(el.value) : NaN;
+  return Math.min(max, Math.max(min, Number.isFinite(v) ? v : fallback));
+}
+function optProfileCfg() {
+  const profile = document.getElementById('opt-search-profile')?.value || 'standard';
+  const base = {
+    standard:{ range:1.00, step:1.00, weightMax:2.00, weightStep:0.25 },
+    wide:    { range:1.60, step:0.50, weightMax:2.50, weightStep:0.25 },
+    explore: { range:2.30, step:0.35, weightMax:3.00, weightStep:0.25 },
+    extreme: { range:3.20, step:0.25, weightMax:4.00, weightStep:0.25 },
+  }[profile] || { range:1, step:1, weightMax:2, weightStep:0.25 };
+  const userRange = optNum('opt-range-mult', 1, 0.5, 4);
+  const stepMode = document.getElementById('opt-step-mode')?.value || 'normal';
+  const stepModeMult = ({ coarse:1.50, normal:1.00, fine:0.50, ultra:0.25 })[stepMode] || 1;
+  return { ...base, profile, range: base.range * userRange, step: base.step * stepModeMult };
+}
+function hardLimitsForParam(key) {
+  if (/thr|Conf/i.test(key)) return { min:0, max:100 };
+  if (/partial/i.test(key)) return { min:0, max:100 };
+  if (/RR|trail|Trail/i.test(key)) return { min:0.05, max:8 };
+  return { min:-1e9, max:1e9 };
+}
+function expandParamSpace(baseSpace) {
+  const cfg = optProfileCfg();
+  const out = {};
+  for (const [key, sp] of Object.entries(baseSpace)) {
+    const center = Number.isFinite(PAPER_PARAMS?.[key]) ? PAPER_PARAMS[key] : (sp.min + sp.max) / 2;
+    const half = ((sp.max - sp.min) / 2) * cfg.range;
+    const lim = hardLimitsForParam(key);
+    const step = Math.max(0.01, sp.step * cfg.step);
+    out[key] = {
+      min: +Math.max(lim.min, center - half).toFixed(4),
+      max: +Math.min(lim.max, center + half).toFixed(4),
+      step: +step.toFixed(4),
+    };
+  }
+  return out;
+}
+function getOptIters(id, fallback) {
+  const el = document.getElementById(id);
+  const v = el ? parseInt(el.value, 10) : fallback;
+  return Math.max(5, Math.min(2000, Number.isFinite(v) ? v : fallback));
+}
+function getWeightValues() {
+  const cfg = optProfileCfg();
+  const vals = [];
+  const maxV = Math.max(2, cfg.weightMax);
+  const step = Math.max(0.05, cfg.weightStep * cfg.step);
+  for (let v=0; v <= maxV + 1e-9; v += step) vals.push(+v.toFixed(3));
+  [0, 0.5, 0.75, 1, 1.25, 1.5, 2].forEach(v => { if (!vals.includes(v) && v <= maxV) vals.push(v); });
+  return vals.sort((a,b)=>a-b);
+}
+function spaceSummary(space) {
+  const cfg = optProfileCfg();
+  return `${cfg.profile} · ampiezza×${cfg.range.toFixed(2)} · passo×${cfg.step.toFixed(2)} · ${Object.entries(space).map(([k,v])=>`${k}[${v.min}→${v.max}/${v.step}]`).join(' · ')}`;
+}
+
 // ── OTTIMIZZAZIONE Simulated Annealing sui parametri ──────────
 const SA_SPACE = {
   thrSwing:   { min:50, max:75, step:2 },
@@ -3737,14 +3822,14 @@ function saObjective(st) {
   return obj;
 }
 
-function saNeighbor(p, temp) {
+function saNeighbor(p, temp, space=SA_SPACE) {
   const q = { ...p };
-  const keys = Object.keys(SA_SPACE);
+  const keys = Object.keys(space);
   // Perturba 1-2 parametri, ampiezza proporzionale alla temperatura
   const nMut = Math.random() < 0.5 ? 1 : 2;
   for (let m = 0; m < nMut; m++) {
     const k = keys[Math.floor(Math.random() * keys.length)];
-    const sp = SA_SPACE[k];
+    const sp = space[k];
     const range = (sp.max - sp.min);
     const delta = (Math.random() * 2 - 1) * range * Math.max(0.15, temp) ;
     let v = (q[k] ?? PAPER_PARAMS[k]) + delta;
@@ -3765,7 +3850,8 @@ async function runSaOptimization() {
   btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Ottimizzazione...';
   progCard.style.display='block'; resEl.innerHTML='';
 
-  const iters = Math.max(5, Math.min(300, parseInt(document.getElementById('sa-iters').value, 10) || 40));
+  const iters = getOptIters('sa-iters', 40);
+  const saSpace = expandParamSpace(SA_SPACE);
   const maxBars = 5000;
   const useScen = {
     swing: document.getElementById('bt-scen-swing').checked,
@@ -3791,7 +3877,7 @@ async function runSaOptimization() {
 
   const t0 = Date.now();
   const fullP = (base) => ({ riskPct: PAPER_PARAMS.riskPct/100, trailBias: PAPER_PARAMS.trailBias,
-    ...Object.fromEntries(Object.keys(SA_SPACE).map(k => [k, base[k] ?? PAPER_PARAMS[k]])),
+    ...Object.fromEntries(Object.keys(saSpace).map(k => [k, base[k] ?? PAPER_PARAMS[k]])),
     partialPct: (base.partialPct ?? PAPER_PARAMS.partialPct)/100 });
 
   const log = (msg) => { progText.innerHTML = msg; };
@@ -3799,7 +3885,7 @@ async function runSaOptimization() {
   try {
     // ── Baseline: parametri live attuali ──────────────────
     log('Baseline con parametri live attuali...');
-    const baseParams = Object.fromEntries(Object.keys(SA_SPACE).map(k => [k, PAPER_PARAMS[k]]));
+    const baseParams = Object.fromEntries(Object.keys(saSpace).map(k => [k, PAPER_PARAMS[k]]));
     const baseSt  = await evalCombined(fullP(baseParams));
     let current = { ...baseParams };
     let currentObj = saObjective(baseSt);
@@ -3811,7 +3897,7 @@ async function runSaOptimization() {
     // ── Loop SA ───────────────────────────────────────────
     for (let k = 0; k < iters; k++) {
       const temp = 1 - k / iters;             // temperatura lineare 1 → 0
-      const cand = saNeighbor(current, temp);
+      const cand = saNeighbor(current, temp, saSpace);
       const st   = await evalCombined(fullP(cand));
       const obj  = saObjective(st);
 
@@ -3835,7 +3921,7 @@ async function runSaOptimization() {
     const improved = bestObj > currentObj*0 && bestPnl > basePnl && bestPf >= 1.05 && (bestSt?.n||0) >= 10;
 
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55;margin-bottom:10px">
-      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s${includeScalp?' · gamba ⚡Scalp 1M inclusa':''}</div>
+      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s · ${spaceSummary(saSpace)}${includeScalp?' · gamba ⚡Scalp 1M inclusa':''}</div>
       ${scalpSkipped?`<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:7px;padding:7px;margin-bottom:8px;color:#f0b429;font-size:11px">⚠️ Scalp richiesto ma dati 1M assenti — ottimizzazione eseguita senza. Scarica il "1M profondo".</div>`:''}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
         <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live attuali)</div>
@@ -3885,6 +3971,24 @@ const SCEN_SA_COMMON_SPACE = {
   trailRR:    { min:0.4, max:1.6, step:0.1 },
   partialPct: { min:10,  max:70, step:5   },
 };
+function getScenSaParamSpace(scen) {
+  const raw = SCEN_SA_PARAM_SPACE[scen];
+  const exp = expandParamSpace({ [raw.thr.key]:raw.thr, [raw.trail.key]:raw.trail });
+  return { thr:{ key:raw.thr.key, ...exp[raw.thr.key] }, trail:{ key:raw.trail.key, ...exp[raw.trail.key] } };
+}
+function getScenSaCommonSpace() {
+  return expandParamSpace(SCEN_SA_COMMON_SPACE);
+}
+function getScenOptSpace(scen) {
+  const raw = Object.fromEntries(SCEN_OPT_SPACE[scen].map(p => [p.key, p]));
+  const exp = expandParamSpace(raw);
+  return SCEN_OPT_SPACE[scen].map(p => ({ ...p, ...exp[p.key] }));
+}
+function getScenOptCommon() {
+  const raw = Object.fromEntries(SCEN_OPT_COMMON.map(p => [p.key, p]));
+  const exp = expandParamSpace(raw);
+  return SCEN_OPT_COMMON.map(p => ({ ...p, ...exp[p.key] }));
+}
 
 async function runScenSA(scen) {
   if (btRunning) return;
@@ -3896,9 +4000,10 @@ async function runScenSA(scen) {
   progCard.style.display='block'; resEl.innerHTML='';
 
   const M = SCEN_META[scen];
-  const PS = SCEN_SA_PARAM_SPACE[scen];
+  const PS = getScenSaParamSpace(scen);
+  const COMMON_SPACE = getScenSaCommonSpace();
   const canWeights = scen !== 'bias'; // bias non ha pesi interni
-  const iters = Math.max(5, Math.min(300, parseInt(document.getElementById('scen-sa-iters')?.value, 10) || (scen === 'scalp' ? 40 : 60))); // scelto da UI
+  const iters = getOptIters('scen-sa-iters', scen === 'scalp' ? 40 : 60); // scelto da UI
   const maxBars = M.mode === '1m' ? 60000 : 5000;
   const useScen = { swing:false, trend:false, bias:false, scalp:false }; useScen[scen] = true;
   const t0 = Date.now();
@@ -3907,14 +4012,14 @@ async function runScenSA(scen) {
   const liveState = () => ({
     thr: PAPER_PARAMS[PS.thr.key],
     trail: PAPER_PARAMS[PS.trail.key],
-    common: Object.fromEntries(Object.keys(SCEN_SA_COMMON_SPACE).map(k => [k, PAPER_PARAMS[k]])),
+    common: Object.fromEntries(Object.keys(COMMON_SPACE).map(k => [k, PAPER_PARAMS[k]])),
     w: canWeights ? { ...SCORE_WEIGHTS[scen] } : null,
   });
   const snap = (v,s) => Math.round(v/s)*s;
-  const W_VALS = [0, 0.5, 0.75, 1, 1.25, 1.5, 2];
+  const W_VALS = getWeightValues();
   const neighbor = (st, temp) => {
     const n = { thr: st.thr, trail: st.trail, common: { ...(st.common || {}) }, w: st.w ? { ...st.w } : null };
-    const dims = ['thr','trail', ...Object.keys(SCEN_SA_COMMON_SPACE).map(k=>'common:'+k), ...(canWeights ? WEIGHT_GROUPS : [])];
+    const dims = ['thr','trail', ...Object.keys(COMMON_SPACE).map(k=>'common:'+k), ...(canWeights ? WEIGHT_GROUPS : [])];
     const k = 1 + (Math.random() < temp ? 1 : 0);
     for (let x=0; x<k; x++) {
       const d = dims[Math.floor(Math.random()*dims.length)];
@@ -3926,7 +4031,7 @@ async function runScenSA(scen) {
         n.trail = +Math.min(PS.trail.max, Math.max(PS.trail.min, snap(n.trail + (Math.random()<0.5?-amp:amp), PS.trail.step))).toFixed(2);
       } else if (d.startsWith('common:')) {
         const key = d.slice(7);
-        const sp = SCEN_SA_COMMON_SPACE[key];
+        const sp = COMMON_SPACE[key];
         const amp = Math.max(1, Math.round(3*temp)) * sp.step;
         const raw = (n.common[key] ?? PAPER_PARAMS[key]) + (Math.random()<0.5?-amp:amp);
         n.common[key] = +Math.min(sp.max, Math.max(sp.min, snap(raw, sp.step))).toFixed(3);
@@ -3985,7 +4090,7 @@ async function runScenSA(scen) {
     saveOptResult(scen, 'sa', improved ? bestSt : baseSt);
     const stLine = (st)=> st ? `${st.n} trade · WR ${st.wr}% · PF ${st.pf} · DD ${st.maxDD}%` : 'nessun trade';
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55">
-      <div style="color:${M.color};font-weight:800;font-size:15px;margin-bottom:8px">🔥 Annealing ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato + parametri comuni)</div>
+      <div style="color:${M.color};font-weight:800;font-size:15px;margin-bottom:8px">🔥 Annealing ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s · ${spaceSummary({[PS.thr.key]:PS.thr,[PS.trail.key]:PS.trail,...COMMON_SPACE})} (scenario isolato + parametri comuni)</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
         <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live)</div>
           <div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(baseSt)}</div>
@@ -3995,7 +4100,7 @@ async function runScenSA(scen) {
           <div style="color:${finPnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${bestSt?bestSt.pnl:0}</div></div>
       </div>
       <div style="color:#c0cce0;font-size:12px;margin-bottom:4px">Soglia: <b style="color:${best.thr!==liveState().thr?'#f0b429':'#f0f4fa'}">${best.thr}</b> · Trail: <b style="color:${best.trail!==liveState().trail?'#f0b429':'#f0f4fa'}">${best.trail}×</b>
-        <br>Comuni: ${Object.keys(SCEN_SA_COMMON_SPACE).map(k=>`${k}=<b style="color:${best.common?.[k]!==liveState().common?.[k]?'#f0b429':'#f0f4fa'}">${best.common?.[k]}</b>`).join(' · ')}
+        <br>Comuni: ${Object.keys(COMMON_SPACE).map(k=>`${k}=<b style="color:${best.common?.[k]!==liveState().common?.[k]?'#f0b429':'#f0f4fa'}">${best.common?.[k]}</b>`).join(' · ')}
         ${best.w?'<br>Pesi: '+WEIGHT_GROUPS.map(g=>`${g}×${best.w[g]??1}`).join(' · '):''}</div>`;
     if (improved) {
       const allUpdates = { ...(best.common || {}), [PS.thr.key]: best.thr, [PS.trail.key]: best.trail };
@@ -4157,7 +4262,7 @@ async function runScenOptimization() {
   progCard.style.display='block'; resEl.innerHTML='';
 
   const scen = document.getElementById('scen-opt-target').value;
-  const space = [...SCEN_OPT_SPACE[scen], ...SCEN_OPT_COMMON];
+  const space = [...getScenOptSpace(scen), ...getScenOptCommon()];
   const maxBars = 5000;
   const btMode = scen === 'scalp' ? '1m' : '1h';
   // Scenario ISOLATO: attribuzione pulita dei risultati al solo scenario in esame
@@ -4452,7 +4557,7 @@ async function runSanityCheck() {
 
 // ── OTTIMIZZAZIONE PESI INTERNI dello scoring, per scenario ──
 const WEIGHT_GROUPS = ['macro','mtf','adx','rsi','pivot','pullback','specific','sess'];
-const WEIGHT_VALUES = [0, 0.5, 0.75, 1, 1.25, 1.5, 2];
+const WEIGHT_VALUES_BASE = [0, 0.5, 0.75, 1, 1.25, 1.5, 2];
 
 async function runWeightOptimization() {
   if (btRunning) return;
@@ -4472,7 +4577,8 @@ async function runWeightOptimization() {
   useScen[scen] = true;
   const scenNames = { swing:'📊 Swing', trend:'📈 Trend', scalp:'⚡ Scalp (1M)' };
 
-  const totalRuns = 1 + WEIGHT_GROUPS.length * WEIGHT_VALUES.length + 1;
+  const weightValues = getWeightValues();
+  const totalRuns = 1 + WEIGHT_GROUPS.length * weightValues.length + 1;
   let runCount = 0;
   const t0 = Date.now();
   const baseP = () => {
@@ -4500,7 +4606,7 @@ async function runWeightOptimization() {
     const perGroup = [];
     for (const g of WEIGHT_GROUPS) {
       let bestV = current[g] ?? 1, bestPnl = -Infinity, rows = [];
-      for (const v of WEIGHT_VALUES) {
+      for (const v of weightValues) {
         await tick(`${g} = ${v}`);
         const res = await btRun(btMode, maxBars, useScen,
           { ...baseP(), weights: mkWeights({ ...current, [g]: v }) }, null);
