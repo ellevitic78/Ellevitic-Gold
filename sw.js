@@ -1,5 +1,5 @@
 // ── XAU/USD Analyzer — Service Worker v5 (Full Auto) ─────────
-const CACHE = 'xauapp-v7';
+const CACHE = 'xauapp-v8-ledger';
 const ASSETS = ['index.html', 'manifest.json', 'icon-192.png', 'icon-72.png'];
 
 self.addEventListener('install', e => {
@@ -41,9 +41,12 @@ let openTrade    = null;
 let openTrades = {};
 let paperCapital = 10000;
 let paperTrades  = [];
+let paperParams  = { spread: 0.04, slippage: 0.02, partialPct: 15, beRR: 0.4, trailRR: 0.4 };
 let lastCheckTs  = 0;
+let paperCapitalPeak = 10000;
 
 const SPREAD       = 0.04;
+const SLIPPAGE     = 0.02;
 const RISK_PCT     = 0.01;
 const LEVERAGE     = 100;
 const MAX_POS_PCT  = 0.05;
@@ -52,6 +55,42 @@ const MIN_SCORE    = 62; // conservativo in background    // soglia minima per e
 const COOL_TRADE   = 15 * 60 * 1000; // 15 min in background // 5 min cooldown tra trade
 let lastTradeTs    = 0;
 const COOL_ALERT   = 15 * 60 * 1000;
+
+function swSpread(t=null) {
+  const v = Number(t?.spread ?? paperParams?.spread ?? SPREAD);
+  return Number.isFinite(v) && v >= 0 ? v : SPREAD;
+}
+function swSlippage(t=null) {
+  const v = Number(t?.slippage ?? paperParams?.slippage ?? SLIPPAGE);
+  return Number.isFinite(v) && v >= 0 ? v : SLIPPAGE;
+}
+function entryFill(rawPrice, dir, spread=swSpread(), slippage=swSlippage()) {
+  return dir === 'BUY'
+    ? +(rawPrice + spread/2 + slippage).toFixed(2)
+    : +(rawPrice - spread/2 - slippage).toFixed(2);
+}
+function exitFill(rawPrice, dir, spread=swSpread(), slippage=swSlippage()) {
+  return dir === 'BUY'
+    ? +(rawPrice - spread/2 - slippage).toFixed(2)
+    : +(rawPrice + spread/2 + slippage).toFixed(2);
+}
+function xauMarketOpen(ref=new Date()) {
+  const d = ref instanceof Date ? ref : new Date(ref);
+  if (Number.isNaN(d.getTime())) return true;
+  const day = d.getUTCDay();
+  const min = d.getUTCHours()*60 + d.getUTCMinutes();
+  if (day === 6) return false;
+  if (day === 0 && min < 22*60 + 10) return false;
+  if (day === 5 && min >= 21*60 + 55) return false;
+  return true;
+}
+function initialRiskDistance(t) {
+  return Math.abs((t.entry ?? 0) - (t.slInitial ?? t.slOrig ?? t.initialSL ?? t.sl ?? 0)) || 1;
+}
+function syncLegacyOpen() {
+  const vals = Object.values(openTrades || {}).filter(Boolean);
+  openTrade = vals[0] || null;
+}
 
 // ── Message handler ───────────────────────────────────────────
 self.addEventListener('message', async e => {
@@ -62,9 +101,12 @@ self.addEventListener('message', async e => {
     alertCfg   = d.config || {};
     paperEnabled = d.paperEnabled || false;
     paperCapital = d.paperCapital || 10000;
+    paperCapitalPeak = Math.max(paperCapitalPeak, paperCapital);
     paperTrades  = d.paperTrades  || [];
+    paperParams  = { ...paperParams, ...(d.paperParams || {}) };
     openTrade    = d.openTrade    || null;
     openTrades   = d.openTrades   || (d.openTrade ? {[(d.openTrade.scenario||'swing')]: d.openTrade} : {});
+    syncLegacyOpen();
     if (bgInterval) clearInterval(bgInterval);
     if (tradeTimer) clearInterval(tradeTimer);
     setTimeout(() => runAll(), 2000);
@@ -86,28 +128,40 @@ self.addEventListener('message', async e => {
     if (d.paperEnabled !== undefined) paperEnabled = d.paperEnabled;
     if (d.openTrade !== undefined)    openTrade    = d.openTrade;
     if (d.openTrades !== undefined)   openTrades   = d.openTrades;
-    if (d.paperCapital !== undefined) paperCapital = d.paperCapital;
+    if (d.paperCapital !== undefined) { paperCapital = d.paperCapital; paperCapitalPeak = Math.max(paperCapitalPeak, paperCapital); }
+    if (d.paperParams) paperParams = { ...paperParams, ...d.paperParams };
+    syncLegacyOpen();
   }
 
   if (d.type === 'PAPER_TRADE_OPEN') {
-    openTrade    = d.trade;
+    if (d.openTrades) openTrades = d.openTrades;
+    if (d.trade) openTrades[d.trade.scenario || 'swing'] = d.trade;
+    syncLegacyOpen();
+    if (d.paperParams) paperParams = { ...paperParams, ...d.paperParams };
     paperCapital = d.capital || paperCapital;
+    paperCapitalPeak = Math.max(paperCapitalPeak, paperCapital);
     if (d.tdKey) tdKey = d.tdKey;
     if (!tradeTimer) tradeTimer = setInterval(() => monitorTrade(), 30000);
     setTimeout(() => monitorTrade(), 2000);
   }
 
   if (d.type === 'PAPER_TRADE_CLOSED') {
-    openTrade = null;
-    if (d.capital) paperCapital = d.capital;
+    if (d.trade?.scenario && openTrades) delete openTrades[d.trade.scenario];
+    syncLegacyOpen();
+    if (d.capital) { paperCapital = d.capital; paperCapitalPeak = Math.max(paperCapitalPeak, paperCapital); }
     if (d.trades)  paperTrades  = d.trades;
   }
 
   if (d.type === 'PAPER_STATE_SYNC') {
     paperEnabled = d.paperEnabled ?? paperEnabled;
     paperCapital = d.paperCapital ?? paperCapital;
+    paperCapitalPeak = Math.max(paperCapitalPeak, paperCapital);
     paperTrades  = d.paperTrades  ?? paperTrades;
+    paperParams  = { ...paperParams, ...(d.paperParams || {}) };
+    openTrades   = d.openTrades ?? openTrades;
     openTrade    = d.openTrade    ?? openTrade;
+    if (openTrade && !openTrades[openTrade.scenario || 'swing']) openTrades[openTrade.scenario || 'swing'] = openTrade;
+    syncLegacyOpen();
   }
 
   if (d.type === 'PING') {
@@ -368,21 +422,20 @@ function calcLotSize(capital, entry, sl) {
 }
 
 async function tryAutoEntry(scoring) {
-  if (!paperEnabled || openTrade) return;
+  // Background legacy scorer usa uno slot proprio: non blocca scalp/swing/trend già aperti,
+  // ma non apre più di un trade nello stesso scenario auto-bg.
+  if (!paperEnabled || (openTrades && openTrades['auto-bg'])) return;
   if (Date.now() - lastTradeTs < COOL_TRADE) return;
 
-  const dd = (10000 - paperCapital) / 10000; // stima DD
+  const dd = paperCapitalPeak > 0 ? (paperCapitalPeak - paperCapital) / paperCapitalPeak : 0; // DD da picco equity
   if (dd >= MAX_DD) { paperEnabled = false; return; }
 
   const { bestDir, bestScore, price, atr1h } = scoring;
   if (bestDir === 'WAIT' || bestScore < MIN_SCORE) return;
-  // Weekend gap guard
-  const wd = new Date(), day = wd.getUTCDay(), hh = wd.getUTCHours();
-  if ((day===5 && hh>=20) || day===6 || (day===0 && hh<22)) return;
+  // Guard sessione XAU: no entry su weekend/pre-gap.
+  if (!xauMarketOpen(new Date())) return;
 
-  const entry = bestDir === 'BUY'
-    ? +(price + SPREAD/2).toFixed(2)
-    : +(price - SPREAD/2).toFixed(2);
+  const entry = entryFill(price, bestDir);
   const sl  = bestDir === 'BUY' ? +(entry - atr1h*1.5).toFixed(2) : +(entry + atr1h*1.5).toFixed(2);
   const risk = Math.abs(entry - sl);
   const tp1 = bestDir === 'BUY' ? +(entry + risk*1.5).toFixed(2) : +(entry - risk*1.5).toFixed(2);
@@ -391,13 +444,14 @@ async function tryAutoEntry(scoring) {
   const riskEur = +(Math.abs(entry-sl)*lots*100).toFixed(2);
 
   openTrade = {
-    id: Date.now(), direction: bestDir, entry, sl, tp1, tp2, lots, riskEur,
+    id: Date.now(), direction: bestDir, entry, sl, slInitial: sl, slOrig: sl, tp1, tp1Initial: tp1, tp2, tp2Initial: tp2, lots, lotsInitial: lots, riskEur,
     confidence: bestScore, openedAt: new Date().toISOString(),
-    capitalAtOpen: paperCapital, spread: SPREAD, atrAtEntry: atr1h,
+    capitalAtOpen: paperCapital, capitalBefore: paperCapital, spread: swSpread(), slippage: swSlippage(), atrAtEntry: atr1h,
     scenario: 'auto-bg', pattern: `BG Score ${bestScore}`,
     managementLog: [], breakEvenSet: false, trailingActive: false,
-    maxFavorable: entry, trailMult: 1.5, warnThresh: 6,
+    maxFavorable: entry, trailMult: 1.5, warnThresh: 6, partialPnl: 0,
   };
+  openTrades[openTrade.scenario || 'auto-bg'] = openTrade;
   lastTradeTs = Date.now();
 
   // Notifica app
@@ -454,18 +508,28 @@ async function monitorTrade() {
   if (!closed && dir==='BUY'  && price >= t.tp2) { closed=true; exitReason='TP2'; exitPrice=t.tp2; }
   if (!closed && dir==='SELL' && price <= t.tp2) { closed=true; exitReason='TP2'; exitPrice=t.tp2; }
   if (!closed && !t.partialDone && ((dir==='BUY' && price >= t.tp1) || (dir==='SELL' && price <= t.tp1))) {
-    const halfLots = +(t.lots/2).toFixed(2);
-    const exitHalf = dir==='BUY' ? +(t.tp1-SPREAD/2).toFixed(2) : +(t.tp1+SPREAD/2).toFixed(2);
+    const pct = Math.max(0, Math.min(100, Number(paperParams.partialPct ?? 50))) / 100;
+    const halfLots = Math.min(t.lots, +(t.lots*pct).toFixed(2));
+    const exitHalf = exitFill(t.tp1, dir, swSpread(t), swSlippage(t));
     const pnlHalf  = +((dir==='BUY'?exitHalf-t.entry:t.entry-exitHalf)*halfLots*100).toFixed(2);
+    const capBeforePartial = paperCapital;
     paperCapital = +(paperCapital + pnlHalf).toFixed(2);
+    paperCapitalPeak = Math.max(paperCapitalPeak, paperCapital);
     t.lots = +(t.lots - halfLots).toFixed(2);
-    t.partialDone = true; t.partialPnl = pnlHalf;
-    const beSL = dir==='BUY' ? +(t.entry+SPREAD).toFixed(2) : +(t.entry-SPREAD).toFixed(2);
+    t.partialDone = true;
+    t.partialClosed = true;
+    t.partialClosedAt = new Date().toISOString();
+    t.partialLots = halfLots;
+    t.partialExitPrice = exitHalf;
+    t.partialCapitalBefore = capBeforePartial;
+    t.partialCapitalAfter = paperCapital;
+    t.partialPnl = pnlHalf;
+    const beSL = dir==='BUY' ? +(t.entry+swSpread(t)).toFixed(2) : +(t.entry-swSpread(t)).toFixed(2);
     if ((dir==='BUY'&&beSL>t.sl)||(dir==='SELL'&&beSL<t.sl)) t.sl = beSL;
     t.breakEvenSet = true;
-    logAction(`TP1 parziale 50%: +€${pnlHalf} · SL→BE`);
+    logAction(`TP1 parziale ${Math.round(pct*100)}%: +€${pnlHalf} · SL→BE`);
     notifyClients({ type:'BG_TRADE_UPDATE', trade:t, price, profRR, ts:Date.now() });
-    await self.registration.showNotification('🎯 TP1 — 50% incassato [BG]', {
+    await self.registration.showNotification(`🎯 TP1 — ${Math.round(pct*100)}% incassato [BG]`, {
       body:`+€${pnlHalf} · Resto corre a TP2 $${t.tp2.toFixed(2)}`,
       icon:'/icon-192.png', tag:'paper-partial', vibrate:[200,100,200],
     });
@@ -473,12 +537,12 @@ async function monitorTrade() {
 
   if (!closed) {
     // Breakeven
-    if (!t.breakEvenSet && profRR >= 0.7) {
+    if (!t.breakEvenSet && profRR >= Number(paperParams.beRR ?? 0.7)) {
       const newSL = dir==='BUY' ? +(t.entry + atr*0.5).toFixed(2) : +(t.entry - atr*0.5).toFixed(2);
       if ((dir==='BUY'&&newSL>t.sl)||(dir==='SELL'&&newSL<t.sl)) {
         const old=t.sl; t.sl=newSL; t.breakEvenSet=true;
         logAction(`BE: SL $${old.toFixed(2)} → $${newSL.toFixed(2)}`);
-        notifyClients({ type:'BG_UPDATE_SL', newSL, breakEvenSet:true, trailingActive:false, action:t.managementLog.slice(-1)[0]?.action, price, ts:Date.now() });
+        notifyClients({ type:'BG_UPDATE_SL', newSL, breakEvenSet:true, trailingActive:false, action:t.managementLog.slice(-1)[0]?.action, price, scenario:t.scenario, tradeId:t.id, ts:Date.now() });
         await self.registration.showNotification('📍 Breakeven impostato', {
           body: `${dir} · SL → $${newSL.toFixed(2)} · Profitto: +${profRR.toFixed(2)}R`,
           icon:'/icon-192.png', tag:'paper-be', vibrate:[200,100,200],
@@ -487,7 +551,7 @@ async function monitorTrade() {
     }
 
     // Trailing
-    if (profRR >= 1.0) {
+    if (profRR >= Number(paperParams.trailRR ?? 1.0)) {
       t.trailingActive = true;
       const trailDist = atr * trailMult;
       const trailSL   = dir==='BUY' ? +(t.maxFavorable-trailDist).toFixed(2) : +(t.maxFavorable+trailDist).toFixed(2);
@@ -495,7 +559,7 @@ async function monitorTrade() {
         const old=t.sl, moved=Math.abs(trailSL-old);
         t.sl=trailSL;
         logAction(`Trail x${trailMult}: SL $${old.toFixed(2)} → $${trailSL.toFixed(2)}`);
-        notifyClients({ type:'BG_UPDATE_SL', newSL:trailSL, breakEvenSet:t.breakEvenSet, trailingActive:true, action:t.managementLog.slice(-1)[0]?.action, price, ts:Date.now() });
+        notifyClients({ type:'BG_UPDATE_SL', newSL:trailSL, breakEvenSet:t.breakEvenSet, trailingActive:true, action:t.managementLog.slice(-1)[0]?.action, price, scenario:t.scenario, tradeId:t.id, ts:Date.now() });
         if (moved > atr*0.5) {
           await self.registration.showNotification('📍 Trailing aggiornato', {
             body: `${dir} · SL $${old.toFixed(2)} → $${trailSL.toFixed(2)} · ${profRR.toFixed(1)}R`,
@@ -505,34 +569,57 @@ async function monitorTrade() {
       }
     }
 
-    openTrade = t;
+    openTrades[t.scenario || 'swing'] = t;
+    syncLegacyOpen();
     notifyClients({ type:'BG_TRADE_UPDATE', trade:t, price, profRR, ts:Date.now() });
-    return;
+    continue;
   }
 
   // ── Chiudi trade ──────────────────────────────────────────
-  const exitSpread = dir==='BUY' ? +(exitPrice-SPREAD/2).toFixed(2) : +(exitPrice+SPREAD/2).toFixed(2);
+  const exitSpread = exitFill(exitPrice, dir, swSpread(t), swSlippage(t));
   const pnlPts = dir==='BUY' ? exitSpread-t.entry : t.entry-exitSpread;
   const pnlEur = +(pnlPts*t.lots*100).toFixed(2);
-  const isWin  = pnlEur > 0;
+  const pnlTotal = +(pnlEur + (t.partialPnl || 0)).toFixed(2);
+  const isWin  = pnlTotal > 0;
+  const capitalBeforeClose = paperCapital;
 
   paperCapital = +(paperCapital + pnlEur).toFixed(2);
 
+  paperCapitalPeak = Math.max(paperCapitalPeak, paperCapital);
+
+  const riskInitial = initialRiskDistance(t);
+  const riskEurInitial = t.riskEur || +(riskInitial * (t.lotsInitial ?? t.lots) * 100).toFixed(2);
+  const standaloneAfter = +((t.capitalBefore ?? t.capitalAtOpen ?? 0) + pnlTotal).toFixed(2);
   const closedTrade = {
-    ...t, exitPrice:exitSpread, exitReason, pnlEur, isWin,
-    closedAt: new Date().toISOString(), capitalAfter: paperCapital,
-    rr: +(pnlPts/Math.abs(t.entry-t.sl||1)).toFixed(2),
+    ...t,
+    exitPrice:exitSpread,
+    exitReason: (exitReason === 'SL' && t.breakEvenSet) ? 'SL_BE' : exitReason,
+    pnlEur,
+    finalPnl: pnlEur,
+    pnlTotal,
+    isWin,
+    closedAt: new Date().toISOString(),
+    capitalBeforeClose,
+    capitalAfter: paperCapital,
+    portfolioCapitalAfter: paperCapital,
+    standaloneCapitalAfter: standaloneAfter,
+    reconciliationDelta: +(paperCapital - standaloneAfter).toFixed(2),
+    slFinal: t.sl,
+    tp2Final: t.tp2,
+    rrFinal: +(pnlPts/riskInitial).toFixed(2),
+    rr: +(pnlTotal/(riskEurInitial || 1)).toFixed(2),
   };
   paperTrades.unshift(closedTrade);
   if (paperTrades.length > 100) paperTrades.pop();
-  openTrade = null;
+  if (openTrades) delete openTrades[(closedTrade.scenario) || 'swing'];
+  syncLegacyOpen();
   lastTradeTs = Date.now();
 
   notifyClients({ type:'BG_TRADE_CLOSED', trade:closedTrade, capital:paperCapital, trades:paperTrades, ts:Date.now() });
 
   const emoji = isWin?'✅':exitReason==='SL'?'❌':'➖';
   await self.registration.showNotification(`${emoji} Trade ${exitReason} — ${dir}`, {
-    body: `${pnlEur>=0?'+':''}€${pnlEur.toFixed(2)} · Capitale: €${paperCapital.toFixed(0)} · ${profRR.toFixed(2)}R`,
+    body: `${pnlTotal>=0?'+':''}€${pnlTotal.toFixed(2)} · Capitale: €${paperCapital.toFixed(0)} · ${profRR.toFixed(2)}R`,
     icon:'/icon-192.png', tag:'paper-bg-exit', vibrate:[300,100,300,100,300], requireInteraction:true,
   });
   console.log('[SW] Trade chiuso:', exitReason, pnlEur);
@@ -552,6 +639,7 @@ async function runAll() {
     notifyClients({ type:'BG_UPDATE', price, rsi:rsiNow, ts:Date.now() });
 
     // Paper trading: rivalutazione trade aperto O nuovo entry
+    syncLegacyOpen();
     if (openTrade) {
       // Rivalutazione basata su scoring: se consenso invertito chiudi
       const tradeDir = openTrade.direction;
