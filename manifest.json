@@ -1,18 +1,35 @@
 {
-  "name": "XAU/USD Analyzer",
-  "short_name": "Gold AI",
-  "description": "Analisi tecnica live XAU/USD con segnali MTF, scalping e anticipatori macro",
-  "start_url": "./",
+  "name": "XAU/USD Analyzer v8.1 evidente",
+  "short_name": "XAU v8.1",
+  "description": "XAU/USD Analyzer — v8.1 evidente, annealing esplorativo, cache aggiornata.",
+  "start_url": "./?v=8.1-evidente",
   "scope": "./",
   "display": "standalone",
   "background_color": "#080b10",
   "theme_color": "#f0b429",
   "orientation": "portrait",
   "icons": [
-    { "src": "icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any maskable" },
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ],
-  "categories": ["finance"],
+  "categories": [
+    "finance"
+  ],
   "lang": "it"
 }

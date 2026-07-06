@@ -1,5 +1,5 @@
-// ── XAU/USD Analyzer — Service Worker v7 pages-fix (Live Scenari + Snapshot Parametri) ─────────
-const CACHE = 'xauapp-v12-live-scenarios-v8-explore';
+// ── XAU/USD Analyzer — Service Worker v8.1 evidente (Live Scenari + Annealing Esplorativo) ─────────
+const CACHE = 'xauapp-v13-live-scenarios-v8-1-evidente';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-72.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
