@@ -428,10 +428,6 @@ button{cursor:pointer}
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
       <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px">
         <span style="color:#c0cce0;font-size:13px">Barre 1H da testare</span>
-        <label style="display:flex;align-items:center;gap:5px;background:#141920;border-radius:7px;padding:6px 9px;cursor:pointer;margin-right:6px">
-          <input type="checkbox" id="bt-fixedrisk" checked style="width:15px;height:15px;accent-color:#3b82f6"/>
-          <span style="color:#c0cce0;font-size:11px;font-weight:700">Rischio fisso<br><span style="color:#94a3b8;font-weight:400;font-size:9px">P&L additivi tra scenari</span></span>
-        </label>
         <select id="bt-bars" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
           <option value="500">500</option>
           <option value="1500">1.500</option>
@@ -3273,10 +3269,8 @@ function btGetParams() {
     const v = el ? parseFloat(el.value) : NaN;
     return isNaN(v) ? dflt : v;
   };
-  const _fx = document.getElementById('bt-fixedrisk');
   const D = PAPER_PARAMS;
   return {
-    fixedRisk: !!(_fx && _fx.checked),
     riskPct:    gv('btp-risk', D.riskPct) / 100,
     minConf:    gv('btp-minconf', D.minConf),
     thrSwing:   gv('btp-thr-swing', D.thrSwing),
@@ -3469,10 +3463,9 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
             const best = { scen:s.id, dir:bDir, score:es.score, setup:es.setup };
             {
             const setup = best.setup;
-            const sizeBase = P.fixedRisk ? START_CAP : capital; // rischio fisso: P&L additivi, niente esplosione da compounding
-            const riskEur = sizeBase * P.riskPct;
+            const riskEur = capital * P.riskPct;
             const slDist  = Math.abs(setup.entry - setup.sl);
-            const lots = slDist ? Math.max(0.01, +Math.min(riskEur/(slDist*100), (sizeBase*0.05)/((setup.entry/100)*100)).toFixed(2)) : 0.01;
+            const lots = slDist ? Math.max(0.01, +Math.min(riskEur/(slDist*100), (capital*0.05)/((setup.entry/100)*100)).toFixed(2)) : 0.01;
             const atrNow = (isScalp ? full5m : fullBase)[i]?.atr || 15;
             slots[best.scen] = {
               direction: best.dir,
@@ -3558,12 +3551,7 @@ async function runBacktest() {
       }
       if (!any1h && !has1m) throw new Error('Nessuno scenario selezionato (o dati 1M assenti per Scalp)');
       const st = btStats(trades, startCap);
-      const period = trades.length
-        ? { from: trades.reduce((a,t)=>a<t.openedAt?a:t.openedAt, trades[0].openedAt),
-            to:   trades.reduce((a,t)=>a>t.closedAt?a:t.closedAt, trades[0].closedAt) }
-        : { from: new Date().toISOString(), to: new Date().toISOString() };
-      state.btResults = { trades, startCap, endCap: startCap + (st?.pnl||0), period,
-        mode: has1m && any1h ? '1h+1m' : (has1m ? '1m' : '1h') };
+      state.btResults = { trades, startCap, endCap: startCap + (st?.pnl||0), mode: has1m && any1h ? '1h+1m' : (has1m ? '1m' : '1h') };
     }
     progBar.style.width='100%';
     progText.textContent = `Completato: ${state.btResults.trades.length} trade`;
@@ -3791,7 +3779,7 @@ async function runScenSA(scen) {
   const evalState = async (st) => {
     const base = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
     const P = { ...base, [PS.thr.key]: st.thr, [PS.trail.key]: st.trail,
-      riskPct: base.riskPct/100, partialPct: base.partialPct/100, fixedRisk: true };
+      riskPct: base.riskPct/100, partialPct: base.partialPct/100 };
     if (st.w) P.weights = { [scen]: st.w };
     const res = await btRun(M.mode, maxBars, useScen, P, null);
     return btStats(res.trades, res.startCap);
@@ -3902,7 +3890,7 @@ async function scenQuickBacktest(scen) {
     const useScen = { swing:false, trend:false, bias:false, scalp:false }; useScen[scen] = true;
     const P = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
     const res = await btRun(M.mode, M.mode==='1m'?60000:5000, useScen,
-      { ...P, riskPct:P.riskPct/100, partialPct:P.partialPct/100, fixedRisk:true }, null);
+      { ...P, riskPct:P.riskPct/100, partialPct:P.partialPct/100 }, null);
     const st = btStats(res.trades, res.startCap);
     progBar.style.width='100%'; progText.textContent = `Backtest ${M.label} completato.`;
     saveOptResult(scen, 'backtest', st);
@@ -4521,9 +4509,8 @@ function renderBtResults() {
   const scenNames = { swing:'📊 Swing', trend:'📈 Trend', bias:'⏰ Bias', scalp:'⚡ Scalp' };
   const pnlCol = tot.pnl >= 0 ? '#22c55e' : '#ef4444';
   const retPct = ((endCap - startCap) / startCap * 100).toFixed(1);
-  const dualNote = mode === '1h+1m' ? `<div style="background:#3b82f615;border:1px solid #3b82f633;border-radius:7px;padding:7px;margin-bottom:8px;color:#94a3b8;font-size:10px">ℹ️ Doppia gamba: 1H e Scalp 1M girano su capitali separati da €10k ciascuno. Con <b>Rischio fisso</b> i P&L sono additivi e confrontabili; col compounding il totale non è un portafoglio unico.</div>` : '';
 
-  let html = `<div class="card" style="border:2px solid ${pnlCol}44;margin-bottom:10px">${dualNote}
+  let html = `<div class="card" style="border:2px solid ${pnlCol}44;margin-bottom:10px">
     <div style="color:#3b82f6;font-weight:800;font-size:15px;margin-bottom:2px">🧪 Risultato Backtest ${mode==='5m'?'· ⚡ 5M Scalp':''}</div>
     <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">${new Date(period.from).toLocaleDateString('it-IT')} → ${new Date(period.to).toLocaleDateString('it-IT')}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:6px">
