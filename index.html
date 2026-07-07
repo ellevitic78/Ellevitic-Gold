@@ -465,7 +465,7 @@ button{cursor:pointer}
       </label>
       <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Iterazioni annealing/scenario</div><input id="scen-sa-iters" type="number" value="160" min="20" max="3000" step="20" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
       <button onclick="clearOptResults()" style="background:#ef444420;border:1px solid #ef444444;color:#ef4444;border-radius:7px;padding:8px 10px;font-size:11px;font-weight:800">🧹 Azzera risultati</button>
-      <div style="grid-column:1/-1;color:#94a3b8;font-size:10px;line-height:1.4">Le ottimizzazioni usano <b>tutte le barre normalizzate</b> dalla data scelta in avanti. Prima del run, se attivo, l'app controlla 1D/1H/5M/1M e integra automaticamente le candele mancanti. Intra-SA usa spazio largo stabile: soglie 30–95, trailing più ampio, minConf/BE/trail trigger/parziale e pesi 0–3×.</div>
+      <div style="grid-column:1/-1;color:#94a3b8;font-size:10px;line-height:1.4">Le ottimizzazioni usano <b>tutte le barre normalizzate</b> dalla data scelta in avanti. Prima del run, se attivo, l'app controlla 1D/1H/5M/1M e integra automaticamente le candele mancanti. Intra-SA usa spazio largo stabile: soglie 30–95, trailing più ampio, minConf/BE/trail trigger/parziale e pesi 0–3×. Ogni miglioramento affidabile viene salvato progressivamente come checkpoint locale, anche se la simulazione non arriva alla fine.</div>
     </div>
     <div id="opt-hub"></div>
     <div id="scenario-hidden-controls" style="display:none">
@@ -483,11 +483,24 @@ button{cursor:pointer}
     <div style="color:#22c55e;font-size:16px;font-weight:900;margin-bottom:4px">🧪 Backtest GENERALE — solo test, nessuna ottimizzazione</div>
     <div style="color:#c0cce0;font-size:12px;line-height:1.5;margin-bottom:10px">
       Simula il sistema complessivo sul passato usando i parametri live correnti.
-      Questa sezione <b>non ottimizza nulla</b>: serve solo a validare gli scenari con verifica coerente: Swing su 5M, Trend/Bias su 1H, Scalp su 1M.
+      Questa sezione <b>non ottimizza nulla</b>: serve solo a validare gli scenari dalla data scelta, con verifica coerente: Swing su 5M, Trend/Bias su 1H, Scalp su 1M.
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#141920;border-radius:7px;padding:8px 10px">
+        <label style="display:flex;flex-direction:column;gap:3px">
+          <span style="color:#c0cce0;font-size:13px">Data inizio backtest generale</span>
+          <input id="bt-start-date" type="date" onchange="saveBtGeneralSettings()" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:6px 8px;font-size:13px"/>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:3px">
+          <span style="color:#c0cce0;font-size:13px">Preparazione dati</span>
+          <span style="display:flex;align-items:center;gap:7px;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:7px 8px;color:#c0cce0;font-size:12px;font-weight:700">
+            <input id="bt-auto-sync" type="checkbox" checked onchange="saveBtGeneralSettings()" style="width:15px;height:15px;accent-color:#22c55e"/> Integra mancanti prima del test
+          </span>
+        </label>
+        <div style="grid-column:1/-1;color:#94a3b8;font-size:10px;line-height:1.4">Il Generale usa tutte le barre normalizzate dalla data scelta. Il limite barre sotto resta un fallback se svuoti la data.</div>
+      </div>
       <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px">
-        <span style="color:#c0cce0;font-size:13px">Barre da testare per timeframe operativo</span>
+        <span style="color:#c0cce0;font-size:13px">Limite barre fallback</span>
         <select id="bt-bars" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
           <option value="500">500</option>
           <option value="1500">1.500</option>
@@ -610,7 +623,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-const APP_VERSION = '8.8.0-wide-annealing-space';
+const APP_VERSION = '8.9.0-general-start-checkpoint-fast';
 // ══ STORAGE ══════════════════════════════════════════════════
 const LS = {
   get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch{return null;} },
@@ -3201,6 +3214,13 @@ function handleSwMessageCore(e) {
 // ══ BACKTEST ENGINE — stesso scoring, parametri configurabili ═
 let btRunning = false;
 
+const BT_ENRICH_CACHE = new Map();
+function btSeriesSignature(candles) {
+  if (!Array.isArray(candles) || !candles.length) return 'empty';
+  const a = candles[0]?.t || '';
+  const b = candles[candles.length-1]?.t || '';
+  return `${candles.length}|${a}|${b}`;
+}
 function btEnrich(candles) {
   const closes = candles.map(cd => cd.c);
   const rsiA  = calcRSI(closes);
@@ -3215,6 +3235,15 @@ function btEnrich(candles) {
   const atrA = calcATR(base);
   base.forEach((cd, i) => cd.atr = atrA[i]);
   return base;
+}
+function btEnrichCached(candles, key='series') {
+  const sig = key + '|' + btSeriesSignature(candles);
+  const hit = BT_ENRICH_CACHE.get(sig);
+  if (hit) return hit;
+  const enriched = btEnrich(candles || []);
+  BT_ENRICH_CACHE.set(sig, enriched);
+  if (BT_ENRICH_CACHE.size > 24) BT_ENRICH_CACHE.delete(BT_ENRICH_CACHE.keys().next().value);
+  return enriched;
 }
 
 function btAggregate(cc, hours) {
@@ -3238,13 +3267,24 @@ function btAggregate(cc, hours) {
   return out;
 }
 
-function btSliceByTime(candles, t) {
-  let hi = candles.length;
-  for (let i = candles.length-1; i >= 0; i--) {
-    if (new Date(candles[i].t) <= t) { hi = i+1; break; }
-    if (i === 0) hi = 0;
+function btIndexByTime(candles, t) {
+  if (!Array.isArray(candles) || !candles.length) return 0;
+  const target = t instanceof Date ? t.getTime() : new Date(t).getTime();
+  let lo = 0, hi = candles.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    const mt = candles[mid].t instanceof Date ? candles[mid].t.getTime() : new Date(candles[mid].t).getTime();
+    if (mt <= target) lo = mid + 1;
+    else hi = mid;
   }
-  return candles.slice(0, hi);
+  return lo;
+}
+function btSliceByTime(candles, t) {
+  return (candles || []).slice(0, btIndexByTime(candles, t));
+}
+function btTailByTime(candles, t, n) {
+  const hi = btIndexByTime(candles, t);
+  return (candles || []).slice(Math.max(0, hi - n), hi);
 }
 
 // Legge i parametri dalla UI (con default = valori live del paper)
@@ -3321,7 +3361,37 @@ function optAutoSyncEnabled() {
   const chk = document.getElementById('opt-auto-sync');
   return chk ? !!chk.checked : true;
 }
-function scenarioOptimizationBars() { return Number.MAX_SAFE_INTEGER; }
+function scenarioOptimizationBars() { return Infinity; }
+function btGeneralStartDateDefault() { return histDateInputDefault(); }
+function syncBtGeneralSettingsInputs() {
+  const el = document.getElementById('bt-start-date');
+  const savedRaw = localStorage.getItem('xauapp_bt_start_date');
+  const savedDate = savedRaw === null ? btGeneralStartDateDefault() : savedRaw;
+  if (el && !el.value && savedDate) el.value = savedDate;
+  const chk = document.getElementById('bt-auto-sync');
+  const savedAuto = localStorage.getItem('xauapp_bt_auto_sync');
+  if (chk && savedAuto !== null) chk.checked = savedAuto !== '0';
+}
+function saveBtGeneralSettings() {
+  const el = document.getElementById('bt-start-date');
+  const chk = document.getElementById('bt-auto-sync');
+  try {
+    if (el) localStorage.setItem('xauapp_bt_start_date', el.value || '');
+    if (chk) localStorage.setItem('xauapp_bt_auto_sync', chk.checked ? '1' : '0');
+  } catch(e) {}
+}
+function btGetStartDate() {
+  syncBtGeneralSettingsInputs();
+  const el = document.getElementById('bt-start-date');
+  const d = el?.value || '';
+  try { localStorage.setItem('xauapp_bt_start_date', d); } catch(e) {}
+  return d || null;
+}
+function btGeneralAutoSyncEnabled() {
+  syncBtGeneralSettingsInputs();
+  const chk = document.getElementById('bt-auto-sync');
+  return chk ? !!chk.checked : true;
+}
 function btTs(cd) {
   if (!cd?.t) return NaN;
   return new Date(String(cd.t).replace(' ', 'T') + (String(cd.t).includes('Z') ? '' : 'Z')).getTime();
@@ -3401,6 +3471,50 @@ async function ensureOptimizationData(startDate, progressText=null, progressBar=
   }
 }
 
+async function ensureBacktestData(startDate, progressText=null, progressBar=null) {
+  if (!startDate || !btGeneralAutoSyncEnabled()) return { skipped:true };
+  if (histDownloading) throw new Error('Download dati già in corso: attendi la fine o disattiva auto-sync del backtest.');
+  histDownloading = true;
+  const pageSize = Math.max(100, Math.min(5000, parseInt(document.getElementById('hist-sync-page-size')?.value, 10) || 5000));
+  const maxPages = Math.max(1, Math.min(500, parseInt(document.getElementById('hist-sync-max-pages')?.value, 10) || 120));
+  const delayMs = parseInt(document.getElementById('hist-delay')?.value, 10) || 8000;
+  const jobs = HIST_CORE_JOBS;
+  let ok=0, warn=0, fail=0;
+  try {
+    for (let i=0; i<jobs.length; i++) {
+      const job = jobs[i];
+      if (progressBar) progressBar.style.width = Math.round(i/jobs.length*15) + '%';
+      if (progressText) progressText.textContent = `📥 Pre-backtest: normalizzo ${job.interval} da ${startDate}...`;
+      const existing = await histLoad(job.key);
+      const before = existing?.candles?.length || 0;
+      const coverage = histCoverageStatus(existing, startDate, job);
+      if (coverage.ok) {
+        ok++;
+        if (progressText) progressText.textContent = `✅ ${job.interval}: già coperto (${coverage.count} barre, ${coverage.first} → ${coverage.last})`;
+        continue;
+      }
+      try {
+        if (progressText) progressText.textContent = `📥 ${job.interval}: ${coverage.reason}, scarico mancanti...`;
+        const fetched = await histFetchBackwardsToStart(job, startDate, pageSize, maxPages, delayMs);
+        const payload = histMergePayload(job, existing, fetched.candles, startDate);
+        const saved = await histSave(job.key, payload);
+        if (!saved) { fail++; continue; }
+        const added = Math.max(0, payload.count - before);
+        if (!fetched.reachedStart) warn++; else ok++;
+        if (progressText) progressText.textContent = `📥 ${job.interval}: ${payload.count} barre normalizzate (+${added})`;
+      } catch(e) { fail++; if (progressText) progressText.textContent = `⚠️ ${job.interval}: ${e.message}`; }
+      if (i < jobs.length-1) await new Promise(r => setTimeout(r, delayMs));
+    }
+    if (progressBar) progressBar.style.width = '15%';
+    if (fail) throw new Error(`Auto-sync dati backtest incompleto: ${fail} errori, ${warn} avvisi.`);
+    if (progressText) progressText.textContent = `✅ Dataset backtest normalizzato da ${startDate}: ${ok} ok · ${warn} avvisi`;
+    return { ok, warn, fail };
+  } finally {
+    histDownloading = false;
+    try { renderHistSavedList(); } catch(e) {}
+  }
+}
+
 // ── Core: esegue un backtest e ritorna i risultati (no UI) ────
 async function btRun(mode, maxBars, useScen, P, onProgress) {
   const is1m = mode === '1m';
@@ -3418,7 +3532,7 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
     src = src.slice(a, b);
   }
   if (src.length < 80) throw new Error(`Storico ${is1m?'XAU 1M':is5m?'XAU 5M':'XAU 1H'} insufficiente${startDate?' da '+startDate:''}: ${src.length} barre.`);
-  const fullBase = btEnrich(src); // timeframe operativo: 1M scalp, 5M swing, 1H trend/bias
+  const fullBase = btEnrichCached(src, seriesKey + '_exec'); // timeframe operativo: 1M scalp, 5M swing, 1H trend/bias
 
   // Contesto multi-timeframe reale: la verifica resta sul timeframe operativo,
   // ma lo scoring può leggere gli altri TF normalizzati se disponibili.
@@ -3431,10 +3545,10 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
   ]);
 
   let full1mArr = is1m ? fullBase : [];
-  let full5m = is5m ? fullBase : (raw5m?.candles?.length ? btEnrich(raw5m.candles) : []);
-  let full1h = mode === '1h' ? fullBase : (raw1h?.candles?.length ? btEnrich(raw1h.candles) : btEnrich(btAggregate(src, 1)));
-  let full4h = raw4h?.candles?.length ? btEnrich(raw4h.candles) : btEnrich(btAggregate((raw1h?.candles?.length ? raw1h.candles : src), 4));
-  let full1d = raw1d?.candles?.length ? btEnrich(raw1d.candles) : btEnrich(btAggregate((raw1h?.candles?.length ? raw1h.candles : src), 24));
+  let full5m = is5m ? fullBase : (raw5m?.candles?.length ? btEnrichCached(raw5m.candles, 'xauusd_5m_ctx') : []);
+  let full1h = mode === '1h' ? fullBase : (raw1h?.candles?.length ? btEnrichCached(raw1h.candles, 'xauusd_1h_ctx') : btEnrichCached(btAggregate(src, 1), seriesKey + '_agg1h'));
+  let full4h = raw4h?.candles?.length ? btEnrichCached(raw4h.candles, 'xauusd_4h_ctx') : btEnrichCached(btAggregate((raw1h?.candles?.length ? raw1h.candles : src), 4), seriesKey + '_agg4h');
+  let full1d = raw1d?.candles?.length ? btEnrichCached(raw1d.candles, 'xauusd_1d_ctx') : btEnrichCached(btAggregate((raw1h?.candles?.length ? raw1h.candles : src), 24), seriesKey + '_agg1d');
 
   if (is1m && !full5m.length) {
     const agg5 = [];
@@ -3446,14 +3560,14 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
       else{b.h=Math.max(b.h,cd.h);b.l=Math.min(b.l,cd.l);b.c=cd.c;b.vol+=cd.vol||0;}
     }
     if(b)agg5.push(b);
-    full5m = btEnrich(agg5);
+    full5m = btEnrichCached(agg5, seriesKey + '_agg5m');
   }
 
   const corrKey = isIntradayFast ? 'eurusd_5m' : 'eurusd_1h';
   const tnxKey  = isIntradayFast ? 'tnx_5m'    : 'tnx_1h';
   const eurRaw = await histLoad(corrKey), tnxRaw = await histLoad(tnxKey);
-  const fullEur = eurRaw?.candles?.length ? btEnrich(btLastCandles(eurRaw.candles, maxBars)) : [];
-  const fullTnx = tnxRaw?.candles?.length ? btEnrich(btLastCandles(tnxRaw.candles, maxBars)) : [];
+  const fullEur = eurRaw?.candles?.length ? btEnrichCached(btLastCandles(eurRaw.candles, maxBars), corrKey + '_corr') : [];
+  const fullTnx = tnxRaw?.candles?.length ? btEnrichCached(btLastCandles(tnxRaw.candles, maxBars), tnxKey + '_corr') : [];
 
   const backup = {
     candles: state.candles, candles4h: state.candles4h,
@@ -3547,18 +3661,18 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
         state.btNow = cd.t;
         if (is1m) {
           const s1m = fullBase.slice(Math.max(0, i-119), i+1);
-          state.candles = { '1m': s1m, '5m': btSliceByTime(full5m, t).slice(-80), '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
+          state.candles = { '1m': s1m, '5m': btTailByTime(full5m, t, 80), '1h': btTailByTime(full1h, t, 120), '1d': btTailByTime(full1d, t, 35) };
         } else if (is5m) {
           const s5m = fullBase.slice(Math.max(0, i-119), i+1);
-          state.candles = { '5m': s5m, '1m': [], '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
+          state.candles = { '5m': s5m, '1m': [], '1h': btTailByTime(full1h, t, 120), '1d': btTailByTime(full1d, t, 35) };
         } else {
-          state.candles = { '1h': fullBase.slice(Math.max(0, i-119), i+1), '5m': [], '1m': [], '1d': btSliceByTime(full1d, t).slice(-35) };
+          state.candles = { '1h': fullBase.slice(Math.max(0, i-119), i+1), '5m': [], '1m': [], '1d': btTailByTime(full1d, t, 35) };
         }
-        state.candles4h = btSliceByTime(full4h, t).slice(-60);
+        state.candles4h = btTailByTime(full4h, t, 60);
         state.pivots = calcPivots(state.candles['1d']);
         state.corrData = {
-          dxy: btSliceByTime(fullEur, t).slice(-60), dxyInverted: true,
-          us10y: btSliceByTime(fullTnx, t).slice(-60),
+          dxy: btTailByTime(fullEur, t, 60), dxyInverted: true,
+          us10y: btTailByTime(fullTnx, t, 60),
         };
 
         let recap = null;
@@ -3613,28 +3727,31 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
   }
 
   return { trades, startCap: START_CAP, endCap: capital,
-           period: { from: fullBase[warmup]?.t, to: fullBase[fullBase.length-1]?.t }, mode, optStartDate: startDate || null };
+           period: { from: fullBase[warmup]?.t, to: fullBase[fullBase.length-1]?.t },
+           mode, optStartDate: startDate || null,
+           barsUsed: fullBase.length, evalBars: Math.max(0, fullBase.length - warmup) };
 }
 
 // ── Run singolo con UI ─────────────────────────────────────────
 function btScenarioJobs(selected, maxBars) {
-  const n = Math.max(1, parseInt(maxBars, 10) || 5000);
+  const unlimited = !Number.isFinite(maxBars);
+  const n = unlimited ? Infinity : Math.max(1, parseInt(maxBars, 10) || 5000);
   const jobs = [];
   if (selected.trend || selected.bias) {
     jobs.push({
-      mode: '1h', label: 'Trend/Bias 1H', bars: Math.min(n, 5000),
+      mode: '1h', label: 'Trend/Bias 1H', bars: unlimited ? Infinity : Math.min(n, 5000),
       use: { swing:false, trend:!!selected.trend, bias:!!selected.bias, scalp:false }
     });
   }
   if (selected.swing) {
     jobs.push({
-      mode: '5m', label: 'Swing 5M', bars: Math.min(n, 250000),
+      mode: '5m', label: 'Swing 5M', bars: unlimited ? Infinity : Math.min(n, 250000),
       use: { swing:true, trend:false, bias:false, scalp:false }
     });
   }
   if (selected.scalp) {
     jobs.push({
-      mode: '1m', label: 'Scalp 1M', bars: Math.max(5000, Math.min(n, 250000)),
+      mode: '1m', label: 'Scalp 1M', bars: unlimited ? Infinity : Math.max(5000, Math.min(n, 250000)),
       use: { swing:false, trend:false, bias:false, scalp:true }
     });
   }
@@ -3656,14 +3773,14 @@ async function btRunScenarioBundle(maxBars, selected, P, onProgress) {
       }
     });
     trades = [...trades, ...res.trades];
-    periods.push(res.period);
+    periods.push({ ...res.period, label: job.label, mode: job.mode, barsUsed: res.barsUsed, evalBars: res.evalBars, trades: res.trades.length });
   }
   trades.sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
   const st = btStats(trades, startCap);
   const period = periods.length
     ? { from: periods.map(p=>p.from).filter(Boolean).sort()[0], to: periods.map(p=>p.to).filter(Boolean).sort().slice(-1)[0] }
     : { from: new Date().toISOString(), to: new Date().toISOString() };
-  return { trades, startCap, endCap: startCap + (st?.pnl||0), period, mode: jobs.map(j=>j.mode).join('+'), jobs };
+  return { trades, startCap, endCap: startCap + (st?.pnl||0), period, mode: jobs.map(j=>j.mode).join('+'), jobs, jobPeriods: periods };
 }
 
 // ── Run singolo con UI ─────────────────────────────────────────
@@ -3678,8 +3795,10 @@ async function runBacktest() {
   btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Backtest...';
   progCard.style.display='block'; resEl.innerHTML='';
 
+  syncBtGeneralSettingsInputs();
   const mode = document.getElementById('bt-mode').value;
-  const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
+  const btStartDate = btGetStartDate();
+  const maxBars = btStartDate ? Infinity : parseInt(document.getElementById('bt-bars').value, 10);
   const selected = {
     swing: !!document.getElementById('bt-scen-swing')?.checked,
     trend: !!document.getElementById('bt-scen-trend')?.checked,
@@ -3688,33 +3807,36 @@ async function runBacktest() {
   };
 
   try {
-    const P = btGetParams();
+    if (btStartDate) await ensureBacktestData(btStartDate, progText, progBar);
+    const P = btStartDate ? { ...btGetParams(), _startDate: btStartDate } : btGetParams();
     if (mode === 'auto') {
       state.btResults = await btRunScenarioBundle(maxBars, selected, P, (pct, label, n, cap) => {
         progBar.style.width = pct + '%';
         progText.textContent = `${label} · ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
       });
     } else if (mode === '5m') {
-      const res = await btRun('5m', Math.min(maxBars, 250000), { scalp:false, swing:true, trend:false, bias:false }, P, (pct, n, cap) => {
+      const res = await btRun('5m', btStartDate ? Infinity : Math.min(maxBars, 250000), { scalp:false, swing:true, trend:false, bias:false }, P, (pct, n, cap) => {
         progBar.style.width = pct + '%';
         progText.textContent = `Swing 5M ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
       });
-      state.btResults = { ...res, jobs:[{mode:'5m', label:'Swing 5M'}] };
+      state.btResults = { ...res, jobs:[{mode:'5m', label:'Swing 5M'}], jobPeriods:[{...res.period, label:'Swing 5M', mode:'5m', barsUsed:res.barsUsed, evalBars:res.evalBars, trades:res.trades.length}] };
     } else if (mode === '1m') {
-      const res = await btRun('1m', Math.max(5000, Math.min(maxBars, 250000)), { scalp:true, swing:false, trend:false, bias:false }, P, (pct, n, cap) => {
+      const res = await btRun('1m', btStartDate ? Infinity : Math.max(5000, Math.min(maxBars, 250000)), { scalp:true, swing:false, trend:false, bias:false }, P, (pct, n, cap) => {
         progBar.style.width = pct + '%';
         progText.textContent = `Scalp 1M ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
       });
-      state.btResults = { ...res, jobs:[{mode:'1m', label:'Scalp 1M'}] };
+      state.btResults = { ...res, jobs:[{mode:'1m', label:'Scalp 1M'}], jobPeriods:[{...res.period, label:'Scalp 1M', mode:'1m', barsUsed:res.barsUsed, evalBars:res.evalBars, trades:res.trades.length}] };
     } else {
-      const res = await btRun('1h', Math.min(maxBars, 5000), { swing:false, trend:selected.trend, bias:selected.bias, scalp:false }, P, (pct, n, cap) => {
+      const res = await btRun('1h', btStartDate ? Infinity : Math.min(maxBars, 5000), { swing:false, trend:selected.trend, bias:selected.bias, scalp:false }, P, (pct, n, cap) => {
         progBar.style.width = pct + '%';
         progText.textContent = `Trend/Bias 1H ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
       });
-      state.btResults = { ...res, jobs:[{mode:'1h', label:'Trend/Bias 1H'}] };
+      state.btResults = { ...res, jobs:[{mode:'1h', label:'Trend/Bias 1H'}], jobPeriods:[{...res.period, label:'Trend/Bias 1H', mode:'1h', barsUsed:res.barsUsed, evalBars:res.evalBars, trades:res.trades.length}] };
     }
+    state.btResults.btStartDate = btStartDate || null;
+    state.btResults.verifyRule = 'scalp=1m;swing=5m;trend=1h;bias=1h';
     progBar.style.width='100%';
-    progText.textContent = `Completato: ${state.btResults.trades.length} trade`;
+    progText.textContent = `Completato: ${state.btResults.trades.length} trade${btStartDate?' · da '+btStartDate:''}`;
     renderBtResults();
   } catch(e) {
     progText.textContent = '❌ ' + e.message;
@@ -3999,6 +4121,8 @@ async function runScenSA(scen) {
     const baseSt = await evalState(cur);
     let curObj = obj(baseSt);
     let best = JSON.parse(JSON.stringify(cur)), bestSt = baseSt, bestObj = curObj;
+    let lastCheckpointPnl = baseSt ? baseSt.pnl : -Infinity;
+    let lastCheckpointTs = 0;
 
     for (let k = 0; k < iters; k++) {
       const temp = saTemperature(k, iters);
@@ -4006,7 +4130,16 @@ async function runScenSA(scen) {
       const st = await evalState(cand);
       const o = obj(st);
       if (o > curObj || Math.random() < Math.exp((o-curObj)/(temp*SCEN_SA_ACCEPT_SCALE+1))) { cur = cand; curObj = o; }
-      if (o > bestObj) { best = JSON.parse(JSON.stringify(cand)); bestSt = st; bestObj = o; }
+      if (o > bestObj) {
+        best = JSON.parse(JSON.stringify(cand)); bestSt = st; bestObj = o;
+        const nowTs = Date.now();
+        if (isReliableImprovement(bestSt, baseSt) && (bestSt.pnl > lastCheckpointPnl) && (nowTs - lastCheckpointTs > 1500)) {
+          const cpParams = { ...PAPER_PARAMS, [PS.thr.key]: best.thr, [PS.trail.key]: best.trail,
+            minConf: best.minConf, beRR: best.beRR, trailRR: best.trailRR, partialPct: best.partialPct };
+          saveOptCheckpoint(scen, 'sa', bestSt, { params: cpParams, weights: best.w || liveState().w, optStartDate, note:`Intra-SA iter ${k+1}/${iters}` });
+          lastCheckpointPnl = bestSt.pnl; lastCheckpointTs = nowTs;
+        }
+      }
       const el = (Date.now()-t0)/1000;
       const eta = el/(k+1)*(iters-k-1);
       progBar.style.width = Math.round((k+1)/iters*100)+'%';
@@ -4102,6 +4235,7 @@ function saveOptResult(scen, source, st, snapshot=null) {
     weights: clonePlain(snap.weights || (scen ? SCORE_WEIGHTS[scen] : {})),
     optStartDate: snap.optStartDate || snap.params?._startDate || '',
     applied: !!snap.applied,
+    checkpoint: !!snap.checkpoint,
     note: snap.note || '',
   };
   const all = loadOptResults();
@@ -4114,6 +4248,30 @@ function saveOptResult(scen, source, st, snapshot=null) {
   if (isBetterScenarioRecord(rec, state[scen].best)) state[scen].best = rec;
   state[scen].lastParams = rec.params;
   if (rec.applied) state[scen].lastAppliedParams = rec.params;
+  saveScenarioOptState(state);
+  renderOptHub();
+}
+function optPfNum(st) { return st ? (st.pf === '∞' ? 999 : parseFloat(st.pf || 0)) : 0; }
+function isReliableImprovement(st, baseSt, minTrades=10) {
+  if (!st || !baseSt) return false;
+  return st.pnl > baseSt.pnl && optPfNum(st) >= 1.05 && (st.n || 0) >= minTrades;
+}
+function saveOptCheckpoint(scen, source, st, snapshot=null) {
+  if (!st) return;
+  const snap = { ...(snapshot || {}), applied:false, checkpoint:true,
+    note: ((snapshot?.note || source) + ' · checkpoint progressivo: salvato durante simulazione non necessariamente completa') };
+  saveOptResult(scen, source, st, snap);
+}
+function applyOptBest(scen) {
+  const state = loadScenarioOptState();
+  const rec = state?.[scen]?.best;
+  if (!rec?.params) { alert('Nessun miglior risultato locale da applicare.'); return; }
+  savePaperParams(rec.params);
+  if (scen !== 'bias' && rec.weights) saveScoreWeights(scen, rec.weights);
+  rec.applied = true;
+  rec.note = (rec.note || '') + ' · applicato manualmente dal miglior risultato locale';
+  state[scen].best = rec;
+  state[scen].lastAppliedParams = rec.params;
   saveScenarioOptState(state);
   renderOptHub();
 }
@@ -4171,7 +4329,7 @@ function renderOptHub() {
   const optState = loadScenarioOptState();
   const results = Object.fromEntries(['swing','trend','scalp','bias'].map(k => [k, optState[k]?.last || legacyResults[k]]));
   const bestResults = Object.fromEntries(['swing','trend','scalp','bias'].map(k => [k, optState[k]?.best || legacyResults[k]]));
-  const srcLabel = { backtest:'🧪 backtest', scenopt:'🎯 parametri', weights:'🧬 pesi', sa:'🔥 intra-SA', csv:'📥 CSV' };
+  const srcLabel = { backtest:'🧪 backtest', scenopt:'🎯 parametri', weights:'🧬 pesi', sa:'🔥 intra-SA', checkpoint:'💾 checkpoint', csv:'📥 CSV' };
   let html = '';
   for (const scen of ['swing','trend','scalp','bias']) {
     const M = SCEN_META[scen];
@@ -4213,7 +4371,8 @@ function renderOptHub() {
         ${r.note ? `<div style="color:#64748b;font-size:9px;margin-top:3px">${r.note}</div>` : ''}
       </div>` : `<div style="color:#64748b;font-size:11px;margin-bottom:7px">Nessun risultato registrato — lancia un backtest o l'annealing intrascenario.</div>`}
       ${best ? `<div style="background:#101722;border:1px solid #22c55e33;border-radius:7px;padding:7px;margin-bottom:7px">
-        <div style="color:#22c55e;font-size:10px;font-weight:800">🏆 MIGLIOR RISULTATO LOCALE</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><div style="color:#22c55e;font-size:10px;font-weight:800">🏆 MIGLIOR RISULTATO LOCALE${best.checkpoint?' · checkpoint':''}</div>
+        <button onclick="applyOptBest('${scen}')" style="background:#22c55e20;border:1px solid #22c55e44;color:#22c55e;border-radius:5px;padding:3px 7px;font-size:9px;font-weight:800">Applica</button></div>
         <div style="color:#c0cce0;font-size:11px;margin-top:2px">${srcLabel[best.source]||best.source}${best.optStartDate?' · da '+best.optStartDate:''} · ${best.n} trade · WR ${best.wr}% · PF ${best.pf} · DD ${best.dd}% <span style="color:${best.pnl>=0?'#22c55e':'#ef4444'};font-weight:900">€${best.pnl}</span></div>
       </div>` : ''}
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr;gap:5px">
@@ -4304,6 +4463,9 @@ async function runScenOptimization() {
         if (pnl > bestPnl && (st?.n||0) >= 5 && pfN >= 0.9) { bestPnl = pnl; bestV = vv; bestSt = st; }
       }
       current[p.key] = bestV; // fissa e passa al parametro successivo
+      if (isReliableImprovement(bestSt, baseSt)) {
+        saveOptCheckpoint(scen, 'scenopt', bestSt, { params: paramsFor(current), weights: SCORE_WEIGHTS[scen], optStartDate, note:`parametri checkpoint dopo ${p.label}` });
+      }
       perParam.push({ p, rows, bestV });
     }
 
@@ -4600,7 +4762,7 @@ async function runWeightOptimization() {
     delete current._v;
     const perGroup = [];
     for (const g of WEIGHT_GROUPS) {
-      let bestV = current[g] ?? 1, bestPnl = -Infinity, rows = [];
+      let bestV = current[g] ?? 1, bestPnl = -Infinity, bestSt = null, rows = [];
       for (const v of WEIGHT_VALUES) {
         await tick(`${g} = ${v}`);
         const res = await btRun(btMode, maxBars, useScen,
@@ -4609,9 +4771,12 @@ async function runWeightOptimization() {
         rows.push({ v, st });
         const pnl = st ? st.pnl : -Infinity;
         const pfN = st ? (st.pf==='∞'?10:parseFloat(st.pf)) : 0;
-        if (pnl > bestPnl && (st?.n||0) >= 5 && pfN >= 0.9) { bestPnl = pnl; bestV = v; }
+        if (pnl > bestPnl && (st?.n||0) >= 5 && pfN >= 0.9) { bestPnl = pnl; bestV = v; bestSt = st; }
       }
       current[g] = bestV;
+      if (isReliableImprovement(bestSt, baseSt)) {
+        saveOptCheckpoint(scen, 'weights', bestSt, { params: baseP(), weights: current, optStartDate, note:`pesi checkpoint dopo ${g}` });
+      }
       perGroup.push({ g, rows, bestV });
     }
 
@@ -4778,7 +4943,7 @@ function btStats(trades, startCap) {
 function renderBtResults() {
   const el = document.getElementById('bt-results');
   if (!el || !state.btResults) return;
-  const { trades, startCap, endCap, period, mode } = state.btResults;
+  const { trades, startCap, endCap, period, mode, jobPeriods, btStartDate } = state.btResults;
 
   if (!trades.length) {
     el.innerHTML = '<div class="card" style="color:#f0b429;font-size:13px;text-align:center;padding:16px">Nessun trade generato — soglie mai superate nel periodo. Prova ad abbassare le soglie nei Parametri o allargare il periodo.</div>';
@@ -4794,13 +4959,25 @@ function renderBtResults() {
 
   let html = `<div class="card" style="border:2px solid ${pnlCol}44;margin-bottom:10px">
     <div style="color:#3b82f6;font-weight:800;font-size:15px;margin-bottom:2px">🧪 Risultato Backtest · ${mode || 'auto'} · verifica scenario-TF</div>
-    <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">${new Date(period.from).toLocaleDateString('it-IT')} → ${new Date(period.to).toLocaleDateString('it-IT')}</div>
+    <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">${btStartDate?'Da '+btStartDate+' · ':''}${new Date(period.from).toLocaleDateString('it-IT')} → ${new Date(period.to).toLocaleDateString('it-IT')}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:6px">
       <div style="background:#141920;border-radius:7px;padding:8px;text-align:center"><div style="color:#94a3b8;font-size:10px">P&L</div><div style="color:${pnlCol};font-size:16px;font-weight:900">${tot.pnl>=0?'+':''}€${tot.pnl}</div><div style="color:#94a3b8;font-size:9px">${retPct}%</div></div>
       <div style="background:#141920;border-radius:7px;padding:8px;text-align:center"><div style="color:#94a3b8;font-size:10px">Win Rate</div><div style="color:${tot.wr>=50?'#22c55e':'#f0b429'};font-size:16px;font-weight:900">${tot.wr}%</div><div style="color:#94a3b8;font-size:9px">${tot.n} trade</div></div>
       <div style="background:#141920;border-radius:7px;padding:8px;text-align:center"><div style="color:#94a3b8;font-size:10px">Profit Factor</div><div style="color:${parseFloat(tot.pf)>=1.5?'#22c55e':parseFloat(tot.pf)>=1?'#f0b429':'#ef4444'};font-size:16px;font-weight:900">${tot.pf}</div><div style="color:#94a3b8;font-size:9px">DD max ${tot.maxDD}%</div></div>
     </div>
   </div>`;
+
+  if (jobPeriods?.length) {
+    html += `<div class="card" style="margin-bottom:10px"><div style="color:#f0f4fa;font-weight:700;font-size:13px;margin-bottom:8px">Periodo e barre testate</div>`;
+    jobPeriods.forEach(j => {
+      const from = j.from ? new Date(j.from).toLocaleDateString('it-IT') : '–';
+      const to   = j.to ? new Date(j.to).toLocaleDateString('it-IT') : '–';
+      html += `<div style="display:grid;grid-template-columns:1.1fr 1fr .8fr .8fr;gap:4px;padding:5px 0;border-bottom:1px solid #1e2535;font-size:11px">
+        <div style="color:#c0cce0;font-weight:700">${j.label}</div><div style="color:#94a3b8">${from} → ${to}</div>
+        <div style="color:#94a3b8;text-align:right">${j.evalBars||j.barsUsed||0} barre</div><div style="color:#94a3b8;text-align:right">${j.trades||0} trade</div></div>`;
+    });
+    html += `<div style="color:#64748b;font-size:10px;margin-top:6px">Verifica: scalp=1M · swing=5M · trend/bias=1H. Il periodo globale sopra è l'unione dei periodi scenario.</div></div>`;
+  }
 
   html += '<div class="card" style="margin-bottom:10px"><div style="color:#f0f4fa;font-weight:700;font-size:13px;margin-bottom:8px">Per scenario</div>';
   Object.entries(byScen).forEach(([id, ts]) => {
@@ -4841,7 +5018,7 @@ function exportBtCsv() {
   const baseHead = ['openedAt','closedAt','scenario','execTf','bias','direction','entry','sl','tp1','tp2','lots','exitReason','exitPrice','partialPnl','pnlEur','pnlTotal','rr','confidence','capitalAfter'];
   const paramKeys = Object.keys(PAPER_PARAMS_DEFAULTS).filter(k=>k !== '_v');
   const weightKeys = WEIGHT_GROUPS.map(g => 'weight_'+g);
-  const metaHead = ['appVersion','snapshotSource','snapshotTs','btMode','paramScenario','verifyRule'];
+  const metaHead = ['appVersion','snapshotSource','snapshotTs','btMode','btStartDate','paramScenario','verifyRule'];
   const head = [...baseHead, ...metaHead, ...paramKeys.map(k=>'param_'+k), ...weightKeys];
   const rows = r.trades.map(t => {
     const snap = t.paramSnapshot || makeParamSnapshot(`backtest_${r.mode||''}`, t.scenario || '', null, null);
@@ -4852,6 +5029,7 @@ function exportBtCsv() {
       snapshotSource: snap.source || `backtest_${r.mode||''}`,
       snapshotTs: snap.ts || '',
       btMode: r.mode || '',
+      btStartDate: r.btStartDate || r.optStartDate || '',
       paramScenario: snap.scenario || t.scenario || '',
       verifyRule: 'scalp=1m;swing=5m;trend=1h;bias=1h',
     };
@@ -5358,6 +5536,8 @@ function renderDownloadScreen() {
 }
 
 function renderHistScreen() {
+  syncOptSettingsInputs();
+  syncBtGeneralSettingsInputs();
   setTimeout(renderOptHub, 50);
   syncParamInputs();
 }

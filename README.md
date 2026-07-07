@@ -45,7 +45,7 @@ App standalone per Android con dati live, analisi MTF, scalping e notifiche in b
 
 ## Versione inclusa
 
-Questa build è la **v8.7 opt-start-autosync**. Vedi `CHANGELOG_8.7.md` per data inizio ottimizzazione, uso di tutte le barre normalizzate dalla data scelta e auto-sync delle candele mancanti prima dei run scenario.
+Questa build è la **v8.9 general-start-checkpoint-fast**. Vedi `CHANGELOG_8.9.md` per data inizio Backtest Generale, checkpoint progressivi delle ottimizzazioni e accelerazioni del motore backtest senza scorciatoie sul risultato finale.
 
 ## Alert disponibili
 - 📍 Prezzo vicino a Pivot / R1 / S1
@@ -81,3 +81,12 @@ Se l'opzione di preparazione automatica è attiva, prima del run l'app controlla
 ## v8.8 — Wide Annealing Space
 
 L'annealing intrascenario ha ora uno spazio di ricerca stabilmente più ampio: soglie 30–95, trailing ATR più largo, pesi fino a 3× e ottimizzazione anche di minConf, BE trigger, trail trigger e parziale TP1. Il rischio percentuale resta escluso perché altererebbe il risultato principalmente tramite leva.
+
+
+## v8.9 — Backtest Generale per data, checkpoint e motore più veloce
+
+Il Backtest Generale ora può partire da una data dedicata e usa tutte le barre normalizzate disponibili da quella data in avanti, con dettaglio del periodo e delle barre realmente usate per Trend/Bias 1H, Swing 5M e Scalp 1M.
+
+Le ottimizzazioni scenario salvano checkpoint locali appena trovano un miglioramento affidabile, così un risultato utile non viene perso se il run non si completa. Dal hub scenario il miglior risultato locale può essere applicato manualmente.
+
+Per ridurre i tempi sono state aggiunte cache indicatori e ricerca binaria sui timestamp: non viene ridotto il rigore del backtest finale, ma vengono eliminati ricalcoli e scansioni inutili.
