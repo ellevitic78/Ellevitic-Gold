@@ -45,7 +45,7 @@ App standalone per Android con dati live, analisi MTF, scalping e notifiche in b
 
 ## Versione inclusa
 
-Questa build è la **v9.1 sound-costs-h24**. Vedi `CHANGELOG_9.1.md` per notifiche sonore, applicazione esplicita di spread/slippage e guida H24.
+Questa build è la **v9.3 15m-history**. Vedi `CHANGELOG_9.3.md` per il nuovo storico XAU/USD 15M lungo pensato per AsiaGapNN.
 
 ## Alert disponibili
 - 📍 Prezzo vicino a Pivot / R1 / S1
@@ -76,7 +76,7 @@ Le altre candele restano disponibili come contesto di scoring, ma entry, SL/TP, 
 
 Nel tab Backtest/Ottimizzazione è stata aggiunta una data di inizio dedicata alle ottimizzazioni. Test scenario, ottimizzazione parametri, ottimizzazione pesi, Intra-SA, Sweep e Sanity Check usano tutte le barre disponibili dalla data scelta in avanti.
 
-Se l'opzione di preparazione automatica è attiva, prima del run l'app controlla e integra le serie core XAU/USD 1D, 1H, 5M e 1M, con merge, deduplica e ordinamento cronologico. Il Backtest Generale rimane solo test e continua a non fare download automatici.
+Se l'opzione di preparazione automatica è attiva, prima del run l'app controlla e integra le serie core XAU/USD 1D, 1H, 15M, 5M e 1M, con merge, deduplica e ordinamento cronologico. Il Backtest Generale rimane solo test e continua a non fare download automatici.
 
 ## v8.8 — Wide Annealing Space
 
@@ -113,3 +113,48 @@ Il backtest applica anche filtro mercato XAU e anti-duplicazione tra scenari. Le
 - Spread e slippage sono applicati su entry, exit, TP1, TP2, SL, SL_BE e trailing.
 - CSV backtest ampliato con prezzi segnale/esecuzione e costi applicati.
 - Aggiunta guida `GUIDA_H24.md`.
+
+
+## v9.2 — Preset rapidi Scalp
+
+Nel tab **Backtest/Ottimizzazione** è disponibile il pannello **⚡ Preset rapidi Scalp**. Da lì puoi:
+
+- ripristinare in un click il preset **Scalp robusto** precedente;
+- tornare al preset base della app;
+- annullare l’ultimo preset applicato tramite backup locale;
+- esportare il preset Scalp attuale in JSON;
+- importare e applicare un preset JSON.
+
+Il preset Scalp robusto applica sia i parametri di esecuzione sia i pesi interni Scalp, perché il risultato non è riproducibile modificando solo soglia e trailing.
+
+
+## v9.3 — Storico 15M lungo per AsiaGapNN
+
+Nel tab **Download** è stato aggiunto XAU/USD **15M** tra le serie normalizzabili. Il 15M serve come timeframe intermedio per il futuro scenario **AsiaGapNN**: abbastanza lungo da costruire memoria storica America→Asia, ma meno pesante dell'1M.
+
+Sono disponibili due modalità:
+
+- checkbox **15M** nella normalizzazione da data di inizio;
+- pulsante **15M lungo** nel download legacy/emergenza, con più pagine storiche tramite `end_date`.
+
+Il 15M viene salvato come `xauusd_15m`, appare nella lista dati salvati ed è esportabile nel bundle storico JSON. Non modifica ancora Scalp/Swing/Trend: prepara il dataset per il nuovo scenario neurale.
+
+
+## v9.4 — AsiaGapNN
+
+La v9.4 aggiunge il primo scenario neurale **AsiaGapNN** per il forecasting del passaggio America→Asia.
+
+Nel tab **Backtest/Ottimizzazione** trovi il pannello **AsiaGapNN — rete neurale America→Asia**.
+
+Funzionalità principali:
+
+- costruzione dataset eventi America→Asia dai dati normalizzati;
+- uso di 1M per verifica, 15M per contesto intermedio, 1H/1D per regime;
+- due reti neurali piccole:
+  - GapNet per prevedere GAP_UP / FLAT / GAP_DOWN;
+  - ContinuationNet per prevedere CONTINUATION / FADE / NO_EDGE;
+- backtest walk-forward: ogni previsione usa solo dati precedenti;
+- ottimizzazione leggera degli iperparametri;
+- export CSV con una riga per evento.
+
+È volutamente forecast/backtest-only: prima si misura l'edge, poi eventualmente diventerà scenario operativo live.

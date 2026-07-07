@@ -355,7 +355,7 @@ button{cursor:pointer}
   <div class="card" style="border:2px solid #3b82f644;margin-bottom:10px">
     <div style="color:#3b82f6;font-size:20px;font-weight:900;margin-bottom:4px">📥 Download & normalizzazione dati</div>
     <div style="color:#c0cce0;font-size:13px;line-height:1.5">
-      Scegli una <b>data di inizio</b>: l'app scarica XAU/USD 1D, 1H, 5M e 1M da quella data, integra le candele mancanti, elimina duplicati e salva tutto ordinato in locale per il backtest.
+      Scegli una <b>data di inizio</b>: l'app scarica XAU/USD 1D, 1H, 15M, 5M e 1M da quella data, integra le candele mancanti, elimina duplicati e salva tutto ordinato in locale per il backtest e per i futuri modelli AsiaGapNN.
     </div>
   </div>
 
@@ -371,9 +371,10 @@ button{cursor:pointer}
         <input id="hist-sync-max-pages" type="number" value="120" min="1" max="500" step="1" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:7px;font-size:13px"/>
       </label>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:8px">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:8px">
       <label style="background:#141920;border-radius:7px;padding:7px;color:#c0cce0;font-size:12px;text-align:center"><input type="checkbox" id="hist-sync-1day" checked style="accent-color:#22c55e"/> 1D</label>
       <label style="background:#141920;border-radius:7px;padding:7px;color:#c0cce0;font-size:12px;text-align:center"><input type="checkbox" id="hist-sync-1h" checked style="accent-color:#22c55e"/> 1H</label>
+      <label style="background:#141920;border-radius:7px;padding:7px;color:#c0cce0;font-size:12px;text-align:center"><input type="checkbox" id="hist-sync-15min" checked style="accent-color:#22c55e"/> 15M</label>
       <label style="background:#141920;border-radius:7px;padding:7px;color:#c0cce0;font-size:12px;text-align:center"><input type="checkbox" id="hist-sync-5min" checked style="accent-color:#22c55e"/> 5M</label>
       <label style="background:#141920;border-radius:7px;padding:7px;color:#c0cce0;font-size:12px;text-align:center"><input type="checkbox" id="hist-sync-1min" checked style="accent-color:#22c55e"/> 1M</label>
     </div>
@@ -410,12 +411,14 @@ button{cursor:pointer}
       </label>
     </div>
     <button id="hist-download-btn" onclick="startHistDownload()" style="width:100%;background:#3b82f6;color:#fff;border-radius:8px;padding:10px 0;font-size:13px;font-weight:800;border:none">⬇️ Avvia download storico legacy</button>
-    <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
-      <select id="hist-deep-pages" style="flex:1;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:8px;font-size:13px">
-        <option value="3">3 pagine</option><option value="6">6 pagine</option><option value="12">12 pagine</option><option value="24">24 pagine</option><option value="36" selected>36 pagine</option>
+    <div style="display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap">
+      <select id="hist-deep-pages" style="flex:1;min-width:110px;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:8px;font-size:13px">
+        <option value="3">3 pagine</option><option value="6">6 pagine</option><option value="12">12 pagine</option><option value="24">24 pagine</option><option value="36" selected>36 pagine</option><option value="72">72 pagine</option><option value="120">120 pagine</option>
       </select>
-      <button id="hist-deep-btn" onclick="startDeepDownload()" style="flex:1;background:#f0b429;color:#000;border-radius:8px;padding:9px 0;font-size:13px;font-weight:800;border:none">⬇️ 1M profondo</button>
+      <button id="hist-deep-btn" onclick="startDeepDownload()" style="flex:1;min-width:120px;background:#f0b429;color:#000;border-radius:8px;padding:9px 0;font-size:13px;font-weight:800;border:none">⬇️ 1M profondo</button>
+      <button id="hist-deep-15m-btn" onclick="startDeepDownload15m()" style="flex:1;min-width:120px;background:#a855f7;color:#fff;border-radius:8px;padding:9px 0;font-size:13px;font-weight:800;border:none">⬇️ 15M lungo</button>
     </div>
+    <div style="color:#94a3b8;font-size:10px;margin-top:6px;line-height:1.4">Il 15M lungo serve come contesto storico intermedio per AsiaGapNN: pesa molto meno dell'1M ma conserva swing intraday e struttura America→Asia.</div>
   </details>
 
   <div id="hist-progress-card" class="card" style="display:none;margin-bottom:10px">
@@ -466,7 +469,7 @@ button{cursor:pointer}
       </label>
       <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Iterazioni annealing/scenario</div><input id="scen-sa-iters" type="number" value="160" min="20" max="3000" step="20" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
       <button onclick="clearOptResults()" style="background:#ef444420;border:1px solid #ef444444;color:#ef4444;border-radius:7px;padding:8px 10px;font-size:11px;font-weight:800">🧹 Azzera risultati</button>
-      <div style="grid-column:1/-1;color:#94a3b8;font-size:10px;line-height:1.4">Le ottimizzazioni usano <b>tutte le barre normalizzate</b> dalla data scelta in avanti. Prima del run, se attivo, l'app controlla 1D/1H/5M/1M e integra automaticamente le candele mancanti. Intra-SA usa spazio largo stabile: soglie 30–95, trailing più ampio, minConf/BE/trail trigger/parziale e pesi 0–3×. Ogni miglioramento affidabile viene salvato progressivamente come checkpoint locale, anche se la simulazione non arriva alla fine.</div>
+      <div style="grid-column:1/-1;color:#94a3b8;font-size:10px;line-height:1.4">Le ottimizzazioni usano <b>tutte le barre normalizzate</b> dalla data scelta in avanti. Prima del run, se attivo, l'app controlla 1D/1H/15M/5M/1M e integra automaticamente le candele mancanti. Intra-SA usa spazio largo stabile: soglie 30–95, trailing più ampio, minConf/BE/trail trigger/parziale e pesi 0–3×. Ogni miglioramento affidabile viene salvato progressivamente come checkpoint locale, anche se la simulazione non arriva alla fine.</div>
     </div>
     <div id="opt-hub"></div>
     <div id="scenario-hidden-controls" style="display:none">
@@ -479,6 +482,41 @@ button{cursor:pointer}
       <button id="bt-sweep-btn" onclick="runBtSweep()">sweep</button>
     </div>
   </div>
+
+  <div class="card" style="border:2px solid #38bdf844;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:6px">
+      <div>
+        <div style="color:#38bdf8;font-size:17px;font-weight:900">🧠 AsiaGapNN — rete neurale America→Asia</div>
+        <div style="color:#94a3b8;font-size:11px;line-height:1.45;margin-top:3px">Scenario event-driven: crea un evento al giorno, allena GapNet e ContinuationNet solo sul passato e verifica gap/continuazione su 1M. Il 15M lungo viene usato come contesto storico intermedio.</div>
+      </div>
+      <div style="background:#0d1117;border:1px solid #1e293b;border-radius:7px;padding:5px 7px;color:#7dd3fc;font-size:10px;font-weight:900;white-space:nowrap">WALK-FORWARD</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#0d1117;border:1px solid #1e2535;border-radius:8px;padding:8px;margin-bottom:8px">
+      <label style="display:flex;flex-direction:column;gap:3px"><span style="color:#94a3b8;font-size:10px">Data inizio eventi</span><input id="ag-start-date" type="date" onchange="saveAsiaGapNNSettings()" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></label>
+      <label style="display:flex;flex-direction:column;gap:3px"><span style="color:#94a3b8;font-size:10px">Auto-sync dati mancanti</span><span style="display:flex;align-items:center;gap:7px;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:8px;color:#c0cce0;font-size:12px;font-weight:700"><input id="ag-auto-sync" type="checkbox" checked onchange="saveAsiaGapNNSettings()" style="width:15px;height:15px;accent-color:#22c55e"/> 1D/1H/15M/5M/1M</span></label>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">USA close UTC</div><input id="ag-usa-close" type="number" min="0" max="23" value="22" onchange="saveAsiaGapNNSettings()" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Asia open UTC</div><input id="ag-asia-open" type="number" min="0" max="23" value="23" onchange="saveAsiaGapNNSettings()" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Orizzonte continuation</div><select id="ag-horizon" onchange="saveAsiaGapNNSettings()" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"><option value="15">+15m</option><option value="30" selected>+30m</option><option value="60">+60m</option></select></div>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Train window eventi</div><input id="ag-train-window" type="number" min="40" max="300" value="90" step="10" onchange="saveAsiaGapNNSettings()" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Prob. minima gap</div><input id="ag-gap-thr" type="number" min="0.50" max="0.90" value="0.56" step="0.01" onchange="saveAsiaGapNNSettings()" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Prob. minima continuation</div><input id="ag-cont-thr" type="number" min="0.50" max="0.90" value="0.56" step="0.01" onchange="saveAsiaGapNNSettings()" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min gap ATR15</div><input id="ag-min-gap-atr" type="number" min="0.02" max="0.80" value="0.12" step="0.01" onchange="saveAsiaGapNNSettings()" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min move ATR15</div><input id="ag-min-move-atr" type="number" min="0.02" max="1.20" value="0.18" step="0.01" onchange="saveAsiaGapNNSettings()" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Hidden 1 / Hidden 2</div><div style="display:flex;gap:5px"><input id="ag-hidden1" type="number" min="4" max="64" value="16" step="4" onchange="saveAsiaGapNNSettings()" style="width:50%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/><input id="ag-hidden2" type="number" min="0" max="32" value="8" step="4" onchange="saveAsiaGapNNSettings()" style="width:50%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div></div>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Epochs / learning rate</div><div style="display:flex;gap:5px"><input id="ag-epochs" type="number" min="10" max="300" value="80" step="10" onchange="saveAsiaGapNNSettings()" style="width:50%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/><input id="ag-lr" type="number" min="0.001" max="0.05" value="0.01" step="0.001" onchange="saveAsiaGapNNSettings()" style="width:50%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div></div>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">L2 regularization</div><input id="ag-l2" type="number" min="0" max="0.10" value="0.001" step="0.0005" onchange="saveAsiaGapNNSettings()" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Candidati ottimizzazione</div><input id="ag-opt-candidates" type="number" min="4" max="60" value="16" step="4" onchange="saveAsiaGapNNSettings()" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+      <button onclick="runAsiaGapNNBacktestUI()" style="background:#38bdf820;border:1px solid #38bdf866;color:#7dd3fc;border-radius:8px;padding:10px 6px;font-size:12px;font-weight:900">🧠 Backtest AsiaGapNN</button>
+      <button onclick="runAsiaGapNNOptimizeUI()" style="background:#a855f720;border:1px solid #a855f766;color:#d8b4fe;border-radius:8px;padding:10px 6px;font-size:12px;font-weight:900">🔥 Ottimizza NN</button>
+      <button onclick="exportAsiaGapNNCsv()" style="background:#22c55e20;border:1px solid #22c55e66;color:#86efac;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:800">📤 CSV eventi</button>
+      <button onclick="saveAsiaGapNNBestAsPreset()" style="background:#f0b42920;border:1px solid #f0b42966;color:#fde68a;border-radius:8px;padding:9px 6px;font-size:12px;font-weight:800">💾 Salva preset best</button>
+    </div>
+    <div id="ag-progress" style="display:none;background:#0d1117;border:1px solid #1e2535;border-radius:8px;padding:8px;color:#c0cce0;font-size:11px;margin-bottom:8px">In attesa...</div>
+    <div id="ag-results"></div>
+  </div>
+
 
   <div class="card" style="border:2px solid #22c55e44;margin-bottom:10px">
     <div style="color:#22c55e;font-size:16px;font-weight:900;margin-bottom:4px">🧪 Backtest GENERALE — solo test, nessuna ottimizzazione</div>
@@ -565,15 +603,30 @@ button{cursor:pointer}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Rischio %</div><input type="number" id="btp-risk" value="5" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min confidence</div><input type="number" id="btp-minconf" value="60" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Swing</div><input type="number" id="btp-thr-swing" value="54" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Trend</div><input type="number" id="btp-thr-trend" value="74" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Scalp</div><input type="number" id="btp-thr-scalp" value="62" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Bias</div><input type="number" id="btp-thr-bias" value="72" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">BE trigger (R)</div><input type="number" id="btp-berr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail trigger (R)</div><input type="number" id="btp-trailrr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Swing ×ATR</div><input type="number" id="btp-trail-swing" value="2.7" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Trend ×ATR</div><input type="number" id="btp-trail-trend" value="1.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Scalp ×ATR</div><input type="number" id="btp-trail-scalp" value="0.8" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parziale TP1 %</div><input type="number" id="btp-partial" value="15" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div></div>
     </details>
 
-    
-
-    
-
-    
-
-    
-
-    
+    <div class="card" style="background:#141920;border:2px solid #f9731644;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:6px">
+        <div>
+          <div style="color:#f97316;font-size:15px;font-weight:900">⚡ Preset rapidi Scalp</div>
+          <div style="color:#94a3b8;font-size:10px;line-height:1.4">Applica in un click parametri + pesi Scalp, senza editarli uno per uno. Il preset completo modifica anche i parametri globali di esecuzione perché nel motore attuale minConf, BE, trail trigger, parziale e rischio sono condivisi.</div>
+        </div>
+        <div id="scalp-preset-status" style="color:#94a3b8;font-size:10px;text-align:right;min-width:78px">Pronto</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <button onclick="applyScalpPreset('robust232')" style="background:#22c55e20;border:1px solid #22c55e66;color:#22c55e;border-radius:7px;padding:9px 7px;font-size:11px;font-weight:900">↩️ Ripristina Scalp robusto<br><span style="font-weight:600;color:#bbf7d0">PF≈1.22 · 5.926 trade</span></button>
+        <button onclick="applyScalpPreset('baseline')" style="background:#3b82f620;border:1px solid #3b82f666;color:#93c5fd;border-radius:7px;padding:9px 7px;font-size:11px;font-weight:900">🏁 Preset base app<br><span style="font-weight:600;color:#bfdbfe">Scalp default prudente</span></button>
+        <button onclick="restoreScalpPresetBackup()" style="background:#f0b42920;border:1px solid #f0b42966;color:#f0b429;border-radius:7px;padding:9px 7px;font-size:11px;font-weight:900">⏪ Annulla ultimo preset<br><span style="font-weight:600;color:#fde68a">ripristina backup locale</span></button>
+        <button onclick="exportCurrentScalpPreset()" style="background:#a855f720;border:1px solid #a855f766;color:#d8b4fe;border-radius:7px;padding:9px 7px;font-size:11px;font-weight:900">📤 Esporta preset attuale<br><span style="font-weight:600;color:#e9d5ff">JSON riapplicabile</span></button>
+      </div>
+      <details style="background:#0d1117;border:1px solid #1e2535;border-radius:7px;padding:7px">
+        <summary style="color:#c0cce0;font-size:11px;font-weight:800;cursor:pointer">Importa preset JSON / slot avanzati</summary>
+        <div style="color:#94a3b8;font-size:10px;line-height:1.35;margin:6px 0">Puoi incollare un preset esportato dall'app. Il JSON può contenere <b>params</b> e <b>weights</b>. Prima dell'applicazione viene creato un backup automatico.</div>
+        <textarea id="scalp-preset-json" placeholder="Incolla qui il preset JSON..." style="width:100%;min-height:78px;background:#080b10;border:1px solid #2a3550;border-radius:6px;color:#f0f4fa;padding:7px;font-size:11px;font-family:monospace"></textarea>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button onclick="importScalpPresetJson()" style="flex:1;background:#22c55e20;border:1px solid #22c55e66;color:#22c55e;border-radius:7px;padding:8px;font-size:11px;font-weight:800">📥 Importa e applica</button>
+          <button onclick="fillScalpPresetJson('robust232')" style="flex:1;background:#1e2740;border:1px solid #2a3550;color:#c0cce0;border-radius:7px;padding:8px;font-size:11px;font-weight:800">Mostra JSON robusto</button>
+        </div>
+      </details>
+    </div>
 
     <div style="color:#94a3b8;font-size:10px;margin-bottom:8px">
       Regola di verifica: lo scoring può leggere tutti i timeframe disponibili, ma entry, SL/TP, trailing ed exit vengono simulati sul timeframe operativo dello scenario.
@@ -647,7 +700,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-const APP_VERSION = '9.1.0-sound-costs-h24';
+const APP_VERSION = '9.4.0-asiagap-nn';
 // ══ STORAGE ══════════════════════════════════════════════════
 const LS = {
   get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch{return null;} },
@@ -5403,6 +5456,7 @@ function exportBtCsv() {
 const HIST_JOBS = [
   { symbol:'XAU/USD', interval:'1min', key:'xauusd_1m' },
   { symbol:'XAU/USD', interval:'5min', key:'xauusd_5m' },
+  { symbol:'XAU/USD', interval:'15min', key:'xauusd_15m' },
   { symbol:'XAU/USD', interval:'1h',   key:'xauusd_1h' },
   { symbol:'XAU/USD', interval:'4h',   key:'xauusd_4h' },
   { symbol:'XAU/USD', interval:'1day', key:'xauusd_1d' },
@@ -5445,12 +5499,13 @@ async function histFetchSeries(symbol, interval, outputsize, endDate) {
 const HIST_CORE_JOBS = [
   { symbol:'XAU/USD', interval:'1day', key:'xauusd_1d',  inputId:'hist-sync-1day' },
   { symbol:'XAU/USD', interval:'1h',   key:'xauusd_1h',  inputId:'hist-sync-1h' },
+  { symbol:'XAU/USD', interval:'15min', key:'xauusd_15m', inputId:'hist-sync-15min' },
   { symbol:'XAU/USD', interval:'5min', key:'xauusd_5m',  inputId:'hist-sync-5min' },
   { symbol:'XAU/USD', interval:'1min', key:'xauusd_1m',  inputId:'hist-sync-1min' },
 ];
 
 function histIntervalMs(interval) {
-  return ({ '1min':60000, '5min':300000, '1h':3600000, '4h':14400000, '1day':86400000 })[interval] || 60000;
+  return ({ '1min':60000, '5min':300000, '15min':900000, '1h':3600000, '4h':14400000, '1day':86400000 })[interval] || 60000;
 }
 function histDateInputDefault() {
   const d = new Date();
@@ -5729,16 +5784,26 @@ async function startHistDownload() {
   renderHistSavedList();
 }
 
-// ── Download 1M profondo: più pagine da 5000 con end_date ────
+// ── Download profondo: più pagine da 5000 con end_date ────
 async function startDeepDownload() {
+  return startDeepDownloadTf({
+    interval:'1min', key:'xauusd_1m', label:'1M', buttonId:'hist-deep-btn', doneText:'⬇️ 1M profondo'
+  });
+}
+async function startDeepDownload15m() {
+  return startDeepDownloadTf({
+    interval:'15min', key:'xauusd_15m', label:'15M', buttonId:'hist-deep-15m-btn', doneText:'⬇️ 15M lungo'
+  });
+}
+async function startDeepDownloadTf({ interval, key, label, buttonId, doneText }) {
   if (histDownloading) return;
   histDownloading = true;
   const pages = parseInt(document.getElementById('hist-deep-pages').value, 10);
   const delayMs = parseInt(document.getElementById('hist-delay').value, 10);
-  const btn = document.getElementById('hist-deep-btn');
-  btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Download profondo...';
+  const btn = document.getElementById(buttonId);
+  if (btn) { btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Download profondo...'; }
   document.getElementById('hist-progress-card').style.display='block';
-  histLog(`🚀 Download 1M profondo: ${pages} pagine × 5000 barre`, '#3b82f6');
+  histLog(`🚀 Download ${label} profondo: ${pages} pagine × 5000 barre`, '#3b82f6');
 
   let all = [];
   let endDate = null;
@@ -5746,38 +5811,38 @@ async function startDeepDownload() {
   try {
     for (let p = 0; p < pages; p++) {
       if (dpBar) dpBar.style.width = Math.round(p/pages*100)+'%';
-      histLog(`⏳ Pagina ${p+1}/${pages}${endDate ? ' (fino a '+endDate+')' : ''}...`, '#94a3b8');
+      histLog(`⏳ ${label} pagina ${p+1}/${pages}${endDate ? ' (fino a '+endDate+')' : ''}...`, '#94a3b8');
       let candles;
       try {
-        const raw = await histFetchSeries('XAU/USD', '1min', 5000, endDate);
+        const raw = await histFetchSeries('XAU/USD', interval, 5000, endDate);
         candles = histNormalize(raw.values);
       } catch(pageErr) {
         // Storico esaurito o errore su questa pagina: fermati e SALVA ciò che hai
-        histLog(`⚪ Stop alla pagina ${p+1}: ${pageErr.message}. Salvo le ${all.length} barre già scaricate.`, '#f0b429');
+        histLog(`⚪ ${label}: stop alla pagina ${p+1}: ${pageErr.message}. Salvo le ${all.length} barre già scaricate.`, '#f0b429');
         break;
       }
-      if (!candles.length) { histLog('⚪ Nessun altro dato disponibile', '#f0b429'); break; }
+      if (!candles.length) { histLog(`⚪ ${label}: nessun altro dato disponibile`, '#f0b429'); break; }
       // Prepend (le pagine vanno indietro nel tempo); dedup sul timestamp
       const existing = new Set(all.map(cd => cd.t));
       const fresh = candles.filter(cd => !existing.has(cd.t));
       all = [...fresh, ...all];
       endDate = candles[0].t; // il più vecchio della pagina appena scaricata
-      histLog(`✅ Pagina ${p+1}: ${fresh.length} barre nuove (totale ${all.length})`, '#22c55e');
+      histLog(`✅ ${label} pagina ${p+1}: ${fresh.length} barre nuove (totale ${all.length})`, '#22c55e');
       if (p < pages-1) await new Promise(r => setTimeout(r, delayMs));
     }
     if (!all.length) throw new Error('Nessuna barra scaricata');
     const payload = {
-      symbol:'XAU/USD', interval:'1min', count: all.length,
+      symbol:'XAU/USD', interval, count: all.length,
       firstDate: all[0]?.t, lastDate: all[all.length-1]?.t,
       downloadedAt: new Date().toISOString(), candles: all,
     };
     if (dpBar) dpBar.style.width = '100%';
-    const ok = await histSave('xauusd_1m', payload);
-    if (ok) histLog(`🏁 Salvate ${all.length} barre 1M (${payload.firstDate} → ${payload.lastDate})`, '#22c55e');
+    const ok = await histSave(key, payload);
+    if (ok) histLog(`🏁 Salvate ${all.length} barre ${label} (${payload.firstDate} → ${payload.lastDate})`, '#22c55e');
   } catch(e) {
     histLog('❌ ' + e.message, '#ef4444');
   }
-  btn.disabled=false; btn.style.opacity='1'; btn.textContent='⬇️ 1M profondo';
+  if (btn) { btn.disabled=false; btn.style.opacity='1'; btn.textContent=doneText; }
   histDownloading = false;
   renderHistSavedList();
 }
@@ -5877,6 +5942,132 @@ function syncParamInputs() {
   });
 }
 
+
+function getScalpParamPresets() {
+  return {
+  robust232: {
+    name: 'Scalp Robust 232k',
+    description: 'Preset Scalp precedente: circa 5.926 trade, PF ~1.22, DD ~39%, P&L ~232k sul CSV 2026-07-07.',
+    params: { thrScalp:75, thrSwing:54, thrTrend:38, thrBias:80, minConf:31, riskPct:5, beRR:0.3, trailRR:1.8, trailScalp:0.9, partialPct:20 },
+    weights: { macro:1.5, mtf:1.25, adx:1.75, rsi:1.25, pivot:1.5, pullback:0.5, specific:1.75, sess:1.0 },
+  },
+  baseline: {
+    name: 'Scalp Base App',
+    description: 'Preset base/prudente della app v9.x, utile per tornare a un set non ottimizzato aggressivamente.',
+    params: { thrScalp:PAPER_PARAMS_DEFAULTS.thrScalp, minConf:PAPER_PARAMS_DEFAULTS.minConf, riskPct:PAPER_PARAMS_DEFAULTS.riskPct, beRR:PAPER_PARAMS_DEFAULTS.beRR, trailRR:PAPER_PARAMS_DEFAULTS.trailRR, trailScalp:PAPER_PARAMS_DEFAULTS.trailScalp, partialPct:PAPER_PARAMS_DEFAULTS.partialPct },
+    weights: { ...SCORE_WEIGHTS_DEFAULTS.scalp },
+  },
+  ultraStress: {
+    name: 'Scalp Ultra Aggressive / Stress',
+    description: 'Preset del candidato estremo: utile solo per confronto/stress, non consigliato come live default.',
+    params: { thrScalp:59, minConf:48, riskPct:5, beRR:0.5, trailRR:1.4, trailScalp:1.5, partialPct:10 },
+    weights: { macro:1.5, mtf:1.5, adx:2, rsi:1.5, pivot:0.75, pullback:1, specific:3, sess:0.25 },
+  },
+  };
+}
+function setScalpPresetStatus(msg, color='#94a3b8') {
+  const el = document.getElementById('scalp-preset-status');
+  if (el) { el.textContent = msg; el.style.color = color; }
+}
+function currentScalpPresetSnapshot() {
+  return {
+    appVersion: APP_VERSION,
+    ts: new Date().toISOString(),
+    params: normalizeParamSnapshot(PAPER_PARAMS),
+    weights: { ...SCORE_WEIGHTS.scalp },
+  };
+}
+function backupCurrentScalpPreset(reason='backup preset') {
+  const backup = { ...currentScalpPresetSnapshot(), reason };
+  try { localStorage.setItem('xauapp_scalp_preset_backup', JSON.stringify(backup)); } catch(e) {}
+  return backup;
+}
+function applyScalpPresetPayload(payload, label='preset importato') {
+  if (!payload || typeof payload !== 'object') throw new Error('Preset non valido');
+  const params = normalizeParamSnapshot(payload.params || payload.P || payload);
+  const allowed = Object.keys(PAPER_PARAMS_DEFAULTS).filter(k => k !== '_v');
+  const cleanParams = {};
+  allowed.forEach(k => { if (params[k] !== undefined && params[k] !== null && params[k] !== '') cleanParams[k] = +params[k]; });
+  const weights = payload.weights || payload.scalpWeights || payload.w || null;
+  const cleanWeights = {};
+  if (weights && typeof weights === 'object') {
+    WEIGHT_GROUPS.forEach(g => { if (weights[g] !== undefined && weights[g] !== null && weights[g] !== '') cleanWeights[g] = +weights[g]; });
+  }
+  if (!Object.keys(cleanParams).length && !Object.keys(cleanWeights).length) throw new Error('Il preset non contiene params o weights applicabili');
+  backupCurrentScalpPreset('prima di applicare ' + label);
+  if (Object.keys(cleanParams).length) savePaperParams(cleanParams);
+  if (Object.keys(cleanWeights).length) saveScoreWeights('scalp', cleanWeights);
+  const st = loadScenarioOptState();
+  st.scalp = st.scalp || {};
+  st.scalp.lastAppliedPreset = { ts: Date.now(), label, params: cleanParams, weights: cleanWeights, appVersion: APP_VERSION };
+  st.scalp.lastAppliedParams = normalizeParamSnapshot(PAPER_PARAMS);
+  saveScenarioOptState(st);
+  if (typeof syncParamInputs === 'function') syncParamInputs();
+  if (typeof renderOptHub === 'function') renderOptHub();
+  setScalpPresetStatus('Applicato', '#22c55e');
+  return { params: cleanParams, weights: cleanWeights };
+}
+function applyScalpPreset(key) {
+  const preset = getScalpParamPresets()[key];
+  if (!preset) { alert('Preset non trovato.'); return; }
+  const msg = key === 'robust232'
+    ? 'Ripristinare il preset Scalp robusto precedente? Verranno aggiornati anche minConf, BE, trail trigger, parziale, rischio e pesi Scalp.'
+    : `Applicare ${preset.name}? Verrà creato prima un backup locale.`;
+  if (!confirm(msg)) return;
+  try {
+    applyScalpPresetPayload(preset, preset.name);
+    alert('Preset applicato: ' + preset.name + '\nOra esegui Test scenario Scalp o Backtest Generale per validare.');
+  } catch(e) {
+    setScalpPresetStatus('Errore', '#ef4444');
+    alert('Errore applicazione preset: ' + e.message);
+  }
+}
+function restoreScalpPresetBackup() {
+  let backup = null;
+  try { backup = JSON.parse(localStorage.getItem('xauapp_scalp_preset_backup') || 'null'); } catch(e) {}
+  if (!backup) { alert('Nessun backup preset trovato.'); return; }
+  if (!confirm('Ripristinare il backup precedente del preset Scalp?')) return;
+  try {
+    const params = backup.params || {};
+    const weights = backup.weights || {};
+    if (params) savePaperParams(params);
+    if (weights) saveScoreWeights('scalp', weights);
+    setScalpPresetStatus('Backup ripristinato', '#f0b429');
+    alert('Backup Scalp ripristinato.');
+  } catch(e) { alert('Errore ripristino backup: ' + e.message); }
+}
+function fillScalpPresetJson(key='robust232') {
+  const el = document.getElementById('scalp-preset-json');
+  if (!el) return;
+  const preset = getScalpParamPresets()[key] || getScalpParamPresets().robust232;
+  el.value = JSON.stringify({ type:'xauapp-scalp-preset', ...preset }, null, 2);
+}
+function importScalpPresetJson() {
+  const el = document.getElementById('scalp-preset-json');
+  if (!el || !el.value.trim()) { alert('Incolla prima un preset JSON.'); return; }
+  try {
+    const payload = JSON.parse(el.value);
+    const label = payload.name || 'preset JSON';
+    if (!confirm('Applicare il preset JSON "' + label + '"?')) return;
+    applyScalpPresetPayload(payload, label);
+    alert('Preset JSON applicato: ' + label);
+  } catch(e) {
+    setScalpPresetStatus('JSON errato', '#ef4444');
+    alert('JSON preset non valido: ' + e.message);
+  }
+}
+function exportCurrentScalpPreset() {
+  const payload = { type:'xauapp-scalp-preset', name:'Scalp attuale', ...currentScalpPresetSnapshot() };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `xau_scalp_preset_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setScalpPresetStatus('JSON esportato', '#a855f7');
+}
+
 function renderDownloadScreen() {
   const startInput = document.getElementById('hist-start-date');
   if (startInput && !startInput.value) startInput.value = histDateInputDefault();
@@ -5886,6 +6077,7 @@ function renderDownloadScreen() {
 function renderHistScreen() {
   syncOptSettingsInputs();
   syncBtGeneralSettingsInputs();
+  syncAsiaGapNNSettingsInputs();
   setTimeout(renderOptHub, 50);
   syncParamInputs();
 }
@@ -8310,6 +8502,435 @@ function doRefreshCurrent() {
   } else if (m === 'download') {
     renderDownloadScreen();
   }
+}
+
+// ══ ASIAGAPNN — rete neurale walk-forward America→Asia ═══════
+let ASIAGAPNN_LAST = null;
+let ASIAGAPNN_BEST = LS.get('xauapp_asiagapnn_best') || null;
+
+function agDefaultStartDate() { return histDateInputDefault ? histDateInputDefault() : new Date(Date.now()-180*86400000).toISOString().slice(0,10); }
+function agNum(id, def) { const el=document.getElementById(id); const v=parseFloat(el?.value); return Number.isFinite(v) ? v : def; }
+function agInt(id, def) { const el=document.getElementById(id); const v=parseInt(el?.value,10); return Number.isFinite(v) ? v : def; }
+function agBool(id, def=true) { const el=document.getElementById(id); return el ? !!el.checked : def; }
+function agClamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function agDateTs(s){ return new Date(String(s).replace(' ', 'T') + (String(s).includes('Z')?'':'Z')).getTime(); }
+function agIsoDateUTC(ts){ return new Date(ts).toISOString().slice(0,10); }
+function agSafe(v, def=0){ v=+v; return Number.isFinite(v) ? v : def; }
+function agSignLabel(i){ return i===0?'UP':i===1?'FLAT':'DOWN'; }
+function agContLabel(i){ return i===0?'CONTINUATION':i===1?'FADE':'NO_EDGE'; }
+function agClassColor(lbl){ return /UP|CONT/.test(lbl) ? '#22c55e' : /DOWN|FADE/.test(lbl) ? '#ef4444' : '#94a3b8'; }
+function agProgress(msg, color='#c0cce0') { const el=document.getElementById('ag-progress'); if(!el) return; el.style.display='block'; el.style.color=color; el.textContent=msg; }
+
+function getAsiaGapNNSettings() {
+  syncAsiaGapNNSettingsInputs();
+  return {
+    startDate: document.getElementById('ag-start-date')?.value || agDefaultStartDate(),
+    autoSync: agBool('ag-auto-sync', true),
+    usaCloseHourUTC: agClamp(agInt('ag-usa-close', 22), 0, 23),
+    asiaOpenHourUTC: agClamp(agInt('ag-asia-open', 23), 0, 23),
+    horizonMin: agClamp(agInt('ag-horizon', 30), 5, 180),
+    trainWindow: agClamp(agInt('ag-train-window', 90), 40, 400),
+    gapProbThreshold: agClamp(agNum('ag-gap-thr', 0.56), 0.5, 0.95),
+    contProbThreshold: agClamp(agNum('ag-cont-thr', 0.56), 0.5, 0.95),
+    minGapAtr: agClamp(agNum('ag-min-gap-atr', 0.12), 0.01, 2),
+    minMoveAtr: agClamp(agNum('ag-min-move-atr', 0.18), 0.01, 2),
+    hidden1: agClamp(agInt('ag-hidden1', 16), 4, 96),
+    hidden2: agClamp(agInt('ag-hidden2', 8), 0, 64),
+    epochs: agClamp(agInt('ag-epochs', 80), 5, 500),
+    learningRate: agClamp(agNum('ag-lr', 0.01), 0.0001, 0.2),
+    l2: agClamp(agNum('ag-l2', 0.001), 0, 0.5),
+    optCandidates: agClamp(agInt('ag-opt-candidates', 16), 2, 120),
+    lotSize: 0.01,
+    seed: 194,
+  };
+}
+function saveAsiaGapNNSettings() {
+  const cfg = getAsiaGapNNSettings();
+  try { localStorage.setItem('xauapp_asiagapnn_cfg', JSON.stringify(cfg)); } catch(e) {}
+}
+function syncAsiaGapNNSettingsInputs() {
+  const saved = LS.get('xauapp_asiagapnn_cfg') || {};
+  const setVal=(id,v)=>{ const el=document.getElementById(id); if(el && (el.value==='' || el.dataset.agLoaded!=='1')) { el.value=v; el.dataset.agLoaded='1'; } };
+  const setChk=(id,v)=>{ const el=document.getElementById(id); if(el && el.dataset.agLoaded!=='1') { el.checked=!!v; el.dataset.agLoaded='1'; } };
+  setVal('ag-start-date', saved.startDate || agDefaultStartDate());
+  setChk('ag-auto-sync', saved.autoSync !== false);
+  setVal('ag-usa-close', saved.usaCloseHourUTC ?? 22);
+  setVal('ag-asia-open', saved.asiaOpenHourUTC ?? 23);
+  setVal('ag-horizon', saved.horizonMin ?? 30);
+  setVal('ag-train-window', saved.trainWindow ?? 90);
+  setVal('ag-gap-thr', saved.gapProbThreshold ?? 0.56);
+  setVal('ag-cont-thr', saved.contProbThreshold ?? 0.56);
+  setVal('ag-min-gap-atr', saved.minGapAtr ?? 0.12);
+  setVal('ag-min-move-atr', saved.minMoveAtr ?? 0.18);
+  setVal('ag-hidden1', saved.hidden1 ?? 16);
+  setVal('ag-hidden2', saved.hidden2 ?? 8);
+  setVal('ag-epochs', saved.epochs ?? 80);
+  setVal('ag-lr', saved.learningRate ?? 0.01);
+  setVal('ag-l2', saved.l2 ?? 0.001);
+  setVal('ag-opt-candidates', saved.optCandidates ?? 16);
+}
+
+function agLowerBound(candles, ts) {
+  let lo=0, hi=candles.length;
+  while(lo<hi){ const mid=(lo+hi)>>1; if(agDateTs(candles[mid].t)<ts) lo=mid+1; else hi=mid; }
+  return lo;
+}
+function agIndexAtOrBefore(candles, ts, maxDriftMs=90*60000) {
+  const i=agLowerBound(candles, ts);
+  const j=i<candles.length && agDateTs(candles[i].t)===ts ? i : i-1;
+  if(j<0) return -1;
+  return Math.abs(ts-agDateTs(candles[j].t))<=maxDriftMs ? j : -1;
+}
+function agIndexAtOrAfter(candles, ts, maxDriftMs=90*60000) {
+  const i=agLowerBound(candles, ts);
+  if(i>=candles.length) return -1;
+  return Math.abs(agDateTs(candles[i].t)-ts)<=maxDriftMs ? i : -1;
+}
+function agRange(candles, start, end) {
+  const s=Math.max(0,start), e=Math.min(candles.length-1,end);
+  if(e<s) return null;
+  let hi=-Infinity, lo=Infinity;
+  for(let i=s;i<=e;i++){ hi=Math.max(hi, candles[i].h); lo=Math.min(lo, candles[i].l); }
+  return { hi, lo, range: Math.max(0.0001, hi-lo) };
+}
+function agAtr(candles, idx, n=60) {
+  if(!candles?.length || idx<=1) return 1;
+  let sum=0, c=0;
+  for(let i=Math.max(1, idx-n+1); i<=idx; i++) { sum += Math.max(candles[i].h-candles[i].l, Math.abs(candles[i].h-candles[i-1].c), Math.abs(candles[i].l-candles[i-1].c)); c++; }
+  return c ? Math.max(0.0001, sum/c) : 1;
+}
+function agReturn(candles, idx, bars, atr) {
+  const j=idx-bars; if(j<0) return 0;
+  return (candles[idx].c - candles[j].c) / Math.max(0.0001, atr);
+}
+function agClosePos(cd, rg) { return rg ? (cd.c-rg.lo)/Math.max(0.0001, rg.hi-rg.lo) : 0.5; }
+function agCandleShape(cd) {
+  const rg=Math.max(0.0001, cd.h-cd.l), body=Math.abs(cd.c-cd.o);
+  return { body: body/rg, upper:(cd.h-Math.max(cd.o,cd.c))/rg, lower:(Math.min(cd.o,cd.c)-cd.l)/rg, dir: cd.c>=cd.o ? 1 : -1 };
+}
+function agPrevDailyContext(c1d, ts, closePrice) {
+  if(!c1d?.length) return {prevHighDist:0,prevLowDist:0,prevRangeAtr:0,dayTrend:0};
+  const i=agIndexAtOrBefore(c1d, ts, 48*3600000);
+  const prev=i>0 ? c1d[i-1] : null;
+  const atrD=agAtr(c1d, Math.max(1,i), 14) || 1;
+  return {
+    prevHighDist: prev ? (closePrice-prev.h)/atrD : 0,
+    prevLowDist: prev ? (closePrice-prev.l)/atrD : 0,
+    prevRangeAtr: prev ? (prev.h-prev.l)/atrD : 0,
+    dayTrend: i>=0 ? (c1d[i].c-c1d[i].o)/atrD : 0,
+  };
+}
+function agContext15(c15, ts, closePrice) {
+  const i=agIndexAtOrBefore(c15||[], ts, 60*60000);
+  if(i<10) return {ret15_4:0, ret15_8:0, pos15_16:0.5, range15_16:0, atr15:1};
+  const atr=agAtr(c15,i,20);
+  const rg=agRange(c15, i-15, i);
+  return { ret15_4:agReturn(c15,i,4,atr), ret15_8:agReturn(c15,i,8,atr), pos15_16:agClosePos(c15[i],rg), range15_16:(rg?.range||0)/atr, atr15:atr };
+}
+function agContext1h(c1h, ts) {
+  const i=agIndexAtOrBefore(c1h||[], ts, 3*3600000);
+  if(i<8) return {ret1h_3:0, ret1h_6:0, pos1h_12:0.5, range1h_12:0};
+  const atr=agAtr(c1h,i,14), rg=agRange(c1h, i-11, i);
+  return { ret1h_3:agReturn(c1h,i,3,atr), ret1h_6:agReturn(c1h,i,6,atr), pos1h_12:agClosePos(c1h[i],rg), range1h_12:(rg?.range||0)/atr };
+}
+function agBuildFeatures(c1m,c15,c1h,c1d, idx, ts, cfg) {
+  const cd=c1m[idx], atr60=agAtr(c1m,idx,60), atr120=agAtr(c1m,idx,120);
+  const rg30=agRange(c1m,idx-29,idx), rg60=agRange(c1m,idx-59,idx), rg120=agRange(c1m,idx-119,idx), rg240=agRange(c1m,idx-239,idx);
+  const dayStart = Date.UTC(new Date(ts).getUTCFullYear(), new Date(ts).getUTCMonth(), new Date(ts).getUTCDate(), 0,0,0);
+  const dayStartIdx=agLowerBound(c1m, dayStart);
+  const dayRg=agRange(c1m, dayStartIdx, idx);
+  const sh=agCandleShape(cd);
+  const ctx15=agContext15(c15, ts, cd.c), ctx1h=agContext1h(c1h, ts), dctx=agPrevDailyContext(c1d, ts, cd.c);
+  const dow=new Date(ts).getUTCDay(), mon=new Date(ts).getUTCMonth()+1;
+  const pos60=agClosePos(cd,rg60), pos240=agClosePos(cd,rg240), posDay=agClosePos(cd,dayRg);
+  const sweepHi60 = rg60 && cd.h>=rg60.h-1e-9 && cd.c < rg60.h-rg60.range*0.25 ? 1 : 0;
+  const sweepLo60 = rg60 && cd.l<=rg60.lo+1e-9 && cd.c > rg60.lo+rg60.range*0.25 ? 1 : 0;
+  return [
+    agReturn(c1m,idx,15,atr60), agReturn(c1m,idx,30,atr60), agReturn(c1m,idx,60,atr60), agReturn(c1m,idx,120,atr120),
+    (rg30?.range||0)/atr60, (rg60?.range||0)/atr60, (rg120?.range||0)/atr120, (rg240?.range||0)/Math.max(0.0001,atr120),
+    pos60, pos240, posDay, sh.body, sh.upper, sh.lower, sh.dir,
+    sweepHi60, sweepLo60,
+    ctx15.ret15_4, ctx15.ret15_8, ctx15.pos15_16, ctx15.range15_16,
+    ctx1h.ret1h_3, ctx1h.ret1h_6, ctx1h.pos1h_12, ctx1h.range1h_12,
+    dctx.prevHighDist, dctx.prevLowDist, dctx.prevRangeAtr, dctx.dayTrend,
+    Math.sin(2*Math.PI*dow/7), Math.cos(2*Math.PI*dow/7), Math.sin(2*Math.PI*mon/12), Math.cos(2*Math.PI*mon/12),
+    dow===1?1:0, dow===5?1:0,
+  ].map(v => agSafe(v,0));
+}
+
+async function agEnsureData(cfg) {
+  if(!cfg.autoSync) return { skipped:true };
+  if (histDownloading) throw new Error('Download dati già in corso: attendi la fine o disattiva auto-sync AsiaGapNN.');
+  histDownloading = true;
+  const pageSize = Math.max(100, Math.min(5000, parseInt(document.getElementById('hist-sync-page-size')?.value, 10) || 5000));
+  const maxPages = Math.max(1, Math.min(500, parseInt(document.getElementById('hist-sync-max-pages')?.value, 10) || 120));
+  const delayMs = parseInt(document.getElementById('hist-delay')?.value, 10) || 8000;
+  const jobs = HIST_CORE_JOBS;
+  let ok=0, warn=0, fail=0;
+  try {
+    for (let i=0; i<jobs.length; i++) {
+      const job = jobs[i];
+      agProgress(`Auto-sync AsiaGapNN ${i+1}/${jobs.length}: ${job.interval}...`, '#7dd3fc');
+      const existing = await histLoad(job.key);
+      const coverage = histCoverageStatus(existing, cfg.startDate, job);
+      if (coverage.ok) { ok++; continue; }
+      try {
+        const fetched = await histFetchBackwardsToStart(job, cfg.startDate, pageSize, maxPages, delayMs);
+        const payload = histMergePayload(job, existing, fetched.candles, cfg.startDate);
+        const saved = await histSave(job.key, payload);
+        if (!saved) { fail++; continue; }
+        if (!fetched.reachedStart) warn++; else ok++;
+      } catch(e) { fail++; console.warn('[AsiaGapNN autosync]', job.interval, e.message); }
+      if (i < jobs.length-1) await new Promise(r => setTimeout(r, delayMs));
+    }
+    if (fail) throw new Error(`Auto-sync AsiaGapNN incompleto: ${fail} errori, ${warn} avvisi.`);
+    return { ok, warn, fail };
+  } finally {
+    histDownloading = false;
+    try { renderHistSavedList(); } catch(e) {}
+  }
+}
+async function buildAsiaGapEvents(cfg) {
+  const [r1m,r5m,r15,r1h,r1d] = await Promise.all(['xauusd_1m','xauusd_5m','xauusd_15m','xauusd_1h','xauusd_1d'].map(histLoad));
+  const c1m=(r1m?.candles||[]).filter(cd => agDateTs(cd.t)>=new Date(cfg.startDate+'T00:00:00Z').getTime()).sort((a,b)=>agDateTs(a.t)-agDateTs(b.t));
+  const c15=(r15?.candles||[]).sort((a,b)=>agDateTs(a.t)-agDateTs(b.t));
+  const c1h=(r1h?.candles||[]).sort((a,b)=>agDateTs(a.t)-agDateTs(b.t));
+  const c1d=(r1d?.candles||[]).sort((a,b)=>agDateTs(a.t)-agDateTs(b.t));
+  if(c1m.length<500) throw new Error('Servono candele 1M normalizzate: vai in Download e scarica almeno alcuni mesi.');
+  const dates=[...new Set(c1m.map(cd=>agIsoDateUTC(agDateTs(cd.t))))].sort();
+  const events=[];
+  for(const date of dates) {
+    const d0=new Date(date+'T00:00:00Z');
+    const day=d0.getUTCDay();
+    if(day===0 || day===6) continue;
+    const usaTs=Date.UTC(d0.getUTCFullYear(),d0.getUTCMonth(),d0.getUTCDate(),cfg.usaCloseHourUTC,0,0);
+    let asiaBase=new Date(d0);
+    if(cfg.asiaOpenHourUTC<=cfg.usaCloseHourUTC) asiaBase=new Date(d0.getTime()+86400000);
+    const asiaTs=Date.UTC(asiaBase.getUTCFullYear(),asiaBase.getUTCMonth(),asiaBase.getUTCDate(),cfg.asiaOpenHourUTC,0,0);
+    const outTs=asiaTs + cfg.horizonMin*60000;
+    if(!isXauMarketTs(usaTs) || !isXauMarketTs(asiaTs)) continue;
+    const usaIdx=agIndexAtOrBefore(c1m, usaTs, 120*60000);
+    const asiaIdx=agIndexAtOrAfter(c1m, asiaTs, 120*60000);
+    const outIdx=agIndexAtOrAfter(c1m, outTs, 150*60000);
+    if(usaIdx<240 || asiaIdx<0 || outIdx<0 || asiaIdx<=usaIdx) continue;
+    const usa=c1m[usaIdx], asia=c1m[asiaIdx], out=c1m[outIdx];
+    const atr15 = Math.max(0.0001, agContext15(c15, usaTs, usa.c).atr15 || agAtr(c1m,usaIdx,60));
+    const gapPts = asia.o - usa.c;
+    const gapAtr = gapPts / atr15;
+    const minGapPts = Math.max(execCost()*2, cfg.minGapAtr*atr15);
+    const gapLabel = gapPts > minGapPts ? 0 : gapPts < -minGapPts ? 2 : 1;
+    const movePts = out.c - asia.o;
+    const minMovePts = Math.max(execCost()*2, cfg.minMoveAtr*atr15);
+    let contLabel = 2;
+    if(gapLabel !== 1) {
+      const gapDir = gapLabel===0 ? 1 : -1;
+      if(movePts*gapDir > minMovePts) contLabel = 0;
+      else if(movePts*gapDir < -minMovePts) contLabel = 1;
+    } else {
+      if(Math.abs(movePts)>minMovePts) contLabel = 2;
+    }
+    const xGap=agBuildFeatures(c1m,c15,c1h,c1d,usaIdx,usaTs,cfg);
+    const xCont=[...xGap, gapAtr, gapLabel===0?1:0, gapLabel===2?1:0, (asia.c-asia.o)/atr15, (asia.h-asia.l)/atr15];
+    events.push({
+      date, usaCloseAt:usa.t, asiaOpenAt:asia.t, horizonAt:out.t,
+      usaClose:+usa.c.toFixed(2), asiaOpen:+asia.o.toFixed(2), horizonClose:+out.c.toFixed(2), atr15:+atr15.toFixed(4),
+      gapPts:+gapPts.toFixed(4), gapAtr:+gapAtr.toFixed(4), movePts:+movePts.toFixed(4),
+      gapLabel, contLabel, xGap, xCont,
+    });
+  }
+  return events;
+}
+
+function agFitScaler(X) {
+  const n=X[0]?.length||0, mean=Array(n).fill(0), sd=Array(n).fill(0);
+  X.forEach(row=>row.forEach((v,j)=>mean[j]+=v));
+  for(let j=0;j<n;j++) mean[j]/=Math.max(1,X.length);
+  X.forEach(row=>row.forEach((v,j)=>{ const d=v-mean[j]; sd[j]+=d*d; }));
+  for(let j=0;j<n;j++) sd[j]=Math.sqrt(sd[j]/Math.max(1,X.length-1)) || 1;
+  return { mean, sd };
+}
+function agScaleRow(row, sc) { return row.map((v,j)=>agClamp((v-(sc.mean[j]||0))/(sc.sd[j]||1), -6, 6)); }
+function agMakeRng(seed){ let s=(seed>>>0)||1; return ()=>((s=(1664525*s+1013904223)>>>0)/4294967296); }
+function agRandn(rng){ const u=Math.max(1e-9,rng()), v=Math.max(1e-9,rng()); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function agSoftmax(z){ const m=Math.max(...z), ex=z.map(v=>Math.exp(v-m)), s=ex.reduce((a,b)=>a+b,0)||1; return ex.map(v=>v/s); }
+function agArgMax(a){ let m=0; for(let i=1;i<a.length;i++) if(a[i]>a[m]) m=i; return m; }
+function agInitMatrix(r,c,rng,scale){ return Array.from({length:r},()=>Array.from({length:c},()=>agRandn(rng)*scale)); }
+function agInitVec(n){ return Array(n).fill(0); }
+
+function agTrainMLP(Xraw, y, classes, cfg, seed=1) {
+  const scaler=agFitScaler(Xraw);
+  const X=Xraw.map(r=>agScaleRow(r,scaler));
+  const input=X[0]?.length||1, h1=Math.max(4,cfg.hidden1||16), h2=Math.max(0,cfg.hidden2||0);
+  const rng=agMakeRng(seed);
+  const W1=agInitMatrix(input,h1,rng,Math.sqrt(2/input)), b1=agInitVec(h1);
+  const W2=h2 ? agInitMatrix(h1,h2,rng,Math.sqrt(2/h1)) : null, b2=h2 ? agInitVec(h2) : null;
+  const W3=agInitMatrix(h2||h1,classes,rng,Math.sqrt(2/(h2||h1))), b3=agInitVec(classes);
+  const lr=cfg.learningRate||0.01, l2=cfg.l2||0.001, epochs=cfg.epochs||80;
+  for(let ep=0; ep<epochs; ep++) {
+    for(let n=0;n<X.length;n++) {
+      const x=X[n];
+      const z1=b1.map((b,j)=>b + x.reduce((s,xi,i)=>s+xi*W1[i][j],0));
+      const a1=z1.map(Math.tanh);
+      let hidden=a1, z2=null, a2=null;
+      if(h2) { z2=b2.map((b,j)=>b + a1.reduce((s,ai,i)=>s+ai*W2[i][j],0)); a2=z2.map(Math.tanh); hidden=a2; }
+      const z3=b3.map((b,j)=>b + hidden.reduce((s,hi,i)=>s+hi*W3[i][j],0));
+      const p=agSoftmax(z3);
+      const dz3=p.slice(); dz3[y[n]]-=1;
+      for(let i=0;i<hidden.length;i++) for(let j=0;j<classes;j++) W3[i][j]-=lr*(hidden[i]*dz3[j] + l2*W3[i][j]);
+      for(let j=0;j<classes;j++) b3[j]-=lr*dz3[j];
+      const dh=hidden.map((_,i)=>dz3.reduce((s,d,j)=>s+d*W3[i][j],0));
+      if(h2) {
+        const dz2=dh.map((d,i)=>d*(1-a2[i]*a2[i]));
+        for(let i=0;i<h1;i++) for(let j=0;j<h2;j++) W2[i][j]-=lr*(a1[i]*dz2[j] + l2*W2[i][j]);
+        for(let j=0;j<h2;j++) b2[j]-=lr*dz2[j];
+        const da1=a1.map((_,i)=>dz2.reduce((s,d,j)=>s+d*W2[i][j],0));
+        const dz1=da1.map((d,i)=>d*(1-a1[i]*a1[i]));
+        for(let i=0;i<input;i++) for(let j=0;j<h1;j++) W1[i][j]-=lr*(x[i]*dz1[j] + l2*W1[i][j]);
+        for(let j=0;j<h1;j++) b1[j]-=lr*dz1[j];
+      } else {
+        const dz1=dh.map((d,i)=>d*(1-a1[i]*a1[i]));
+        for(let i=0;i<input;i++) for(let j=0;j<h1;j++) W1[i][j]-=lr*(x[i]*dz1[j] + l2*W1[i][j]);
+        for(let j=0;j<h1;j++) b1[j]-=lr*dz1[j];
+      }
+    }
+  }
+  function predict(rowRaw) {
+    const x=agScaleRow(rowRaw,scaler);
+    const a1=b1.map((b,j)=>Math.tanh(b + x.reduce((s,xi,i)=>s+xi*W1[i][j],0)));
+    let hidden=a1;
+    if(h2) hidden=b2.map((b,j)=>Math.tanh(b + a1.reduce((s,ai,i)=>s+ai*W2[i][j],0)));
+    const z=b3.map((b,j)=>b + hidden.reduce((s,hi,i)=>s+hi*W3[i][j],0));
+    return agSoftmax(z);
+  }
+  return { predict };
+}
+
+function agEvalBacktest(events, cfg, onStep=null) {
+  const rows=[]; let pnl=0, grossWin=0, grossLoss=0, trades=0, wins=0, gapCorrect=0, gapPreds=0, contCorrect=0, contPreds=0;
+  let equity=0, peak=0, maxDD=0;
+  const start=Math.max(cfg.trainWindow, 40);
+  for(let i=start; i<events.length; i++) {
+    const train=events.slice(Math.max(0,i-cfg.trainWindow), i);
+    const e=events[i];
+    const gapNet=agTrainMLP(train.map(x=>x.xGap), train.map(x=>x.gapLabel), 3, cfg, cfg.seed+i*7);
+    const contNet=agTrainMLP(train.map(x=>x.xCont), train.map(x=>x.contLabel), 3, cfg, cfg.seed+i*11+5);
+    const gp=gapNet.predict(e.xGap), cp=contNet.predict(e.xCont);
+    const gPred=agArgMax(gp), cPred=agArgMax(cp), gProb=Math.max(...gp), cProb=Math.max(...cp);
+    if(gPred!==1 && gProb>=cfg.gapProbThreshold) { gapPreds++; if(gPred===e.gapLabel) gapCorrect++; }
+    let decision='NO_TRADE', dir='', tradePnlPts=0, tradePnlEur=0;
+    if(gPred!==1 && gProb>=cfg.gapProbThreshold && cPred!==2 && cProb>=cfg.contProbThreshold) {
+      contPreds++; if(cPred===e.contLabel) contCorrect++;
+      const gapDir=gPred===0 ? 'BUY' : 'SELL';
+      dir = cPred===0 ? gapDir : (gapDir==='BUY'?'SELL':'BUY');
+      decision = cPred===0 ? 'CONTINUATION' : 'FADE';
+      const entry=applyEntryCosts(dir, e.asiaOpen);
+      const exit=applyExitCosts(dir, e.horizonClose);
+      tradePnlPts = dir==='BUY' ? exit-entry : entry-exit;
+      tradePnlEur = +(tradePnlPts * 100 * cfg.lotSize).toFixed(2);
+      pnl += tradePnlEur; trades++; if(tradePnlEur>0){wins++; grossWin+=tradePnlEur;} else grossLoss+=Math.abs(tradePnlEur);
+      equity += tradePnlEur; peak=Math.max(peak,equity); maxDD=Math.max(maxDD, peak-equity);
+    }
+    rows.push({
+      date:e.date, usaCloseAt:e.usaCloseAt, asiaOpenAt:e.asiaOpenAt, horizonAt:e.horizonAt,
+      usaClose:e.usaClose, asiaOpen:e.asiaOpen, horizonClose:e.horizonClose, atr15:e.atr15,
+      gapPts:e.gapPts, gapAtr:e.gapAtr, movePts:e.movePts,
+      gapLabel:agSignLabel(e.gapLabel), contLabel:agContLabel(e.contLabel),
+      gapPred:agSignLabel(gPred), gapProb:+gProb.toFixed(4), contPred:agContLabel(cPred), contProb:+cProb.toFixed(4),
+      decision, direction:dir, pnlPts:+tradePnlPts.toFixed(4), pnlEur:+tradePnlEur.toFixed(2), equity:+equity.toFixed(2),
+    });
+    if(onStep && (i-start)%5===0) onStep(i-start+1, events.length-start, rows.length, pnl);
+  }
+  const pf = grossLoss ? grossWin/grossLoss : (grossWin ? 99 : 0);
+  const coverage = rows.length ? trades/rows.length : 0;
+  const score = (trades>=10 ? (pnl/Math.max(1,trades)) : -999) * Math.max(0.1,pf) * Math.sqrt(Math.max(1,trades)) - maxDD*0.08 - Math.max(0,coverage-0.55)*1000 - Math.max(0,0.08-coverage)*1000;
+  return {
+    rows, events:events.length, tested:rows.length, trades, wins, pnl:+pnl.toFixed(2), pf:+pf.toFixed(3), winRate: trades ? +(wins/trades*100).toFixed(2) : 0,
+    gapAccuracy: gapPreds ? +(gapCorrect/gapPreds*100).toFixed(2) : 0, gapPreds,
+    contAccuracy: contPreds ? +(contCorrect/contPreds*100).toFixed(2) : 0, contPreds,
+    coverage:+(coverage*100).toFixed(2), maxDD:+maxDD.toFixed(2), score:+score.toFixed(2), cfg:clonePlain(cfg), appVersion:APP_VERSION,
+  };
+}
+
+async function runAsiaGapNNBacktest(cfgOverride=null, silent=false) {
+  const cfg={...getAsiaGapNNSettings(), ...(cfgOverride||{})};
+  if(!silent) agProgress('Preparo dataset eventi America→Asia...', '#7dd3fc');
+  if(!silent) await agEnsureData(cfg);
+  const events=await buildAsiaGapEvents(cfg);
+  if(events.length < Math.max(50,cfg.trainWindow+10)) throw new Error(`Eventi insufficienti: ${events.length}. Riduci train window o scarica più storico.`);
+  if(!silent) agProgress(`Alleno walk-forward su ${events.length} eventi...`, '#7dd3fc');
+  const res=agEvalBacktest(events,cfg, silent?null:(done,total,rows,pnl)=>agProgress(`Walk-forward ${done}/${total} · eventi ${rows} · PnL €${pnl.toFixed(2)}`, '#c0cce0'));
+  ASIAGAPNN_LAST=res;
+  try { localStorage.setItem('xauapp_asiagapnn_last', JSON.stringify({ts:Date.now(), metrics:{...res, rows:undefined}, cfg:res.cfg})); } catch(e) {}
+  return res;
+}
+function renderAsiaGapNNResult(res, targetId='ag-results') {
+  const el=document.getElementById(targetId); if(!el) return;
+  const lastTrade=[...res.rows].reverse().find(r=>r.decision!=='NO_TRADE');
+  const lastForecast=res.rows[res.rows.length-1];
+  el.innerHTML = `
+    <div style="background:#0d1117;border:1px solid #1e2535;border-radius:9px;padding:9px;margin-top:8px">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:8px">
+        <div><div style="color:#f0f4fa;font-size:15px;font-weight:900">AsiaGapNN risultato walk-forward</div><div style="color:#94a3b8;font-size:10px">${res.cfg.startDate} · USA ${res.cfg.usaCloseHourUTC}:00 UTC → Asia ${res.cfg.asiaOpenHourUTC}:00 UTC · horizon +${res.cfg.horizonMin}m · app ${res.appVersion}</div></div>
+        <div style="color:${res.pnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${res.pnl.toLocaleString('it-IT',{maximumFractionDigits:2})}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">
+        ${[
+          ['Eventi', `${res.tested}/${res.events}`, '#7dd3fc'], ['Trade', res.trades, '#f0b429'], ['Coverage', res.coverage+'%', '#c0cce0'],
+          ['WR', res.winRate+'%', '#22c55e'], ['PF', res.pf, res.pf>=1.2?'#22c55e':'#f0b429'], ['Max DD €', res.maxDD, '#ef4444'],
+          ['Gap acc.', res.gapAccuracy+'%', '#a855f7'], ['Cont acc.', res.contAccuracy+'%', '#a855f7'], ['Score', res.score, '#f0b429'],
+        ].map(([k,v,c])=>`<div style="background:#141920;border-radius:7px;padding:7px;text-align:center"><div style="color:#94a3b8;font-size:9px">${k}</div><div style="color:${c};font-size:13px;font-weight:900">${v}</div></div>`).join('')}
+      </div>
+      ${lastForecast ? `<div style="background:#141920;border-radius:7px;padding:8px;color:#c0cce0;font-size:11px;line-height:1.45;margin-bottom:6px"><b style="color:#7dd3fc">Ultimo forecast ${lastForecast.date}</b>: gap <span style="color:${agClassColor(lastForecast.gapPred)};font-weight:900">${lastForecast.gapPred}</span> ${(lastForecast.gapProb*100).toFixed(1)}% · continuation <span style="color:${agClassColor(lastForecast.contPred)};font-weight:900">${lastForecast.contPred}</span> ${(lastForecast.contProb*100).toFixed(1)}% · decisione <b>${lastForecast.decision}</b> ${lastForecast.direction||''}</div>` : ''}
+      ${lastTrade ? `<div style="background:#141920;border-radius:7px;padding:8px;color:#94a3b8;font-size:10px;line-height:1.4">Ultimo trade: ${lastTrade.date} · ${lastTrade.direction} · ${lastTrade.decision} · PnL €${lastTrade.pnlEur}</div>` : ''}
+      <div style="color:#94a3b8;font-size:10px;margin-top:6px;line-height:1.4">Nota: PnL simulato con 0.01 lot e costi v9.1/v9.4. La rete non usa dati futuri: a ogni evento allena solo sui giorni precedenti.</div>
+    </div>`;
+}
+async function runAsiaGapNNBacktestUI() {
+  const btns=document.querySelectorAll('button');
+  try { btns.forEach(b=>{ if((b.textContent||'').includes('AsiaGapNN')) b.disabled=true; });
+    const res=await runAsiaGapNNBacktest(null,false); renderAsiaGapNNResult(res); agProgress(`Completato: ${res.trades} trade · PF ${res.pf} · PnL €${res.pnl}`, res.pnl>=0?'#22c55e':'#f0b429');
+  } catch(e) { agProgress('Errore AsiaGapNN: '+e.message, '#ef4444'); alert('AsiaGapNN: '+e.message); }
+  finally { btns.forEach(b=>b.disabled=false); }
+}
+function agCandidateCfg(base, k) {
+  const h1=[8,12,16,24,32][k%5], h2=[0,6,8,12,16][Math.floor(k/2)%5], ep=[40,60,90,120][Math.floor(k/3)%4];
+  const lr=[0.004,0.007,0.01,0.016,0.025][Math.floor(k/5)%5], l2=[0.0001,0.0005,0.001,0.003,0.008][Math.floor(k/7)%5];
+  const tw=[60,90,120,150][Math.floor(k/11)%4], gp=[0.54,0.56,0.58,0.62][Math.floor(k/13)%4], cp=[0.54,0.56,0.60,0.64][Math.floor(k/17)%4];
+  const mg=[0.08,0.12,0.16,0.22,0.30][Math.floor(k/19)%5], mm=[0.10,0.16,0.22,0.30][Math.floor(k/23)%4], hz=[15,30,60][Math.floor(k/29)%3];
+  return {...base, hidden1:h1, hidden2:h2, epochs:ep, learningRate:lr, l2, trainWindow:tw, gapProbThreshold:gp, contProbThreshold:cp, minGapAtr:mg, minMoveAtr:mm, horizonMin:hz, seed:194+k*37};
+}
+async function runAsiaGapNNOptimizeUI() {
+  const base=getAsiaGapNNSettings(); const n=base.optCandidates||16; let best=null, tried=0;
+  try {
+    await agEnsureData(base);
+    for(let k=0;k<n;k++) {
+      const cfg=agCandidateCfg(base,k);
+      agProgress(`Ottimizzazione NN ${k+1}/${n}: H${cfg.hidden1}/${cfg.hidden2} · ep ${cfg.epochs} · tw ${cfg.trainWindow} · horizon ${cfg.horizonMin}`, '#d8b4fe');
+      try { const res=await runAsiaGapNNBacktest(cfg,true); tried++; if(!best || res.score>best.score) { best=res; ASIAGAPNN_BEST=res; renderAsiaGapNNResult(best); } }
+      catch(e) { console.warn('[AsiaGapNN opt]', e.message); }
+      await new Promise(r=>setTimeout(r,0));
+    }
+    if(!best) throw new Error('Nessun candidato valido. Scarica più storico o riduci train window.');
+    ASIAGAPNN_LAST=best; ASIAGAPNN_BEST=best;
+    try { localStorage.setItem('xauapp_asiagapnn_best', JSON.stringify({ts:Date.now(), metrics:{...best, rows:undefined}, cfg:best.cfg})); } catch(e) {}
+    renderAsiaGapNNResult(best); agProgress(`Best NN su ${tried} candidati: score ${best.score} · PF ${best.pf} · PnL €${best.pnl}`, '#22c55e');
+  } catch(e) { agProgress('Errore ottimizzazione NN: '+e.message, '#ef4444'); alert('Ottimizzazione AsiaGapNN: '+e.message); }
+}
+function exportAsiaGapNNCsv() {
+  const res=ASIAGAPNN_LAST;
+  if(!res?.rows?.length) { alert('Esegui prima Backtest AsiaGapNN o Ottimizza NN.'); return; }
+  const cfg=res.cfg||{};
+  const headers=['appVersion','runTs','date','usaCloseAt','asiaOpenAt','horizonAt','usaClose','asiaOpen','horizonClose','atr15','gapPts','gapAtr','movePts','gapLabel','gapPred','gapProb','contLabel','contPred','contProb','decision','direction','pnlPts','pnlEur','equity','startDate','usaCloseHourUTC','asiaOpenHourUTC','horizonMin','trainWindow','hidden1','hidden2','epochs','learningRate','l2','gapProbThreshold','contProbThreshold','minGapAtr','minMoveAtr','spread','slippage','entryCostPerSide'];
+  const ts=new Date().toISOString();
+  const rows=res.rows.map(r=>headers.map(h=>csvEscape(({appVersion:APP_VERSION,runTs:ts,startDate:cfg.startDate,usaCloseHourUTC:cfg.usaCloseHourUTC,asiaOpenHourUTC:cfg.asiaOpenHourUTC,horizonMin:cfg.horizonMin,trainWindow:cfg.trainWindow,hidden1:cfg.hidden1,hidden2:cfg.hidden2,epochs:cfg.epochs,learningRate:cfg.learningRate,l2:cfg.l2,gapProbThreshold:cfg.gapProbThreshold,contProbThreshold:cfg.contProbThreshold,minGapAtr:cfg.minGapAtr,minMoveAtr:cfg.minMoveAtr,spread:SPREAD,slippage:SLIPPAGE,entryCostPerSide:execCost(),...r})[h])).join(','));
+  downloadFile(headers.map(csvEscape).join(',')+'\n'+rows.join('\n'), `asiagapnn_${new Date().toISOString().slice(0,10)}.csv`, 'text/csv;charset=utf-8');
+}
+function saveAsiaGapNNBestAsPreset() {
+  const res=ASIAGAPNN_LAST || ASIAGAPNN_BEST;
+  if(!res) { alert('Nessun risultato AsiaGapNN da salvare.'); return; }
+  ASIAGAPNN_BEST=res;
+  try { localStorage.setItem('xauapp_asiagapnn_best', JSON.stringify({ts:Date.now(), metrics:{...res, rows:undefined}, cfg:res.cfg})); } catch(e) {}
+  alert(`Preset AsiaGapNN salvato. PF ${res.pf} · score ${res.score} · PnL €${res.pnl}`);
 }
 
 // ══ PWA: SERVICE WORKER + NOTIFICATIONS ══════════════════════
