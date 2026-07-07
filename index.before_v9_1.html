@@ -305,7 +305,6 @@ button{cursor:pointer}
             <input type="number" id="cfg-price-below" placeholder="es. 4150" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:7px;padding:8px 10px;color:#fde68a;font-size:17px"/>
           </div>
         </div>
-        <div id="sound-config-static"></div>
         <button onclick="saveAlertConfig()" style="width:100%;background:#f0b429;color:#000;border-radius:8px;padding:9px 0;font-size:17px;font-weight:700;border:none;margin-top:4px">Salva configurazione</button>
       </div>
 
@@ -647,7 +646,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-const APP_VERSION = '9.1.0-sound-costs-h24';
+const APP_VERSION = '9.0.0-portfolio-rigore';
 // ══ STORAGE ══════════════════════════════════════════════════
 const LS = {
   get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch{return null;} },
@@ -2253,114 +2252,8 @@ function getSessionStatus() {
   return { sess, sessInfo:sessInfo[sess]||sessInfo['Asia'], timeStr, nextEvent, minToNext, h, m };
 }
 
-
-// ══ NOTIFICHE SONORE LOCALI ═══════════════════════════════════
-const SOUND_DEFAULTS = { enabled:true, volume:0.75, open:true, close:true, alert:true, management:true };
-let SOUND_SETTINGS = { ...SOUND_DEFAULTS, ...(LS.get('sound_settings') || {}) };
-let audioCtx = null;
-let audioUnlocked = false;
-function saveSoundSettings(partial={}) {
-  SOUND_SETTINGS = { ...SOUND_SETTINGS, ...partial };
-  LS.set('sound_settings', SOUND_SETTINGS);
-  syncSoundInputs();
-}
-async function unlockAudio() {
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return false;
-    if (!audioCtx) audioCtx = new Ctx();
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
-    audioUnlocked = true;
-    return true;
-  } catch(e) { return false; }
-}
-function tone(freq, ms, delay=0, gainMul=1) {
-  if (!audioCtx) return;
-  const t0 = audioCtx.currentTime + delay;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(freq, t0);
-  gain.gain.setValueAtTime(0.0001, t0);
-  gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, (SOUND_SETTINGS.volume||0.75) * 0.18 * gainMul), t0 + 0.015);
-  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + ms/1000);
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start(t0); osc.stop(t0 + ms/1000 + 0.03);
-}
-async function playSound(kind='alert') {
-  if (!SOUND_SETTINGS.enabled) return;
-  if (kind === 'open' && SOUND_SETTINGS.open === false) return;
-  if (kind === 'close' && SOUND_SETTINGS.close === false) return;
-  if (kind === 'alert' && SOUND_SETTINGS.alert === false) return;
-  if (kind === 'management' && SOUND_SETTINGS.management === false) return;
-  const ok = await unlockAudio();
-  if (!ok) return;
-  if (kind === 'open') { tone(880, 120, 0); tone(1175, 160, 0.13); }
-  else if (kind === 'close') { tone(660, 120, 0); tone(440, 180, 0.14); }
-  else if (kind === 'management') { tone(740, 90, 0); tone(980, 90, 0.10); }
-  else { tone(1046, 100, 0); tone(784, 120, 0.12); }
-  if ('vibrate' in navigator) {
-    try { navigator.vibrate(kind === 'close' ? [180,70,180] : kind === 'open' ? [120,60,120] : [90,40,90]); } catch(e) {}
-  }
-}
-function syncSoundInputs() {
-  const setChk=(id,val)=>{const el=document.getElementById(id); if(el) el.checked=!!val;};
-  setChk('cfg-sound-enabled', SOUND_SETTINGS.enabled);
-  setChk('cfg-sound-open', SOUND_SETTINGS.open);
-  setChk('cfg-sound-close', SOUND_SETTINGS.close);
-  setChk('cfg-sound-alert', SOUND_SETTINGS.alert);
-  setChk('cfg-sound-management', SOUND_SETTINGS.management);
-  const vol=document.getElementById('cfg-sound-volume'); if(vol) vol.value = Math.round((SOUND_SETTINGS.volume??0.75)*100);
-}
-function readSoundInputs() {
-  const val = id => document.getElementById(id);
-  const vol = parseInt(val('cfg-sound-volume')?.value || '75', 10);
-  saveSoundSettings({
-    enabled: val('cfg-sound-enabled')?.checked ?? SOUND_SETTINGS.enabled,
-    open: val('cfg-sound-open')?.checked ?? SOUND_SETTINGS.open,
-    close: val('cfg-sound-close')?.checked ?? SOUND_SETTINGS.close,
-    alert: val('cfg-sound-alert')?.checked ?? SOUND_SETTINGS.alert,
-    management: val('cfg-sound-management')?.checked ?? SOUND_SETTINGS.management,
-    volume: Math.max(0, Math.min(100, Number.isFinite(vol)?vol:75)) / 100,
-  });
-}
-async function testSound() {
-  readSoundInputs();
-  await playSound('open');
-  const el = document.getElementById('sound-status');
-  if (el) el.textContent = audioUnlocked ? 'Audio sbloccato: ON' : 'Audio non disponibile';
-}
-function renderSoundControls() {
-  return `<div style="margin-top:10px;border-top:1px solid #2a3550;padding-top:10px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <div><div style="color:#f0b429;font-weight:700;font-size:16px">🔊 Notifiche sonore locali</div><div id="sound-status" style="color:#cbd5e1;font-size:14px">Richiede un tap su “Test suono” dopo l'apertura dell'app.</div></div>
-      <button onclick="testSound()" style="background:#f0b429;color:#000;border-radius:7px;padding:7px 10px;font-size:15px;font-weight:800">Test suono</button>
-    </div>
-    <label style="display:flex;justify-content:space-between;align-items:center;background:#1e2740;border-radius:7px;padding:7px;margin-bottom:5px"><span style="color:#f0f4fa;font-size:16px">Audio attivo</span><input type="checkbox" id="cfg-sound-enabled" ${SOUND_SETTINGS.enabled?'checked':''} style="width:17px;height:17px;accent-color:#f0b429"/></label>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
-      <label style="display:flex;align-items:center;gap:5px;background:#1e2740;border-radius:7px;padding:7px"><input type="checkbox" id="cfg-sound-open" ${SOUND_SETTINGS.open?'checked':''} style="accent-color:#f0b429"/><span style="color:#f0f4fa;font-size:15px">Trade open</span></label>
-      <label style="display:flex;align-items:center;gap:5px;background:#1e2740;border-radius:7px;padding:7px"><input type="checkbox" id="cfg-sound-close" ${SOUND_SETTINGS.close?'checked':''} style="accent-color:#f0b429"/><span style="color:#f0f4fa;font-size:15px">Trade close</span></label>
-      <label style="display:flex;align-items:center;gap:5px;background:#1e2740;border-radius:7px;padding:7px"><input type="checkbox" id="cfg-sound-alert" ${SOUND_SETTINGS.alert?'checked':''} style="accent-color:#f0b429"/><span style="color:#f0f4fa;font-size:15px">Alert</span></label>
-      <label style="display:flex;align-items:center;gap:5px;background:#1e2740;border-radius:7px;padding:7px"><input type="checkbox" id="cfg-sound-management" ${SOUND_SETTINGS.management?'checked':''} style="accent-color:#f0b429"/><span style="color:#f0f4fa;font-size:15px">BE/Trail/TP1</span></label>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px"><span style="color:#cbd5e1;font-size:15px">Volume</span><input type="range" id="cfg-sound-volume" min="0" max="100" value="${Math.round((SOUND_SETTINGS.volume??0.75)*100)}" style="flex:1;accent-color:#f0b429"/></div>
-  </div>`;
-}
-
 // ══ PAPER TRADING ENGINE ═════════════════════════════════════
 const SPREAD      = 0.04;   // $0.04 spread fisso bid/ask
-const SLIPPAGE    = 0.02;   // $0.02 slippage simulato, applicato sempre contro il trade
-function execCost(){ return SPREAD / 2 + SLIPPAGE; }
-function price2(v){ return +(Number(v)||0).toFixed(2); }
-function applyEntryCosts(dir, rawPrice) {
-  return dir === 'BUY' ? price2(rawPrice + execCost()) : price2(rawPrice - execCost());
-}
-function applyExitCosts(dir, rawPrice) {
-  return dir === 'BUY' ? price2(rawPrice - execCost()) : price2(rawPrice + execCost());
-}
-function breakEvenStopFor(dir, entryExec) {
-  return dir === 'BUY' ? price2(entryExec + execCost()) : price2(entryExec - execCost());
-}
 const RISK_PCT    = 0.01;   // 1% del capitale per trade (rischio per stop)
 const LEVERAGE    = 100;    // leva 1:100
 const MAX_POS_PCT = 0.05;   // max 5% capitale per singola posizione
@@ -2442,7 +2335,9 @@ function openPaperTradeFor(scenarioId, dirIn, esIn) {
   const es = { score: esIn.score, dir: dirIn, setup: esIn.setup, reasons: esIn.R || [] };
 
   const rawEntry = es.setup.entry;
-  const entry = applyEntryCosts(es.dir, rawEntry);
+  const entry = es.dir === 'BUY'
+    ? +(rawEntry + SPREAD / 2).toFixed(2)
+    : +(rawEntry - SPREAD / 2).toFixed(2);
 
   const sl  = es.setup.sl;
   const tp1 = es.setup.tp1;
@@ -2474,10 +2369,10 @@ function openPaperTradeFor(scenarioId, dirIn, esIn) {
     id:            Date.now() + Math.floor(Math.random()*1000),
     direction:     es.dir,
     entry, sl, tp1, tp2, lots, riskEur,
-    entrySignalPrice: rawEntry, spread: SPREAD, slippage: SLIPPAGE, entryCost: execCost(),
     confidence:    es.score,
     openedAt:      new Date().toISOString(),
     capitalAtOpen: p.capital,
+    spread:        SPREAD,
     pattern:       `Auto [${scenarioId}]`,
     macroDir:      '–',
     atrAtEntry:    getScenarioAtrFromState(scenarioId) || 0,
@@ -2492,7 +2387,7 @@ function openPaperTradeFor(scenarioId, dirIn, esIn) {
     trailingActive: false,
     breakEvenSet:   false,
     partialClosed:  false,
-    maxFavorable:   entry,
+    maxFavorable:   es.setup.entry,
     minAdverse:     es.setup.entry,
   };
 
@@ -2512,7 +2407,6 @@ function openPaperTradeFor(scenarioId, dirIn, esIn) {
     tdKey: state.tdKey,
   }).catch(()=>{});
 
-  playSound('open');
   if ('serviceWorker' in navigator && Notification.permission === 'granted') {
     navigator.serviceWorker.ready.then(reg => {
       reg.showNotification(`🤖 Paper Trade — ${trade.direction} [${scenarioId}]`, {
@@ -2749,18 +2643,17 @@ function evaluateAutoExitCore(t, currentPrice) {
       const hitTp1 = (dir === 'BUY' && currentPrice >= t.tp1) || (dir === 'SELL' && currentPrice <= t.tp1);
       if (hitTp1) {
         const halfLots = +(t.lots * PAPER_PARAMS.partialPct/100).toFixed(2);
-        const exitHalf = applyExitCosts(dir, t.tp1);
+        const exitHalf = dir === 'BUY' ? +(t.tp1 - SPREAD/2).toFixed(2) : +(t.tp1 + SPREAD/2).toFixed(2);
         const pnlHalf  = +((dir==='BUY' ? exitHalf - t.entry : t.entry - exitHalf) * halfLots * 100).toFixed(2);
         p.capital = +(p.capital + pnlHalf).toFixed(2);
         t.lots = +(t.lots - halfLots).toFixed(2);
         t.partialDone = true;
         t.partialPnl = pnlHalf;
         // SL a breakeven pieno dopo il parziale (trade ora risk-free)
-        const beSL = breakEvenStopFor(dir, t.entry);
+        const beSL = dir === 'BUY' ? +(t.entry + SPREAD).toFixed(2) : +(t.entry - SPREAD).toFixed(2);
         if ((dir==='BUY' && beSL > t.sl) || (dir==='SELL' && beSL < t.sl)) t.sl = beSL;
         t.breakEvenSet = true;
         logAction(`TP1 parziale 50%: +€${pnlHalf} · resto ${t.lots} lot corre a TP2 · SL→BE`);
-        playSound('management');
         if ('serviceWorker' in navigator && Notification.permission === 'granted') {
           navigator.serviceWorker.ready.then(reg => reg.showNotification('🎯 TP1 — 50% incassato', {
             body: `+€${pnlHalf} · Resto corre a TP2 $${fmtP(t.tp2)} · SL a breakeven`,
@@ -2804,7 +2697,9 @@ function evaluateAutoExitCore(t, currentPrice) {
   }
 
   // ── Chiudi il trade ───────────────────────────────────────
-  const exitWithSpread = applyExitCosts(dir, exitPrice);
+  const exitWithSpread = dir === 'BUY'
+    ? +(exitPrice - SPREAD / 2).toFixed(2)
+    : +(exitPrice + SPREAD / 2).toFixed(2);
 
   const pnlPts = dir === 'BUY' ? exitWithSpread - t.entry : t.entry - exitWithSpread;
   const pnlEur = +(pnlPts * t.lots * 100).toFixed(2);
@@ -2817,10 +2712,6 @@ function evaluateAutoExitCore(t, currentPrice) {
   const closed_trade = {
     ...t,
     exitPrice:     exitWithSpread,
-    exitSignalPrice: price2(exitPrice),
-    exitCost:      execCost(),
-    spread:        SPREAD,
-    slippage:      SLIPPAGE,
     exitReason,
     pnlEur,
     isWin,
@@ -2835,7 +2726,6 @@ function evaluateAutoExitCore(t, currentPrice) {
     warnThresh,
   };
 
-  playSound('close');
   p.trades.unshift(closed_trade);
   if (p.trades.length > 100) p.trades.pop();
   if (p.openTrades) delete p.openTrades[(closed_trade.scenario) || 'swing'];
@@ -3054,7 +2944,7 @@ function renderPaperWidget() {
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
       <div>
         <div style="color:#f0b429;font-weight:800;font-size:17px">🤖 Paper Trading Auto</div>
-        <div style="color:#f0f4fa;font-size:16px;margin-top:1px">Leva 1:100 · Spread $${SPREAD} · Slippage $${SLIPPAGE} · Rischio 1% · Max pos 5% · Capital €10K</div>
+        <div style="color:#f0f4fa;font-size:16px;margin-top:1px">Leva 1:100 · Spread $${SPREAD} · Rischio 1% · Max pos 5% · Capital €10K</div>
       </div>
       <button onclick="togglePaperTrading()" style="background:${p.enabled?'#ef4444':'#22c55e'};color:#fde68a;border-radius:8px;padding:7px 14px;font-size:16px;font-weight:700;border:none">
         ${p.enabled?'⏹ Stop':'▶ Avvia'}
@@ -3208,11 +3098,10 @@ async function refreshSwDiag() {
     <div class="card" style="margin-bottom:8px">
       <div style="color:#3b82f6;font-weight:700;font-size:17px;margin-bottom:8px">🌐 Ambiente</div>
       ${row('HTTPS', isHttps?'✅ Sì':'❌ No (serve HTTPS)', isHttps)}
-      ${row('Costi esecuzione', `spread $${SPREAD} · slippage $${SLIPPAGE} · costo/lato $${execCost().toFixed(2)}`, true)}
       ${row('Service Worker', hasSW?'Supportato':'Non supportato', hasSW)}
       ${row('Permesso notifiche', perm, perm==='granted')}
       ${row('SW Controller', swState)}
-      ${row('SW risponde al PING', swOk ? '✅ Sì (' + (swResponse?.ts ? new Date(swResponse.ts).toLocaleTimeString('it-IT') : '–') + ')' : '❌ No (timeout 3s)', swOk)}
+      ${row('SW risponde al PING', swOk?'✅ Sì ('+swResponse?.ts?new Date(swResponse.ts).toLocaleTimeString('it-IT'):'–'+')':'❌ No (timeout 3s)', swOk)}
     </div>
 
     <div class="card" style="margin-bottom:8px">
@@ -3262,7 +3151,6 @@ async function testSwPing() {
 }
 
 async function testNotification() {
-  await playSound('alert');
   if (Notification.permission !== 'granted') {
     logDiag('✗ Permesso notifiche non concesso', '#ef4444');
     return;
@@ -3859,12 +3747,12 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
         }
         if (!closed && !tr.partialDone && ((isBuy && cd.h >= tr.tp1) || (!isBuy && cd.l <= tr.tp1))) {
           const partLots = tr.lots * P.partialPct;
-          const exitHalf = applyExitCosts(dir, tr.tp1);
+          const exitHalf = isBuy ? tr.tp1 - SPREAD/2 : tr.tp1 + SPREAD/2;
           const pnlHalf  = (isBuy ? exitHalf - tr.entry : tr.entry - exitHalf) * partLots * 100;
           capital += pnlHalf;
           tr.lots = tr.lots - partLots;
           tr.partialDone = true; tr.partialPnl = +pnlHalf.toFixed(2);
-          const beSL = breakEvenStopFor(dir, tr.entry);
+          const beSL = isBuy ? tr.entry + SPREAD : tr.entry - SPREAD;
           if ((isBuy && beSL > tr.sl) || (!isBuy && beSL < tr.sl)) tr.sl = beSL;
           tr.breakEvenSet = true;
         }
@@ -3886,13 +3774,13 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
             if ((isBuy && trailSL > tr.sl) || (!isBuy && trailSL < tr.sl)) tr.sl = trailSL;
           }
         } else {
-          const exitSpread = applyExitCosts(dir, exitPrice);
+          const exitSpread = isBuy ? exitPrice - SPREAD/2 : exitPrice + SPREAD/2;
           const pnlPts = isBuy ? exitSpread - tr.entry : tr.entry - exitSpread;
           const pnlEur = +(pnlPts * tr.lots * 100).toFixed(2);
           capital = +(capital + pnlEur).toFixed(2);
           const pnlTotal = +(pnlEur + (tr.partialPnl||0)).toFixed(2);
           trades.push({
-            ...tr, exitPrice: +exitSpread.toFixed(2), exitSignalPrice: price2(exitPrice), exitCost: execCost(), exitReason, pnlEur,
+            ...tr, exitPrice: +exitSpread.toFixed(2), exitReason, pnlEur,
             pnlTotal,
             isWin: pnlTotal > 0,
             closedAt: cd.t,
@@ -3946,25 +3834,20 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
             {
             const setup = best.setup;
             const capitalBeforeTrade = capital;
-            const entryExec = applyEntryCosts(best.dir, setup.entry);
             const riskEur = capitalBeforeTrade * P.riskPct;
-            const slDist  = Math.abs(entryExec - setup.sl);
-            const lots = slDist ? Math.max(0.01, +Math.min(riskEur/(slDist*100), (capitalBeforeTrade*0.05)/((entryExec/100)*100)).toFixed(2)) : 0.01;
+            const slDist  = Math.abs(setup.entry - setup.sl);
+            const lots = slDist ? Math.max(0.01, +Math.min(riskEur/(slDist*100), (capitalBeforeTrade*0.05)/((setup.entry/100)*100)).toFixed(2)) : 0.01;
             const atrNow = getScenarioAtrFromState(best.scen) || cd.atr || 15;
             const paramSnapshot = makeParamSnapshot(`backtest_${mode}`, best.scen, P, P.weights?.[best.scen]);
             slots[best.scen] = {
               direction: best.dir,
-              entry: entryExec,
-              entrySignalPrice: price2(setup.entry),
-              entryCost: execCost(),
-              spread: SPREAD,
-              slippage: SLIPPAGE,
+              entry: best.dir==='BUY' ? setup.entry + SPREAD/2 : setup.entry - SPREAD/2,
               sl: setup.sl, slOrig: setup.sl, initialSl: setup.sl, tp1: setup.tp1, tp2: setup.tp2,
               lots, scenario: best.scen, execTf: scenarioExecTF(best.scen), confidence: best.score,
               openedAt: cd.t, atrAtEntry: atrNow, paramSnapshot,
               trailMult: trailMap[best.scen] ?? 1.5,
               timedExitUTC: setup.timedExitUTC ?? null, bias: setup.bias ?? null,
-              maxFavorable: entryExec, partialDone: false, breakEvenSet: false, partialPnl: 0,
+              maxFavorable: setup.entry, partialDone: false, breakEvenSet: false, partialPnl: 0,
               capitalBeforeTrade: +capitalBeforeTrade.toFixed(2),
               riskPct: +(P.riskPct * 100).toFixed(4),
               initialRisk: +slDist.toFixed(4),
@@ -5358,7 +5241,7 @@ function renderBtResults() {
 function exportBtCsv() {
   const r = state.btResults;
   if (!r?.trades?.length) { alert('Nessun risultato da esportare.'); return; }
-  const baseHead = ['openedAt','closedAt','scenario','execTf','bias','direction','entrySignalPrice','entry','entryCost','spread','slippage','initialSl','finalSl','sl','tp1','tp2','lots','exitReason','exitSignalPrice','exitPrice','exitCost','partialPnl','pnlEur','pnlTotal','rr','confidence','capitalBeforeTrade','capitalAfter','scenarioCapitalAfter','portfolioCapitalBefore','portfolioCapitalAfter','initialRisk','initialRiskEur','riskPct','runMode','portfolioMode','duplicateKey'];
+  const baseHead = ['openedAt','closedAt','scenario','execTf','bias','direction','entry','initialSl','finalSl','sl','tp1','tp2','lots','exitReason','exitPrice','partialPnl','pnlEur','pnlTotal','rr','confidence','capitalBeforeTrade','capitalAfter','scenarioCapitalAfter','portfolioCapitalBefore','portfolioCapitalAfter','initialRisk','initialRiskEur','riskPct','runMode','portfolioMode','duplicateKey'];
   const paramKeys = Object.keys(PAPER_PARAMS_DEFAULTS).filter(k=>k !== '_v');
   const weightKeys = WEIGHT_GROUPS.map(g => 'weight_'+g);
   const metaHead = ['appVersion','snapshotSource','snapshotTs','btMode','btStartDate','paramScenario','verifyRule','portfolioMode','rawTradeCount','duplicatesDropped','overlapDropped','alignedDropped'];
@@ -8076,7 +7959,7 @@ function renderRecapScreen() {
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div>
         <div style="color:#f0b429;font-weight:800;font-size:16px">🤖 Paper Trading Automatico</div>
-        <div style="color:#cbd5e1;font-size:16px">Leva 1:100 · spread $${SPREAD} · slippage $${SLIPPAGE} · 1% rischio · max 5%</div>
+        <div style="color:#cbd5e1;font-size:16px">Leva 1:100 · $${SPREAD} spread · 1% rischio · max 5%</div>
       </div>
       <button onclick="togglePaperTrading()" style="background:${p.enabled?"#ef4444":"#22c55e"};color:#000;border-radius:8px;padding:8px 14px;font-size:16px;font-weight:700;border:none">${p.enabled?"⏹ Stop":"▶ Avvia"}</button>
     </div>
@@ -8148,7 +8031,6 @@ function renderRecapScreen() {
         <div><div style="color:#cbd5e1;font-size:15px;margin-bottom:2px">Alert sopra $</div><input type="number" id="cfg-price-above" placeholder="es. 4400" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#fde68a;font-size:16px"/></div>
         <div><div style="color:#cbd5e1;font-size:15px;margin-bottom:2px">Alert sotto $</div><input type="number" id="cfg-price-below" placeholder="es. 4100" style="width:100%;background:#1e2740;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#fde68a;font-size:16px"/></div>
       </div>
-      ${renderSoundControls()}
       <button onclick="saveAlertConfig()" style="width:100%;background:#f0b429;color:#000;border-radius:7px;padding:7px 0;font-size:16px;font-weight:700;border:none">Salva config notifiche</button>
     </div>
   </div>`;
@@ -8166,19 +8048,13 @@ function launchPaperFromRecap(tradeData) {
   if (dd >= MAX_DD) { alert('Drawdown massimo raggiunto. Resetta il paper trading.'); return; }
   if (!p.enabled) p.enabled = true;
 
-  const rawEntry = tradeData.entry;
-  const entryExec = applyEntryCosts(tradeData.direction, rawEntry);
-  const lots = calcLotSize(p.capital, entryExec, tradeData.sl);
-  const riskEur = +(Math.abs(entryExec - tradeData.sl) * lots * 100).toFixed(2);
+  const lots = calcLotSize(p.capital, tradeData.entry, tradeData.sl);
+  const riskEur = +(Math.abs(tradeData.entry - tradeData.sl) * lots * 100).toFixed(2);
 
   const trade = {
     id: Date.now(),
     direction: tradeData.direction,
-    entry: entryExec,
-    entrySignalPrice: rawEntry,
-    spread: SPREAD,
-    slippage: SLIPPAGE,
-    entryCost: execCost(),
+    entry: tradeData.entry,
     sl: tradeData.sl,
     tp1: tradeData.tp1,
     tp2: tradeData.tp2,
@@ -8186,6 +8062,7 @@ function launchPaperFromRecap(tradeData) {
     confidence: tradeData.confidence,
     openedAt: new Date().toISOString(),
     capitalAtOpen: p.capital,
+    spread: SPREAD,
     pattern: `Scenario ${tradeData.label}`,
     macroDir: '–',
     atrAtEntry: 0,
@@ -8200,7 +8077,7 @@ function launchPaperFromRecap(tradeData) {
   if ('serviceWorker' in navigator && Notification.permission === 'granted') {
     navigator.serviceWorker.ready.then(reg => {
       reg.showNotification(`🤖 Paper Trade Aperto [${tradeData.label}]`, {
-        body: `${tradeData.direction} XAU @ $${fmtP(entryExec)} · SL $${fmtP(tradeData.sl)} · TP $${fmtP(tradeData.tp1)}`,
+        body: `${tradeData.direction} XAU @ $${fmtP(tradeData.entry)} · SL $${fmtP(tradeData.sl)} · TP $${fmtP(tradeData.tp1)}`,
         icon: '/icon-192.png', tag: 'paper-recap', vibrate: [200,100,200,100,200],
       });
     }).catch(()=>{});
@@ -8378,7 +8255,6 @@ function handleSwMessage(e) {
 
   // SW aggiorna SL (trailing/BE) calcolato in background
   if (d.type === 'BG_UPDATE_SL' && state.paper?.openTrade) {
-    playSound('management');
     const t = state.paper.openTrade;
     const dir = t.direction;
     if ((dir==='BUY' && d.newSL > t.sl) || (dir==='SELL' && d.newSL < t.sl)) {
@@ -8404,14 +8280,12 @@ function handleSwMessage(e) {
     if (lastEl) { lastEl.style.display='block'; lastEl.textContent=`⚠ Errore: ${d.error}`; }
   }
   if (d.type === 'ALERT_FIRED') {
-    playSound('alert');
     const lastEl = document.getElementById('bg-last-check');
     if (lastEl) { lastEl.style.display='block'; lastEl.textContent=`🔔 Alert: ${d.title} · ${new Date(d.ts).toLocaleTimeString('it-IT')}`; }
   }
 
   // Trade aperto dal SW in background
   if (d.type === 'BG_TRADE_OPENED' && d.trade) {
-    playSound('open');
     state.paper.openTrade    = d.trade;
     state.paper.lastSignalTs = d.ts || Date.now();
     if (!state.paper.enabled) state.paper.enabled = true;
@@ -8422,7 +8296,6 @@ function handleSwMessage(e) {
 
   // Trade aggiornato (trailing/BE) dal SW
   if (d.type === 'BG_TRADE_UPDATE' && d.trade) {
-    playSound('management');
     state.paper.openTrade = d.trade;
     savePaperState();
     if (state.mode === 'recap') renderRecapScreen();
@@ -8430,7 +8303,6 @@ function handleSwMessage(e) {
 
   // Trade chiuso dal SW in background
   if (d.type === 'BG_TRADE_CLOSED' && d.trade) {
-    playSound('close');
     if (state.paper.openTrades) delete state.paper.openTrades[(d.trade.scenario) || 'swing'];
     syncLegacyOpen();
     if (d.capital !== undefined) state.paper.capital = d.capital;
@@ -8523,7 +8395,6 @@ function toggleAlertPanel() {
   const visible = panel.style.display !== 'none';
   panel.style.display = visible ? 'none' : 'block';
   if (!visible) {
-    const sc = document.getElementById('sound-config-static'); if (sc) { sc.innerHTML = renderSoundControls(); syncSoundInputs(); }
     panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     updateNotifDebug();
   }
@@ -8541,7 +8412,6 @@ function updateNotifDebug() {
 
 // ── Salva config ──────────────────────────────────────────────
 async function saveAlertConfig() {
-  readSoundInputs();
   const cfg = getAlertConfig();
   LS.set('alert_config', cfg);
   await sendToSW({ type: 'UPDATE_CONFIG', tdKey: state.tdKey, config: cfg });
@@ -8626,7 +8496,6 @@ async function restoreBgState() {
   setChk('cfg-lead',   savedCfg.lead);
   if (savedCfg.priceAbove) { const el=document.getElementById('cfg-price-above'); if(el) el.value=savedCfg.priceAbove; }
   if (savedCfg.priceBelow) { const el=document.getElementById('cfg-price-below'); if(el) el.value=savedCfg.priceBelow; }
-  syncSoundInputs();
 
   if (wasActive && state.tdKey && Notification.permission === 'granted') {
     console.log('[PWA] Auto-restoring background monitoring...');

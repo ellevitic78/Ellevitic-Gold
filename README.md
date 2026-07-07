@@ -45,7 +45,7 @@ App standalone per Android con dati live, analisi MTF, scalping e notifiche in b
 
 ## Versione inclusa
 
-Questa build è la **v8.9 general-start-checkpoint-fast**. Vedi `CHANGELOG_8.9.md` per data inizio Backtest Generale, checkpoint progressivi delle ottimizzazioni e accelerazioni del motore backtest senza scorciatoie sul risultato finale.
+Questa build è la **v9.1 sound-costs-h24**. Vedi `CHANGELOG_9.1.md` per notifiche sonore, applicazione esplicita di spread/slippage e guida H24.
 
 ## Alert disponibili
 - 📍 Prezzo vicino a Pivot / R1 / S1
@@ -56,8 +56,8 @@ Questa build è la **v8.9 general-start-checkpoint-fast**. Vedi `CHANGELOG_8.9.m
 
 ## Note
 - Il monitoraggio gira ogni **5 minuti** (rispetta il rate limit Twelve Data free: 800 req/giorno)
-- Su Android Chrome le notifiche funzionano anche con lo schermo spento
-- Su iOS Safari le PWA non supportano push notification (limitazione Apple)
+- Su Android Chrome le notifiche possono funzionare tramite Service Worker, ma la continuità dipende da browser, batteria e produttore del telefono.
+- Il suono custom dell'app funziona quando la pagina è viva e l'audio è stato sbloccato; a pagina sospesa resta il suono della notifica di sistema.
 
 ## v8.6 — Timeframe operativo per scenario
 
@@ -104,3 +104,12 @@ Questa correzione evita l'errore della versione precedente: sommare trade genera
 Il Generale ha anche l'opzione di allineare i risultati all'intersezione comune dei periodi scenario. Serve quando, per esempio, 1H parte più tardi di 5M/1M: in quel caso i trade fuori periodo comune vengono rimossi dalla vista Generale per rendere i risultati confrontabili.
 
 Il backtest applica anche filtro mercato XAU e anti-duplicazione tra scenari. Le ottimizzazioni usano un ranking più robusto: P&L, PF, drawdown, trade minimi, stabilità mensile, equilibrio BUY/SELL e penalità overtrade.
+
+
+## v9.1 — Notifiche sonore, costi e H24
+
+- Aggiunte notifiche sonore locali configurabili: open, close, alert e gestione trade.
+- Aggiunto pulsante Test suono per sbloccare l'audio dopo il tap utente.
+- Spread e slippage sono applicati su entry, exit, TP1, TP2, SL, SL_BE e trailing.
+- CSV backtest ampliato con prezzi segnale/esecuzione e costi applicati.
+- Aggiunta guida `GUIDA_H24.md`.

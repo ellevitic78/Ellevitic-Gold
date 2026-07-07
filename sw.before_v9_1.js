@@ -1,5 +1,5 @@
-// ── XAU/USD Analyzer — Service Worker v9.1 (Sound + Costs + H24) ─────────
-const CACHE = 'xauapp-v9-1';
+// ── XAU/USD Analyzer — Service Worker v8.9 (General Start + Checkpoints) ─────────
+const CACHE = 'xauapp-v9-0';
 const ASSETS = ['index.html', 'manifest.json', 'icon-192.png', 'icon-72.png'];
 
 self.addEventListener('install', e => {
@@ -44,12 +44,6 @@ let paperTrades  = [];
 let lastCheckTs  = 0;
 
 const SPREAD       = 0.04;
-const SLIPPAGE     = 0.02;
-function execCost(){ return SPREAD/2 + SLIPPAGE; }
-function price2(v){ return +(Number(v)||0).toFixed(2); }
-function applyEntryCosts(dir, rawPrice){ return dir==='BUY' ? price2(rawPrice + execCost()) : price2(rawPrice - execCost()); }
-function applyExitCosts(dir, rawPrice){ return dir==='BUY' ? price2(rawPrice - execCost()) : price2(rawPrice + execCost()); }
-function breakEvenStopFor(dir, entryExec){ return dir==='BUY' ? price2(entryExec + execCost()) : price2(entryExec - execCost()); }
 const RISK_PCT     = 0.01;
 const LEVERAGE     = 100;
 const MAX_POS_PCT  = 0.05;
@@ -97,7 +91,6 @@ self.addEventListener('message', async e => {
 
   if (d.type === 'PAPER_TRADE_OPEN') {
     openTrade    = d.trade;
-    if (d.trade) openTrades[(d.trade.scenario||'swing')] = d.trade;
     paperCapital = d.capital || paperCapital;
     if (d.tdKey) tdKey = d.tdKey;
     if (!tradeTimer) tradeTimer = setInterval(() => monitorTrade(), 30000);
@@ -387,7 +380,9 @@ async function tryAutoEntry(scoring) {
   const wd = new Date(), day = wd.getUTCDay(), hh = wd.getUTCHours();
   if ((day===5 && hh>=20) || day===6 || (day===0 && hh<22)) return;
 
-  const entry = applyEntryCosts(bestDir, price);
+  const entry = bestDir === 'BUY'
+    ? +(price + SPREAD/2).toFixed(2)
+    : +(price - SPREAD/2).toFixed(2);
   const sl  = bestDir === 'BUY' ? +(entry - atr1h*1.5).toFixed(2) : +(entry + atr1h*1.5).toFixed(2);
   const risk = Math.abs(entry - sl);
   const tp1 = bestDir === 'BUY' ? +(entry + risk*1.5).toFixed(2) : +(entry - risk*1.5).toFixed(2);
@@ -398,7 +393,7 @@ async function tryAutoEntry(scoring) {
   openTrade = {
     id: Date.now(), direction: bestDir, entry, sl, tp1, tp2, lots, riskEur,
     confidence: bestScore, openedAt: new Date().toISOString(),
-    capitalAtOpen: paperCapital, spread: SPREAD, slippage: SLIPPAGE, entryCost: execCost(), entrySignalPrice: price, atrAtEntry: atr1h,
+    capitalAtOpen: paperCapital, spread: SPREAD, atrAtEntry: atr1h,
     scenario: 'auto-bg', pattern: `BG Score ${bestScore}`,
     managementLog: [], breakEvenSet: false, trailingActive: false,
     maxFavorable: entry, trailMult: 1.5, warnThresh: 6,
@@ -460,12 +455,12 @@ async function monitorTrade() {
   if (!closed && dir==='SELL' && price <= t.tp2) { closed=true; exitReason='TP2'; exitPrice=t.tp2; }
   if (!closed && !t.partialDone && ((dir==='BUY' && price >= t.tp1) || (dir==='SELL' && price <= t.tp1))) {
     const halfLots = +(t.lots/2).toFixed(2);
-    const exitHalf = applyExitCosts(dir, t.tp1);
+    const exitHalf = dir==='BUY' ? +(t.tp1-SPREAD/2).toFixed(2) : +(t.tp1+SPREAD/2).toFixed(2);
     const pnlHalf  = +((dir==='BUY'?exitHalf-t.entry:t.entry-exitHalf)*halfLots*100).toFixed(2);
     paperCapital = +(paperCapital + pnlHalf).toFixed(2);
     t.lots = +(t.lots - halfLots).toFixed(2);
     t.partialDone = true; t.partialPnl = pnlHalf;
-    const beSL = breakEvenStopFor(dir, t.entry);
+    const beSL = dir==='BUY' ? +(t.entry+SPREAD).toFixed(2) : +(t.entry-SPREAD).toFixed(2);
     if ((dir==='BUY'&&beSL>t.sl)||(dir==='SELL'&&beSL<t.sl)) t.sl = beSL;
     t.breakEvenSet = true;
     logAction(`TP1 parziale 50%: +€${pnlHalf} · SL→BE`);
@@ -516,7 +511,7 @@ async function monitorTrade() {
   }
 
   // ── Chiudi trade ──────────────────────────────────────────
-  const exitSpread = applyExitCosts(dir, exitPrice);
+  const exitSpread = dir==='BUY' ? +(exitPrice-SPREAD/2).toFixed(2) : +(exitPrice+SPREAD/2).toFixed(2);
   const pnlPts = dir==='BUY' ? exitSpread-t.entry : t.entry-exitSpread;
   const pnlEur = +(pnlPts*t.lots*100).toFixed(2);
   const isWin  = pnlEur > 0;
@@ -524,14 +519,13 @@ async function monitorTrade() {
   paperCapital = +(paperCapital + pnlEur).toFixed(2);
 
   const closedTrade = {
-    ...t, exitPrice:exitSpread, exitSignalPrice:price2(exitPrice), exitCost:execCost(), spread:SPREAD, slippage:SLIPPAGE, exitReason, pnlEur, isWin,
+    ...t, exitPrice:exitSpread, exitReason, pnlEur, isWin,
     closedAt: new Date().toISOString(), capitalAfter: paperCapital,
     rr: +(pnlPts/Math.abs(t.entry-t.sl||1)).toFixed(2),
   };
   paperTrades.unshift(closedTrade);
   if (paperTrades.length > 100) paperTrades.pop();
   openTrade = null;
-  if (closedTrade.scenario) delete openTrades[closedTrade.scenario];
   lastTradeTs = Date.now();
 
   notifyClients({ type:'BG_TRADE_CLOSED', trade:closedTrade, capital:paperCapital, trades:paperTrades, ts:Date.now() });
