@@ -1,5 +1,5 @@
-// ── XAU/USD Analyzer — Service Worker v5 (Full Auto) ─────────
-const CACHE = 'xauapp-v7';
+// ── XAU/USD Analyzer — Service Worker v8.5 (Full Auto) ─────────
+const CACHE = 'xauapp-v8-6';
 const ASSETS = ['index.html', 'manifest.json', 'icon-192.png', 'icon-72.png'];
 
 self.addEventListener('install', e => {

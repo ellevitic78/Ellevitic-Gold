@@ -95,6 +95,7 @@ button{cursor:pointer}
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
           <span style="font-size:18px">🥇</span>
           <span style="color:#f0b429;font-weight:800;font-size:20px">XAU/USD</span>
+          <span id="app-version-badge" style="background:#3b82f620;color:#93c5fd;border:1px solid #3b82f644;border-radius:4px;padding:1px 5px;font-size:11px;font-weight:800">v8.5</span>
           <span id="status-badge" style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:4px;padding:1px 5px;font-size:16px;font-weight:700">⟳</span>
           <button onclick="showSettings()" style="background:#141920;border:1px solid #2a3550;color:#f0f4fa;border-radius:5px;padding:2px 7px;font-size:16px">⚙️</button>
         </div>
@@ -126,7 +127,8 @@ button{cursor:pointer}
       <button id="mode-swing" onclick="setMode('swing')" style="flex:1;padding:8px 0;border-radius:8px;font-size:17px;font-weight:700;background:#141920;color:#f0f4fa;border:none">📊 Swing</button>
       <button id="mode-scalp" onclick="setMode('scalp')" style="flex:1;padding:8px 0;border-radius:8px;font-size:17px;font-weight:700;background:#141920;color:#f0f4fa;border:none">⚡ Scalp</button>
       <button id="mode-trend" onclick="setMode('trend')" style="flex:1;padding:8px 0;border-radius:8px;font-size:17px;font-weight:700;background:#141920;color:#f0f4fa;border:none">📈 Trend</button>
-      <button id="mode-hist" onclick="setMode('hist')" style="flex:1;padding:8px 0;border-radius:8px;font-size:17px;font-weight:700;background:#141920;color:#f0f4fa;border:none">📥</button>
+      <button id="mode-hist" onclick="setMode('hist')" style="flex:1;padding:8px 0;border-radius:8px;font-size:16px;font-weight:700;background:#141920;color:#f0f4fa;border:none">🧪</button>
+      <button id="mode-download" onclick="setMode('download')" style="flex:1;padding:8px 0;border-radius:8px;font-size:16px;font-weight:700;background:#141920;color:#f0f4fa;border:none">📥</button>
       <button onclick="doRefreshCurrent()" id="refresh-btn" style="padding:5px 11px;border-radius:8px;border:1px solid #2a3550;background:transparent;color:#f0f4fa;font-size:16px">↻</button>
     </div>
     <!-- TF tabs (solo swing mode) -->
@@ -346,55 +348,74 @@ button{cursor:pointer}
   </div>
 </div>
 
-<!-- ══ HIST SCREEN — Download storico per backtest ══════════ -->
-<div id="hist-screen" style="display:none;max-width:480px;margin:0 auto;padding-bottom:36px">
+
+<!-- ══ DOWNLOAD SCREEN — Dati normalizzati per backtest ═══════ -->
+<div id="download-screen" style="display:none;max-width:480px;margin:0 auto;padding-bottom:36px">
   <div class="card" style="border:2px solid #3b82f644;margin-bottom:10px">
-    <div style="color:#3b82f6;font-size:20px;font-weight:900;margin-bottom:4px">📥 Storico per Backtest</div>
+    <div style="color:#3b82f6;font-size:20px;font-weight:900;margin-bottom:4px">📥 Download & normalizzazione dati</div>
     <div style="color:#c0cce0;font-size:13px;line-height:1.5">
-      Scarica <b>una tantum</b> le serie storiche XAU/USD, EUR/USD e TNX da Twelve Data.
-      Vengono salvate qui sul telefono (localStorage) — il backtest futuro le userà
-      senza richiamare più l'API.
+      Scegli una <b>data di inizio</b>: l'app scarica XAU/USD 1D, 1H, 5M e 1M da quella data, integra le candele mancanti, elimina duplicati e salva tutto ordinato in locale per il backtest.
     </div>
   </div>
 
-  <div class="card" style="margin-bottom:10px">
-    <div style="color:#f0f4fa;font-weight:700;font-size:14px;margin-bottom:8px">⚙️ Configurazione</div>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+  <div class="card" style="border:2px solid #22c55e44;margin-bottom:10px">
+    <div style="color:#22c55e;font-weight:800;font-size:15px;margin-bottom:8px">🧼 Normalizza dataset backtest</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px">
+      <label style="display:flex;flex-direction:column;gap:3px;background:#141920;border-radius:7px;padding:8px 10px">
+        <span style="color:#c0cce0;font-size:12px">Data di inizio</span>
+        <input id="hist-start-date" type="date" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:7px;font-size:13px"/>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:3px;background:#141920;border-radius:7px;padding:8px 10px">
+        <span style="color:#c0cce0;font-size:12px">Max pagine / timeframe</span>
+        <input id="hist-sync-max-pages" type="number" value="120" min="1" max="500" step="1" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:7px;font-size:13px"/>
+      </label>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:8px">
+      <label style="background:#141920;border-radius:7px;padding:7px;color:#c0cce0;font-size:12px;text-align:center"><input type="checkbox" id="hist-sync-1day" checked style="accent-color:#22c55e"/> 1D</label>
+      <label style="background:#141920;border-radius:7px;padding:7px;color:#c0cce0;font-size:12px;text-align:center"><input type="checkbox" id="hist-sync-1h" checked style="accent-color:#22c55e"/> 1H</label>
+      <label style="background:#141920;border-radius:7px;padding:7px;color:#c0cce0;font-size:12px;text-align:center"><input type="checkbox" id="hist-sync-5min" checked style="accent-color:#22c55e"/> 5M</label>
+      <label style="background:#141920;border-radius:7px;padding:7px;color:#c0cce0;font-size:12px;text-align:center"><input type="checkbox" id="hist-sync-1min" checked style="accent-color:#22c55e"/> 1M</label>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:9px">
+      <label style="display:flex;flex-direction:column;gap:3px;background:#141920;border-radius:7px;padding:8px 10px">
+        <span style="color:#c0cce0;font-size:12px">Barre per pagina</span>
+        <select id="hist-sync-page-size" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:7px;font-size:13px">
+          <option value="1000">1.000</option>
+          <option value="3000">3.000</option>
+          <option value="5000" selected>5.000</option>
+        </select>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:3px;background:#141920;border-radius:7px;padding:8px 10px">
+        <span style="color:#c0cce0;font-size:12px">Pausa tra chiamate</span>
+        <select id="hist-delay" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:7px;font-size:13px">
+          <option value="2000">2s</option>
+          <option value="8000" selected>8s prudente</option>
+          <option value="15000">15s free</option>
+        </select>
+      </label>
+    </div>
+    <button id="hist-sync-btn" onclick="startNormalizedDownload()" style="width:100%;background:#22c55e;color:#000;border-radius:8px;padding:11px 0;font-size:14px;font-weight:900;border:none">🧼 Scarica e integra mancanti</button>
+    <div style="color:#94a3b8;font-size:10px;margin-top:6px;line-height:1.4">Nota: l'integrazione è deduplicata e ordinata. Se raggiunge il limite pagine prima della data di inizio, aumenta “Max pagine”.</div>
+  </div>
+
+  <details class="card" style="margin-bottom:10px">
+    <summary style="color:#3b82f6;font-size:14px;font-weight:800;cursor:pointer">⚙️ Download legacy / emergenza</summary>
+    <div style="display:flex;flex-direction:column;gap:6px;margin:10px 0">
       <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px">
         <span style="color:#c0cce0;font-size:13px">Barre per serie</span>
         <select id="hist-outputsize" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
-          <option value="1000">1.000 (rapido)</option>
-          <option value="3000">3.000</option>
-          <option value="5000" selected>5.000 (consigliato)</option>
-        </select>
-      </label>
-      <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px">
-        <span style="color:#c0cce0;font-size:13px">Pausa tra chiamate</span>
-        <select id="hist-delay" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
-          <option value="2000">2s (piano a pagamento)</option>
-          <option value="8000" selected>8s (prudente)</option>
-          <option value="15000">15s (piano free)</option>
+          <option value="1000">1.000</option><option value="3000">3.000</option><option value="5000" selected>5.000</option>
         </select>
       </label>
     </div>
-    <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">
-      Serie scaricate: XAU/USD (1M·5M·1H·4H·Daily) · EUR/USD (5M·1H) · TNX (5M·1H) — 9 chiamate totali
-    </div>
-    <button id="hist-download-btn" onclick="startHistDownload()" style="width:100%;background:#3b82f6;color:#fff;border-radius:8px;padding:11px 0;font-size:14px;font-weight:800;border:none">
-      ⬇️ Avvia download storico
-    </button>
+    <button id="hist-download-btn" onclick="startHistDownload()" style="width:100%;background:#3b82f6;color:#fff;border-radius:8px;padding:10px 0;font-size:13px;font-weight:800;border:none">⬇️ Avvia download storico legacy</button>
     <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
       <select id="hist-deep-pages" style="flex:1;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:8px;font-size:13px">
-        <option value="3">3 pagine (~10 giorni 1M)</option>
-        <option value="6">6 pagine (~3 settimane 1M)</option>
-        <option value="12">12 pagine (~1,5 mesi 1M)</option>
-        <option value="24">24 pagine (~3 mesi 1M)</option>
-        <option value="36" selected>36 pagine (~6 mesi 1M)</option>
+        <option value="3">3 pagine</option><option value="6">6 pagine</option><option value="12">12 pagine</option><option value="24">24 pagine</option><option value="36" selected>36 pagine</option>
       </select>
       <button id="hist-deep-btn" onclick="startDeepDownload()" style="flex:1;background:#f0b429;color:#000;border-radius:8px;padding:9px 0;font-size:13px;font-weight:800;border:none">⬇️ 1M profondo</button>
     </div>
-    <div style="color:#94a3b8;font-size:10px;margin-top:4px">Scarica pagine multiple di XAU 1M a ritroso (5000 barre/pagina). 36 pagine ≈ 6 mesi ≈ 18MB (ok per IndexedDB) e ~5-8 min di download con pausa 8s. Il download si ferma da solo quando il provider non ha più dati.</div>
-  </div>
+  </details>
 
   <div id="hist-progress-card" class="card" style="display:none;margin-bottom:10px">
     <div style="color:#f0b429;font-weight:700;font-size:13px;margin-bottom:8px">⏳ Download in corso...</div>
@@ -402,37 +423,66 @@ button{cursor:pointer}
       <div id="hist-progress-bar" style="width:0%;height:100%;background:#3b82f6;border-radius:99px;transition:width .3s"></div>
     </div>
     <div id="hist-progress-text" style="color:#c0cce0;font-size:12px">In attesa...</div>
-    <div id="hist-progress-log" style="margin-top:8px;background:#0d1117;border-radius:8px;padding:8px;font-family:monospace;font-size:11px;color:#22c55e;max-height:160px;overflow-y:auto"></div>
+    <div id="hist-progress-log" style="margin-top:8px;background:#0d1117;border-radius:8px;padding:8px;font-family:monospace;font-size:11px;color:#22c55e;max-height:180px;overflow-y:auto"></div>
   </div>
 
   <div class="card" style="margin-bottom:10px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="color:#f0f4fa;font-weight:700;font-size:14px">💾 Dati salvati</div>
-      <button onclick="renderHistScreen()" style="background:#1e2740;border:1px solid #2a3550;color:#c0cce0;border-radius:6px;padding:4px 10px;font-size:11px">🔄</button>
+      <button onclick="renderDownloadScreen()" style="background:#1e2740;border:1px solid #2a3550;color:#c0cce0;border-radius:6px;padding:4px 10px;font-size:11px">🔄</button>
     </div>
     <div id="hist-saved-list"><div style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">Caricamento...</div></div>
   </div>
 
+  <div class="card" style="margin-bottom:10px">
+    <div style="color:#f0f4fa;font-weight:700;font-size:14px;margin-bottom:8px">📤 Esporta / Pulisci</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button onclick="exportHistData()" style="flex:1;min-width:130px;background:#22c55e20;border:1px solid #22c55e44;color:#22c55e;border-radius:7px;padding:9px 0;font-size:12px;font-weight:700">📤 Esporta tutto (JSON)</button>
+      <button onclick="clearHistData()" style="flex:1;min-width:130px;background:#ef444420;border:1px solid #ef444444;color:#ef4444;border-radius:7px;padding:9px 0;font-size:12px;font-weight:700">🗑 Elimina tutto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OPTIMIZATION/BACKTEST SCREEN ═══════════════════════════ -->
+<div id="hist-screen" style="display:none;max-width:480px;margin:0 auto;padding-bottom:36px">
+  <div class="card" style="border:2px solid #a855f744;margin-bottom:10px">
+    <div style="color:#a855f7;font-size:20px;font-weight:900;margin-bottom:4px">🧪 Backtest & Ottimizzazione</div>
+    <div style="color:#c0cce0;font-size:13px;line-height:1.5">Qui non si scaricano dati. Il generale fa solo backtest; le ottimizzazioni sono isolate per scenario. Verifica trade: Scalp 1M · Swing 5M · Trend 1H.</div>
+  </div>
   <div class="card" style="border:2px solid #3b82f644;margin-bottom:10px">
-    <div style="color:#3b82f6;font-size:16px;font-weight:800;margin-bottom:4px">🧰 Ottimizzazione per scenario</div>
-    <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">Ogni scenario opera su uno slot indipendente (rischio 2% ciascuno): qui lo testi, ottimizzi e monitori <b>da solo</b>. Parametri live e ultimo risultato sempre in vista.</div>
+    <div style="color:#3b82f6;font-size:16px;font-weight:800;margin-bottom:4px">🧰 Ottimizzazione SOLO per scenario</div>
+    <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">Ogni scenario opera su uno slot indipendente e sul proprio timeframe operativo: Scalp=1M, Swing=5M, Trend=1H. Qui fai backtest isolato, ottimizzazione parametri, ottimizzazione pesi e annealing intrascenario. Ultimi parametri e miglior risultato vengono salvati localmente.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:end;margin-bottom:8px;background:#0d1117;border:1px solid #1e2535;border-radius:8px;padding:8px">
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Iterazioni annealing/scenario</div><input id="scen-sa-iters" type="number" value="60" min="5" max="1000" step="5" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Barre Scalp 1M</div><input id="scen-sa-bars-1m" type="number" value="60000" min="5000" max="250000" step="5000" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+      <button onclick="clearOptResults()" style="background:#ef444420;border:1px solid #ef444444;color:#ef4444;border-radius:7px;padding:8px 10px;font-size:11px;font-weight:800">🧹 Azzera risultati</button>
+    </div>
     <div id="opt-hub"></div>
+    <div id="scenario-hidden-controls" style="display:none">
+      <select id="scen-opt-target"><option value="trend">trend</option><option value="swing">swing</option><option value="bias">bias</option><option value="scalp">scalp</option></select>
+      <button id="scen-opt-btn" onclick="runScenOptimization()">scenario</button>
+      <select id="wopt-target"><option value="swing">swing</option><option value="trend">trend</option><option value="scalp">scalp</option></select>
+      <button id="wopt-btn" onclick="runWeightOptimization()">weights</button>
+      <select id="bt-sweep-param"><option value="minConf">minConf</option><option value="thrSwing">thrSwing</option><option value="thrTrend">thrTrend</option><option value="thrScalp">thrScalp</option><option value="thrBias">thrBias</option><option value="riskPct">riskPct</option><option value="beRR">beRR</option><option value="trailRR">trailRR</option><option value="trailTrend">trailTrend</option><option value="trailSwing">trailSwing</option><option value="trailScalp">trailScalp</option><option value="partialPct">partialPct</option></select>
+      <input type="number" id="bt-sweep-from" value="50"/><input type="number" id="bt-sweep-to" value="75"/><input type="number" id="bt-sweep-step" value="5"/>
+      <button id="bt-sweep-btn" onclick="runBtSweep()">sweep</button>
+    </div>
   </div>
 
   <div class="card" style="border:2px solid #22c55e44;margin-bottom:10px">
-    <div style="color:#22c55e;font-size:16px;font-weight:900;margin-bottom:4px">🧪 Backtest COMPLESSIVO — tutti gli scenari insieme (multi-slot)</div>
+    <div style="color:#22c55e;font-size:16px;font-weight:900;margin-bottom:4px">🧪 Backtest GENERALE — solo test, nessuna ottimizzazione</div>
     <div style="color:#c0cce0;font-size:12px;line-height:1.5;margin-bottom:10px">
-      Simula il paper trading sul passato usando <b>lo stesso identico scoring e le stesse regole di gestione</b>
-      (soglie, spread, rischio 1%, TP1 parziale 50%, breakeven, trailing per scenario, exit a orario).
+      Simula il sistema complessivo sul passato usando i parametri live correnti.
+      Questa sezione <b>non ottimizza nulla</b>: serve solo a validare gli scenari con verifica coerente: Swing su 5M, Trend/Bias su 1H, Scalp su 1M.
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
       <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px">
-        <span style="color:#c0cce0;font-size:13px">Barre 1H da testare</span>
+        <span style="color:#c0cce0;font-size:13px">Barre da testare per timeframe operativo</span>
         <select id="bt-bars" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
           <option value="500">500</option>
           <option value="1500">1.500</option>
           <option value="3000">3.000</option>
-          <option value="5000" selected>5.000 (max 1H)</option>
+          <option value="5000" selected>5.000</option>
           <option value="20000">20.000 (1M ~3 sett)</option>
           <option value="60000">60.000 (1M ~2 mesi)</option>
           <option value="200000">200.000 (1M tutto ~6 mesi)</option>
@@ -440,10 +490,10 @@ button{cursor:pointer}
       </label>
       <div style="display:flex;gap:6px">
         <label style="flex:1;display:flex;align-items:center;gap:6px;background:#141920;border-radius:7px;padding:8px 10px;cursor:pointer">
-          <input type="checkbox" id="bt-scen-swing" checked style="width:16px;height:16px;accent-color:#f0b429"/><span style="color:#f0b429;font-size:12px;font-weight:700">📊 Swing</span>
+          <input type="checkbox" id="bt-scen-swing" checked style="width:16px;height:16px;accent-color:#f0b429"/><span style="color:#f0b429;font-size:12px;font-weight:700">📊 Swing 5M</span>
         </label>
         <label style="flex:1;display:flex;align-items:center;gap:6px;background:#141920;border-radius:7px;padding:8px 10px;cursor:pointer">
-          <input type="checkbox" id="bt-scen-trend" checked style="width:16px;height:16px;accent-color:#22c55e"/><span style="color:#22c55e;font-size:12px;font-weight:700">📈 Trend</span>
+          <input type="checkbox" id="bt-scen-trend" checked style="width:16px;height:16px;accent-color:#22c55e"/><span style="color:#22c55e;font-size:12px;font-weight:700">📈 Trend 1H</span>
         </label>
         <label style="flex:1;display:flex;align-items:center;gap:6px;background:#141920;border-radius:7px;padding:8px 10px;cursor:pointer">
           <input type="checkbox" id="bt-scen-bias" checked style="width:16px;height:16px;accent-color:#a855f7"/><span style="color:#a855f7;font-size:12px;font-weight:700">⏰ Bias</span>
@@ -454,11 +504,12 @@ button{cursor:pointer}
       </div>
     </div>
     <label style="display:flex;align-items:center;justify-content:space-between;background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:6px">
-      <span style="color:#c0cce0;font-size:13px">Modalità</span>
+      <span style="color:#c0cce0;font-size:13px">Modalità verifica</span>
       <select id="bt-mode" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:13px">
-        <option value="1h" selected>1H — Swing/Trend/Bias</option>
-        <option value="5m">5M — Scalp (approssimato)</option>
-        <option value="1m">1M — Scalp (reale, richiede 1M profondo)</option>
+        <option value="auto" selected>AUTO — Swing 5M · Trend 1H · Scalp 1M</option>
+        <option value="5m">Solo Swing 5M</option>
+        <option value="1h">Solo Trend/Bias 1H</option>
+        <option value="1m">Solo Scalp 1M</option>
       </select>
     </label>
 
@@ -467,97 +518,18 @@ button{cursor:pointer}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Rischio %</div><input type="number" id="btp-risk" value="5" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min confidence</div><input type="number" id="btp-minconf" value="60" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Swing</div><input type="number" id="btp-thr-swing" value="54" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Trend</div><input type="number" id="btp-thr-trend" value="74" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Scalp</div><input type="number" id="btp-thr-scalp" value="62" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Bias</div><input type="number" id="btp-thr-bias" value="72" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">BE trigger (R)</div><input type="number" id="btp-berr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail trigger (R)</div><input type="number" id="btp-trailrr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Swing ×ATR</div><input type="number" id="btp-trail-swing" value="2.7" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Trend ×ATR</div><input type="number" id="btp-trail-trend" value="1.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Scalp ×ATR</div><input type="number" id="btp-trail-scalp" value="0.8" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parziale TP1 %</div><input type="number" id="btp-partial" value="15" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div></div>
     </details>
 
-    <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
-      <summary style="color:#3b82f6;font-size:13px;font-weight:700;cursor:pointer">🛡️ Sanity check anti-overfitting</summary>
-      <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
-        Valida la configurazione live corrente con 3 prove: <b>Out-of-Sample</b> (ultimo 30% del periodo),
-        <b>walk-forward</b> (4 finestre sequenziali) e <b>robustezza</b> (i parametri perturbati di ±1 passo
-        devono reggere). Include anche la gamba <b>Scalp 1M</b> se il 1M profondo è scaricato (modello complessivo). Verdetto: 🟢 robusto · 🟡 fragile · 🔴 probabile overfit. ~15-17 backtest, 2-4 min.
-        Consigliato <b>dopo ogni ottimizzazione</b> prima di fidarsi dei nuovi parametri.
-      </div>
-      <button id="sanity-btn" onclick="runSanityCheck()" style="width:100%;background:#3b82f6;color:#fff;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🛡️ Avvia sanity check</button>
-    </details>
+    
 
-    <details open style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
-      <summary style="color:#a855f7;font-size:13px;font-weight:700;cursor:pointer">🔥 Ottimizzazione (Simulated Annealing)</summary>
-      <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
-        Cerca i parametri migliori su 5000 barre 1H partendo dai valori live.
-        Se il risultato batte la baseline (P&L superiore, PF ≥ 1.05, ≥ 10 trade),
-        <b style="color:#22c55e">i parametri live vengono sostituiti automaticamente</b>.
-      </div>
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
-        <div style="flex:1"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Iterazioni (≈3-6s l'una)</div>
-        <input type="number" id="sa-iters" value="40" min="5" max="300" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
-        <button id="sa-run-btn" onclick="runSaOptimization()" style="flex:1;background:#a855f7;color:#fff;border-radius:7px;padding:11px 0;font-size:13px;font-weight:800;border:none;margin-top:14px">🔥 Avvia ottimizzazione</button>
-      </div>
-    </details>
+    
 
-    <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
-      <summary style="color:#3b82f6;font-size:13px;font-weight:700;cursor:pointer">🎯 Ottimizzazione per scenario (un parametro alla volta)</summary>
-      <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
-        Ottimizza i parametri del singolo scenario in isolamento (soglia, poi trailing) con
-        ricerca completa su ogni parametro. Stessa logica dell'Annealing: se il risultato
-        combinato batte la baseline, <b style="color:#22c55e">i parametri live dello scenario vengono aggiornati</b>.
-      </div>
-      <div style="display:flex;gap:6px;align-items:flex-end">
-        <div style="flex:1"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Scenario</div>
-          <select id="scen-opt-target" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:8px;font-size:13px">
-            <option value="trend" selected>📈 Trend</option>
-            <option value="swing">📊 Swing</option>
-            <option value="bias">⏰ Bias</option>
-            <option value="scalp">⚡ Scalp (1M profondo)</option>
-          </select></div>
-        <button id="scen-opt-btn" onclick="runScenOptimization()" style="flex:1;background:#3b82f6;color:#fff;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🎯 Ottimizza scenario</button>
-      </div>
-    </details>
+    
 
-    <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
-      <summary style="color:#e879f9;font-size:13px;font-weight:700;cursor:pointer">🧬 Pesi interni scoring (per scenario)</summary>
-      <div style="color:#94a3b8;font-size:11px;line-height:1.5;margin:8px 0">
-        Ottimizza i <b>pesi dei criteri dentro lo score</b> (macro, MTF, ADX, RSI, pivot, pullback,
-        criteri specifici, sessione) come moltiplicatori ×0–×2, un criterio alla volta, scenario isolato.
-        Se il risultato batte la baseline, <b style="color:#22c55e">i pesi live dello scenario vengono aggiornati</b>.
-        ~57 backtest: 3-6 minuti.
-      </div>
-      <div style="display:flex;gap:6px;align-items:flex-end">
-        <div style="flex:1"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Scenario</div>
-          <select id="wopt-target" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:8px;font-size:13px">
-            <option value="swing" selected>📊 Swing</option>
-            <option value="trend">📈 Trend</option>
-            <option value="scalp">⚡ Scalp (1M profondo — lento: 10-20 min)</option>
-          </select></div>
-        <button id="wopt-btn" onclick="runWeightOptimization()" style="flex:1;background:#e879f9;color:#000;border-radius:7px;padding:10px 0;font-size:13px;font-weight:800;border:none">🧬 Ottimizza pesi</button>
-      </div>
-    </details>
+    
 
-    <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
-      <summary style="color:#f97316;font-size:13px;font-weight:700;cursor:pointer">🔁 Sweep — testa un range su UN parametro</summary>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
-        <div style="grid-column:1/4"><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parametro</div>
-          <select id="bt-sweep-param" style="width:100%;background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:6px;font-size:13px">
-            <option value="minConf" selected>Min confidence</option>
-            <option value="thrSwing">Soglia Swing</option>
-            <option value="thrTrend">Soglia Trend</option>
-            <option value="thrScalp">Soglia Scalp</option>
-            <option value="thrBias">Soglia Bias</option>
-            <option value="riskPct">Rischio %</option>
-            <option value="beRR">BE trigger (R)</option>
-            <option value="trailRR">Trail trigger (R)</option>
-            <option value="trailTrend">Trail Trend ×ATR</option>
-            <option value="trailSwing">Trail Swing ×ATR</option>
-            <option value="trailScalp">Trail Scalp ×ATR</option>
-            <option value="partialPct">Parziale TP1 %</option>
-          </select></div>
-        <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Da</div><input type="number" id="bt-sweep-from" value="50" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div>
-        <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">A</div><input type="number" id="bt-sweep-to" value="75" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div>
-        <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Passo</div><input type="number" id="bt-sweep-step" value="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div>
-      </div>
-      <button id="bt-sweep-btn" onclick="runBtSweep()" style="width:100%;background:#f97316;color:#000;border-radius:7px;padding:9px 0;font-size:13px;font-weight:800;border:none;margin-top:8px">🔁 Avvia sweep</button>
-    </details>
+    
 
     <div style="color:#94a3b8;font-size:10px;margin-bottom:8px">
-      ⚠️ Modalità 5M Scalp è <b>approssimata</b>: le candele 1M sono surrogate dalle 5M e il contesto Daily
-      deriva da soli ~17 giorni di dati. PA-exit e estensione TP2 non simulate: risultato <b>conservativo</b>.
+      Regola di verifica: lo scoring può leggere tutti i timeframe disponibili, ma entry, SL/TP, trailing ed exit vengono simulati sul timeframe operativo dello scenario.
     </div>
     <button id="bt-run-btn" onclick="runBacktest()" style="width:100%;background:#22c55e;color:#000;border-radius:8px;padding:11px 0;font-size:14px;font-weight:800;border:none">🧪 Avvia backtest</button>
   </div>
@@ -571,13 +543,6 @@ button{cursor:pointer}
 
   <div id="bt-results" style="margin-bottom:10px"></div>
 
-  <div class="card" style="margin-bottom:10px">
-    <div style="color:#f0f4fa;font-weight:700;font-size:14px;margin-bottom:8px">📤 Esporta / Pulisci</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button onclick="exportHistData()" style="flex:1;min-width:130px;background:#22c55e20;border:1px solid #22c55e44;color:#22c55e;border-radius:7px;padding:9px 0;font-size:12px;font-weight:700">📤 Esporta tutto (JSON)</button>
-      <button onclick="clearHistData()" style="flex:1;min-width:130px;background:#ef444420;border:1px solid #ef444444;color:#ef4444;border-radius:7px;padding:9px 0;font-size:12px;font-weight:700">🗑 Elimina tutto</button>
-    </div>
-  </div>
 </div>
 
 <!-- ══ SW DIAGNOSTICS PANEL ═════════════════════════════════ -->
@@ -635,6 +600,7 @@ button{cursor:pointer}
 </div>
 
 <script>
+const APP_VERSION = '8.6.0-scenario-exec-tf';
 // ══ STORAGE ══════════════════════════════════════════════════
 const LS = {
   get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch{return null;} },
@@ -2363,12 +2329,14 @@ function openPaperTradeFor(scenarioId, dirIn, esIn) {
     spread:        SPREAD,
     pattern:       `Auto [${scenarioId}]`,
     macroDir:      '–',
-    atrAtEntry:    (state.candles['1h']||[]).slice(-1)[0]?.atr || 0,
+    atrAtEntry:    getScenarioAtrFromState(scenarioId) || 0,
+    execTf:        scenarioExecTF(scenarioId),
     scenario:      scenarioId,
     timedExitUTC:  es.setup.timedExitUTC ?? null,
     bias:          es.setup.bias ?? null,
     entryReasons:  es.reasons,
     scoreSnapshot,
+    paramSnapshot: makeParamSnapshot('paper_open', scenarioId),
     managementLog: [],
     trailingActive: false,
     breakEvenSet:   false,
@@ -2405,7 +2373,7 @@ function openPaperTradeFor(scenarioId, dirIn, esIn) {
 }
 
 // ── Analisi forza prezzo per gestione trade ──────────────────
-// Usa il TF corretto per lo scenario: scalp→1M, swing→5M/1H, trend→1H
+// Usa il TF operativo corretto per lo scenario: scalp→1M, swing→5M, trend/bias→1H
 function getScenarioCandles(scenario) {
   if (scenario === "scalp") {
     return (state.candles["1m"]||[]).length >= 5
@@ -2796,6 +2764,10 @@ function exportPaperLog() {
     // Motivazioni entry scenario vincente
     'Entry_reason1', 'Entry_reason2', 'Entry_reason3',
     'Entry_reason4', 'Entry_reason5',
+    // Snapshot parametri/pesi al momento dell'apertura
+    'AppVersion', 'ParamSnapshotSource', 'ParamSnapshotTs',
+    ...Object.keys(PAPER_PARAMS_DEFAULTS).filter(k=>k !== '_v').map(k=>'param_'+k),
+    ...WEIGHT_GROUPS.map(g=>'weight_'+g),
   ];
 
   const rows = trades.map(t => {
@@ -2811,6 +2783,9 @@ function exportPaperLog() {
     const mgLog   = (t.managementLog || []).map(l => `[${new Date(l.ts).toLocaleTimeString('it-IT')}] ${l.action}`).join(' | ');
     const reasons = t.entryReasons || [];
     const pa      = t.paAtClose || {};
+    const ps      = t.paramSnapshot || makeParamSnapshot('paper_export_missing_snapshot', t.scenario || '');
+    const pp      = normalizeParamSnapshot(ps.params || ps);
+    const ww      = ps.weights || (t.scenario ? SCORE_WEIGHTS[t.scenario] : {}) || {};
 
     return [
       t.id, t.openedAt, t.closedAt || '', durMin,
@@ -2827,7 +2802,7 @@ function exportPaperLog() {
       t.breakEvenSet ? 'SI' : 'NO',
       t.trailingActive ? 'SI' : 'NO',
       (t.managementLog || []).length,
-      `"${mgLog.replace(/"/g, "'")}"`,
+      mgLog,
       // PA close
       pa.warnScore || '', pa.strScore || '', pa.topWarning || '',
       // Swing breakdown
@@ -2841,11 +2816,11 @@ function exportPaperLog() {
       (tr.reasons || [])[0] || '', (tr.reasons || [])[1] || '', (tr.reasons || [])[2] || '',
       // Entry reasons
       reasons[0] || '', reasons[1] || '', reasons[2] || '', reasons[3] || '', reasons[4] || '',
-    ].map(v => {
-      // Escape per CSV
-      const s = String(v === null || v === undefined ? '' : v);
-      return s.includes(',') || s.includes('\n') ? `"${s.replace(/"/g, "'")}"` : s;
-    });
+      // Param snapshot
+      ps.appVersion || APP_VERSION, ps.source || '', ps.ts || '',
+      ...Object.keys(PAPER_PARAMS_DEFAULTS).filter(k=>k !== '_v').map(k => pp[k] ?? ''),
+      ...WEIGHT_GROUPS.map(g => ww?.[g] ?? ''),
+    ].map(csvEscape);
   });
 
   const csvContent = [headers, ...rows].map(r => r.join(',')).join('\n');
@@ -3287,13 +3262,34 @@ function btGetParams() {
   };
 }
 
+
+function scenarioExecTF(scenario) {
+  return ({ scalp:'1m', swing:'5m', trend:'1h', bias:'1h' })[scenario] || '1h';
+}
+function getScenarioAtrFromState(scenario) {
+  const tf = scenarioExecTF(scenario);
+  const cd = (state.candles?.[tf] || []).slice(-1)[0];
+  if (cd?.atr) return cd.atr;
+  const fallback = ['1h','5m','1m'].map(tf => (state.candles?.[tf] || []).slice(-1)[0]).find(Boolean);
+  return fallback?.atr || 15;
+}
+function scenarioBtMode(scenario) { return scenarioExecTF(scenario); }
+function scenarioDefaultBars(scenario, requested) {
+  const n = parseInt(requested, 10) || 5000;
+  if (scenario === 'trend' || scenario === 'bias') return Math.min(n, 5000);
+  if (scenario === 'scalp') return Math.max(5000, Math.min(n, 250000));
+  if (scenario === 'swing') return Math.min(n, 250000);
+  return n;
+}
+
 // ── Core: esegue un backtest e ritorna i risultati (no UI) ────
 async function btRun(mode, maxBars, useScen, P, onProgress) {
-  const isScalp = mode === '5m' || mode === '1m';
   const is1m = mode === '1m';
-  const seriesKey = is1m ? 'xauusd_1m' : isScalp ? 'xauusd_5m' : 'xauusd_1h';
+  const is5m = mode === '5m';
+  const isIntradayFast = is1m || is5m;
+  const seriesKey = is1m ? 'xauusd_1m' : is5m ? 'xauusd_5m' : 'xauusd_1h';
   const raw = await histLoad(seriesKey);
-  if (!raw?.candles?.length) throw new Error(`Serve lo storico ${is1m?'XAU 1M (usa "1M profondo")':isScalp?'XAU 5M':'XAU 1H'} — scaricalo prima.`);
+  if (!raw?.candles?.length) throw new Error(`Serve lo storico ${is1m?'XAU 1M':is5m?'XAU 5M':'XAU 1H'} — scaricalo prima nel tab Download.`);
 
   let src = raw.candles.slice(-maxBars);
   if (P._range) {
@@ -3301,13 +3297,25 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
     const b = Math.floor(src.length * P._range[1]);
     src = src.slice(a, b);
   }
-  const fullBase = btEnrich(src);
+  const fullBase = btEnrich(src); // timeframe operativo: 1M scalp, 5M swing, 1H trend/bias
 
-  // Contesto TF superiori
-  let full1h, full4h, full1d, full5m, full1mArr = [];
-  if (is1m) {
-    full1mArr = fullBase;
-    // Aggrega 5M reali dalle 1M
+  // Contesto multi-timeframe reale: la verifica resta sul timeframe operativo,
+  // ma lo scoring può leggere gli altri TF normalizzati se disponibili.
+  const [raw1m, raw5m, raw1h, raw4h, raw1d] = await Promise.all([
+    is1m ? Promise.resolve(raw) : histLoad('xauusd_1m'),
+    is5m ? Promise.resolve(raw) : histLoad('xauusd_5m'),
+    mode === '1h' ? Promise.resolve(raw) : histLoad('xauusd_1h'),
+    histLoad('xauusd_4h'),
+    histLoad('xauusd_1d'),
+  ]);
+
+  let full1mArr = is1m ? fullBase : [];
+  let full5m = is5m ? fullBase : (raw5m?.candles?.length ? btEnrich(raw5m.candles) : []);
+  let full1h = mode === '1h' ? fullBase : (raw1h?.candles?.length ? btEnrich(raw1h.candles) : btEnrich(btAggregate(src, 1)));
+  let full4h = raw4h?.candles?.length ? btEnrich(raw4h.candles) : btEnrich(btAggregate((raw1h?.candles?.length ? raw1h.candles : src), 4));
+  let full1d = raw1d?.candles?.length ? btEnrich(raw1d.candles) : btEnrich(btAggregate((raw1h?.candles?.length ? raw1h.candles : src), 24));
+
+  if (is1m && !full5m.length) {
     const agg5 = [];
     let b=null,bk=null;
     for (const cd of src) {
@@ -3318,22 +3326,10 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
     }
     if(b)agg5.push(b);
     full5m = btEnrich(agg5);
-    full1h = btEnrich(btAggregate(src, 1));
-    full4h = btEnrich(btAggregate(src, 4));
-    full1d = btEnrich(btAggregate(src, 24));
-  } else if (isScalp) {
-    full5m = fullBase;
-    full1h = btEnrich(btAggregate(src, 1));
-    full4h = btEnrich(btAggregate(src, 4));
-    full1d = btEnrich(btAggregate(src, 24));
-  } else {
-    full1h = fullBase;
-    full5m = [];
-    full4h = btEnrich(btAggregate(src, 4));
-    full1d = btEnrich(btAggregate(src, 24));
   }
-  const corrKey = isScalp ? 'eurusd_5m' : 'eurusd_1h';  // per 1m: le 5m sono il meglio disponibile
-  const tnxKey  = isScalp ? 'tnx_5m'    : 'tnx_1h';
+
+  const corrKey = isIntradayFast ? 'eurusd_5m' : 'eurusd_1h';
+  const tnxKey  = isIntradayFast ? 'tnx_5m'    : 'tnx_1h';
   const eurRaw = await histLoad(corrKey), tnxRaw = await histLoad(tnxKey);
   const fullEur = eurRaw?.candles?.length ? btEnrich(eurRaw.candles.slice(-maxBars)) : [];
   const fullTnx = tnxRaw?.candles?.length ? btEnrich(tnxRaw.candles.slice(-maxBars)) : [];
@@ -3429,11 +3425,11 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
       {
         state.btNow = cd.t;
         if (is1m) {
-          const s1m = full1mArr.slice(Math.max(0, i-119), i+1);
-          state.candles = { '1m': s1m, '5m': btSliceByTime(full5m, t).slice(-60), '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
-        } else if (isScalp) {
-          const s5m = full5m.slice(Math.max(0, i-119), i+1);
-          state.candles = { '5m': s5m, '1m': s5m.slice(-30), '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
+          const s1m = fullBase.slice(Math.max(0, i-119), i+1);
+          state.candles = { '1m': s1m, '5m': btSliceByTime(full5m, t).slice(-80), '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
+        } else if (is5m) {
+          const s5m = fullBase.slice(Math.max(0, i-119), i+1);
+          state.candles = { '5m': s5m, '1m': [], '1h': btSliceByTime(full1h, t).slice(-120), '1d': btSliceByTime(full1d, t).slice(-35) };
         } else {
           state.candles = { '1h': fullBase.slice(Math.max(0, i-119), i+1), '5m': [], '1m': [], '1d': btSliceByTime(full1d, t).slice(-35) };
         }
@@ -3466,13 +3462,14 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
             const riskEur = capital * P.riskPct;
             const slDist  = Math.abs(setup.entry - setup.sl);
             const lots = slDist ? Math.max(0.01, +Math.min(riskEur/(slDist*100), (capital*0.05)/((setup.entry/100)*100)).toFixed(2)) : 0.01;
-            const atrNow = (isScalp ? full5m : fullBase)[i]?.atr || 15;
+            const atrNow = getScenarioAtrFromState(best.scen) || cd.atr || 15;
+            const paramSnapshot = makeParamSnapshot(`backtest_${mode}`, best.scen, P, P.weights?.[best.scen]);
             slots[best.scen] = {
               direction: best.dir,
               entry: best.dir==='BUY' ? setup.entry + SPREAD/2 : setup.entry - SPREAD/2,
               sl: setup.sl, slOrig: setup.sl, tp1: setup.tp1, tp2: setup.tp2,
-              lots, scenario: best.scen, confidence: best.score,
-              openedAt: cd.t, atrAtEntry: atrNow,
+              lots, scenario: best.scen, execTf: scenarioExecTF(best.scen), confidence: best.score,
+              openedAt: cd.t, atrAtEntry: atrNow, paramSnapshot,
               trailMult: trailMap[best.scen] ?? 1.5,
               timedExitUTC: setup.timedExitUTC ?? null, bias: setup.bias ?? null,
               maxFavorable: setup.entry, partialDone: false, breakEvenSet: false, partialPnl: 0,
@@ -3499,6 +3496,56 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
 }
 
 // ── Run singolo con UI ─────────────────────────────────────────
+function btScenarioJobs(selected, maxBars) {
+  const n = Math.max(1, parseInt(maxBars, 10) || 5000);
+  const jobs = [];
+  if (selected.trend || selected.bias) {
+    jobs.push({
+      mode: '1h', label: 'Trend/Bias 1H', bars: Math.min(n, 5000),
+      use: { swing:false, trend:!!selected.trend, bias:!!selected.bias, scalp:false }
+    });
+  }
+  if (selected.swing) {
+    jobs.push({
+      mode: '5m', label: 'Swing 5M', bars: Math.min(n, 250000),
+      use: { swing:true, trend:false, bias:false, scalp:false }
+    });
+  }
+  if (selected.scalp) {
+    jobs.push({
+      mode: '1m', label: 'Scalp 1M', bars: Math.max(5000, Math.min(n, 250000)),
+      use: { swing:false, trend:false, bias:false, scalp:true }
+    });
+  }
+  return jobs;
+}
+
+async function btRunScenarioBundle(maxBars, selected, P, onProgress) {
+  const jobs = btScenarioJobs(selected, maxBars);
+  if (!jobs.length) throw new Error('Nessuno scenario selezionato.');
+  let trades = [], startCap = 10000;
+  const periods = [];
+  for (let j = 0; j < jobs.length; j++) {
+    const job = jobs[j];
+    const res = await btRun(job.mode, job.bars, job.use, P, (pct, n, cap) => {
+      if (onProgress) {
+        const base = Math.round((j / jobs.length) * 100);
+        const scaled = Math.min(100, Math.round(base + pct / jobs.length));
+        onProgress(scaled, job.label, n, cap);
+      }
+    });
+    trades = [...trades, ...res.trades];
+    periods.push(res.period);
+  }
+  trades.sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
+  const st = btStats(trades, startCap);
+  const period = periods.length
+    ? { from: periods.map(p=>p.from).filter(Boolean).sort()[0], to: periods.map(p=>p.to).filter(Boolean).sort().slice(-1)[0] }
+    : { from: new Date().toISOString(), to: new Date().toISOString() };
+  return { trades, startCap, endCap: startCap + (st?.pnl||0), period, mode: jobs.map(j=>j.mode).join('+'), jobs };
+}
+
+// ── Run singolo con UI ─────────────────────────────────────────
 async function runBacktest() {
   if (btRunning) return;
   btRunning = true;
@@ -3512,51 +3559,38 @@ async function runBacktest() {
 
   const mode = document.getElementById('bt-mode').value;
   const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
-  const scalpChecked = !!document.getElementById('bt-scen-scalp')?.checked;
+  const selected = {
+    swing: !!document.getElementById('bt-scen-swing')?.checked,
+    trend: !!document.getElementById('bt-scen-trend')?.checked,
+    bias:  !!document.getElementById('bt-scen-bias')?.checked,
+    scalp: !!document.getElementById('bt-scen-scalp')?.checked,
+  };
 
   try {
-    if (mode === '5m' || mode === '1m') {
-      // Modalità dedicata scalp: come prima
-      const res = await btRun(mode, maxBars, { scalp:true, swing:false, trend:false, bias:false }, btGetParams(), (pct, n, cap) => {
+    const P = btGetParams();
+    if (mode === 'auto') {
+      state.btResults = await btRunScenarioBundle(maxBars, selected, P, (pct, label, n, cap) => {
         progBar.style.width = pct + '%';
-        progText.textContent = `Simulazione ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
+        progText.textContent = `${label} · ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
       });
-      state.btResults = res;
+    } else if (mode === '5m') {
+      const res = await btRun('5m', Math.min(maxBars, 250000), { scalp:false, swing:true, trend:false, bias:false }, P, (pct, n, cap) => {
+        progBar.style.width = pct + '%';
+        progText.textContent = `Swing 5M ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
+      });
+      state.btResults = { ...res, jobs:[{mode:'5m', label:'Swing 5M'}] };
+    } else if (mode === '1m') {
+      const res = await btRun('1m', Math.max(5000, Math.min(maxBars, 250000)), { scalp:true, swing:false, trend:false, bias:false }, P, (pct, n, cap) => {
+        progBar.style.width = pct + '%';
+        progText.textContent = `Scalp 1M ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
+      });
+      state.btResults = { ...res, jobs:[{mode:'1m', label:'Scalp 1M'}] };
     } else {
-      // COMPLESSIVO a doppia gamba: 1H (Swing/Trend/Bias) + gamba Scalp 1M se spuntata
-      const useScen = {
-        swing: document.getElementById('bt-scen-swing').checked,
-        trend: document.getElementById('bt-scen-trend').checked,
-        bias:  document.getElementById('bt-scen-bias').checked,
-        scalp: false,
-      };
-      const any1h = useScen.swing || useScen.trend || useScen.bias;
-      const has1m = scalpChecked && !!(await histLoad('xauusd_1m'))?.candles?.length;
-      if (scalpChecked && !has1m) progText.textContent = '⚠️ Scalp richiesto ma 1M assente — procedo senza';
-
-      let trades = [], startCap = 10000;
-      if (any1h) {
-        const r1 = await btRun('1h', Math.min(maxBars, 5000), useScen, btGetParams(), (pct, n, cap) => {
-          progBar.style.width = Math.round(pct*(has1m?0.5:1)) + '%';
-          progText.textContent = `Gamba 1H ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
-        });
-        trades = r1.trades; startCap = r1.startCap;
-      }
-      if (has1m) {
-        const r2 = await btRun('1m', 60000, { scalp:true, swing:false, trend:false, bias:false }, btGetParams(), (pct, n, cap) => {
-          progBar.style.width = Math.round((has1m&&any1h?50:0) + pct*(any1h?0.5:1)) + '%';
-          progText.textContent = `Gamba ⚡Scalp 1M ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
-        });
-        trades = [...trades, ...r2.trades].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
-      }
-      if (!any1h && !has1m) throw new Error('Nessuno scenario selezionato (o dati 1M assenti per Scalp)');
-      const st = btStats(trades, startCap);
-      const period = trades.length
-        ? { from: trades.reduce((a,t)=>a<t.openedAt?a:t.openedAt, trades[0].openedAt),
-            to:   trades.reduce((a,t)=>a>t.closedAt?a:t.closedAt, trades[0].closedAt) }
-        : { from: new Date().toISOString(), to: new Date().toISOString() };
-      state.btResults = { trades, startCap, endCap: startCap + (st?.pnl||0), period,
-        mode: has1m && any1h ? '1h+1m' : (has1m ? '1m' : '1h') };
+      const res = await btRun('1h', Math.min(maxBars, 5000), { swing:false, trend:selected.trend, bias:selected.bias, scalp:false }, P, (pct, n, cap) => {
+        progBar.style.width = pct + '%';
+        progText.textContent = `Trend/Bias 1H ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
+      });
+      state.btResults = { ...res, jobs:[{mode:'1h', label:'Trend/Bias 1H'}] };
     }
     progBar.style.width='100%';
     progText.textContent = `Completato: ${state.btResults.trades.length} trade`;
@@ -3570,17 +3604,19 @@ async function runBacktest() {
 
 // ── OTTIMIZZAZIONE Simulated Annealing sui parametri ──────────
 const SA_SPACE = {
-  thrSwing:   { min:50, max:75, step:2 },
-  thrTrend:   { min:50, max:75, step:2 },
-  thrBias:    { min:50, max:80, step:3 },
-  minConf:    { min:0,  max:75, step:5 },
-  beRR:       { min:0.4, max:1.3, step:0.1 },
-  trailRR:    { min:0.6, max:1.6, step:0.1 },
-  trailSwing: { min:0.8, max:2.5, step:0.2 },
-  trailTrend: { min:1.0, max:3.0, step:0.2 },
-  partialPct: { min:30, max:70, step:5 },
-  thrScalp:   { min:55, max:75, step:2 },
-  trailScalp: { min:0.4, max:1.6, step:0.1 },
+  // Range volutamente più ampio della vecchia 8.x: l'annealing non deve pescare in un recinto troppo stretto.
+  thrSwing:   { min:45, max:85, step:1 },
+  thrTrend:   { min:45, max:85, step:1 },
+  thrBias:    { min:45, max:85, step:1 },
+  minConf:    { min:0,  max:85, step:1 },
+  beRR:       { min:0.1, max:2.0, step:0.1 },
+  trailRR:    { min:0.1, max:2.5, step:0.1 },
+  trailSwing: { min:0.4, max:4.0, step:0.1 },
+  trailTrend: { min:0.6, max:4.5, step:0.1 },
+  trailBias:  { min:0.4, max:3.0, step:0.1 },
+  partialPct: { min:0, max:80, step:5 },
+  thrScalp:   { min:45, max:85, step:1 },
+  trailScalp: { min:0.3, max:2.2, step:0.1 },
 };
 // riskPct escluso di proposito: col compounding ottimizzarlo significa solo alzarlo — non è un'ottimizzazione, è leva.
 
@@ -3596,6 +3632,12 @@ function saObjective(st) {
   return obj;
 }
 
+function saTemperature(k, iters) {
+  // Raffreddamento geometrico: esplorazione ampia all'inizio, passi piccoli alla fine.
+  if (iters <= 1) return 0.01;
+  return Math.max(0.01, Math.pow(0.01, k / (iters - 1)));
+}
+
 function saNeighbor(p, temp) {
   const q = { ...p };
   const keys = Object.keys(SA_SPACE);
@@ -3605,7 +3647,7 @@ function saNeighbor(p, temp) {
     const k = keys[Math.floor(Math.random() * keys.length)];
     const sp = SA_SPACE[k];
     const range = (sp.max - sp.min);
-    const delta = (Math.random() * 2 - 1) * range * Math.max(0.15, temp) ;
+    const delta = (Math.random() * 2 - 1) * range * Math.max(0.02, temp) ;
     let v = (q[k] ?? PAPER_PARAMS[k]) + delta;
     v = Math.round(v / sp.step) * sp.step;
     q[k] = +Math.min(sp.max, Math.max(sp.min, v)).toFixed(3);
@@ -3624,8 +3666,9 @@ async function runSaOptimization() {
   btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Ottimizzazione...';
   progCard.style.display='block'; resEl.innerHTML='';
 
-  const iters = Math.max(5, Math.min(300, parseInt(document.getElementById('sa-iters').value, 10) || 40));
+  const iters = Math.max(5, Math.min(1000, parseInt(document.getElementById('sa-iters').value, 10) || 60));
   const maxBars = 5000;
+  const scalpBars = Math.max(5000, Math.min(250000, parseInt(document.getElementById('sa-scalp-bars')?.value, 10) || 60000));
   const useScen = {
     swing: document.getElementById('bt-scen-swing').checked,
     trend: document.getElementById('bt-scen-trend').checked,
@@ -3642,7 +3685,7 @@ async function runSaOptimization() {
     const r1 = await btRun('1h', maxBars, useScen, P, null);
     let all = r1.trades;
     if (includeScalp) {
-      const r2 = await btRun('1m', maxBars, { swing:false, trend:false, bias:false, scalp:true }, P, null);
+      const r2 = await btRun('1m', scalpBars, { swing:false, trend:false, bias:false, scalp:true }, P, null);
       all = [...r1.trades, ...r2.trades].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
     }
     return btStats(all, 10000);
@@ -3669,7 +3712,7 @@ async function runSaOptimization() {
 
     // ── Loop SA ───────────────────────────────────────────
     for (let k = 0; k < iters; k++) {
-      const temp = 1 - k / iters;             // temperatura lineare 1 → 0
+      const temp = saTemperature(k, iters);       // temperatura geometrica 1 → 0.01
       const cand = saNeighbor(current, temp);
       const st   = await evalCombined(fullP(cand));
       const obj  = saObjective(st);
@@ -3691,10 +3734,10 @@ async function runSaOptimization() {
     const basePnl = baseSt ? baseSt.pnl : -1e9;
     const bestPnl = bestSt ? bestSt.pnl : -1e9;
     const bestPf  = bestSt ? (bestSt.pf==='∞'?10:parseFloat(bestSt.pf)) : 0;
-    const improved = bestObj > currentObj*0 && bestPnl > basePnl && bestPf >= 1.05 && (bestSt?.n||0) >= 10;
+    const improved = bestPnl > basePnl && bestPf >= 1.05 && (bestSt?.n||0) >= 10;
 
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55;margin-bottom:10px">
-      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s${includeScalp?' · gamba ⚡Scalp 1M inclusa':''}</div>
+      <div style="color:#a855f7;font-weight:800;font-size:15px;margin-bottom:8px">🔥 Simulated Annealing — ${iters} iterazioni · ${((Date.now()-t0)/1000).toFixed(0)}s${includeScalp?' · gamba ⚡Scalp 1M '+scalpBars+' barre inclusa':''}</div>
       ${scalpSkipped?`<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:7px;padding:7px;margin-bottom:8px;color:#f0b429;font-size:11px">⚠️ Scalp richiesto ma dati 1M assenti — ottimizzazione eseguita senza. Scarica il "1M profondo".</div>`:''}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
         <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live attuali)</div>
@@ -3731,10 +3774,10 @@ async function runSaOptimization() {
 
 // ── SIMULATED ANNEALING PER SCENARIO: parametri + pesi interni insieme ──
 const SCEN_SA_PARAM_SPACE = {
-  swing: { thr:{key:'thrSwing',min:50,max:78,step:2}, trail:{key:'trailSwing',min:0.8,max:3.0,step:0.2} },
-  trend: { thr:{key:'thrTrend',min:50,max:78,step:2}, trail:{key:'trailTrend',min:1.0,max:3.0,step:0.2} },
-  scalp: { thr:{key:'thrScalp',min:55,max:75,step:2}, trail:{key:'trailScalp',min:0.4,max:1.6,step:0.1} },
-  bias:  { thr:{key:'thrBias', min:50,max:80,step:3}, trail:{key:'trailBias', min:0.6,max:2.0,step:0.2} },
+  swing: { thr:{key:'thrSwing',min:45,max:85,step:1}, trail:{key:'trailSwing',min:0.4,max:4.0,step:0.1} },
+  trend: { thr:{key:'thrTrend',min:45,max:85,step:1}, trail:{key:'trailTrend',min:0.6,max:4.5,step:0.1} },
+  scalp: { thr:{key:'thrScalp',min:45,max:85,step:1}, trail:{key:'trailScalp',min:0.3,max:2.2,step:0.1} },
+  bias:  { thr:{key:'thrBias', min:45,max:85,step:1}, trail:{key:'trailBias', min:0.4,max:3.0,step:0.1} },
 };
 
 async function runScenSA(scen) {
@@ -3749,8 +3792,10 @@ async function runScenSA(scen) {
   const M = SCEN_META[scen];
   const PS = SCEN_SA_PARAM_SPACE[scen];
   const canWeights = scen !== 'bias'; // bias non ha pesi interni
-  const iters = scen === 'scalp' ? 40 : 60; // 1M più pesante
-  const maxBars = M.mode === '1m' ? 60000 : 5000;
+  const iters = Math.max(5, Math.min(1000, parseInt(document.getElementById('scen-sa-iters')?.value, 10) || (scen === 'scalp' ? 40 : 60)));
+  const maxBars = M.mode === '1m'
+    ? Math.max(5000, Math.min(250000, parseInt(document.getElementById('scen-sa-bars-1m')?.value, 10) || 60000))
+    : scenarioDefaultBars(scen, document.getElementById('bt-bars')?.value || 5000);
   const useScen = { swing:false, trend:false, bias:false, scalp:false }; useScen[scen] = true;
   const t0 = Date.now();
 
@@ -3807,7 +3852,7 @@ async function runScenSA(scen) {
     let best = JSON.parse(JSON.stringify(cur)), bestSt = baseSt, bestObj = curObj;
 
     for (let k = 0; k < iters; k++) {
-      const temp = 1 - k/iters;
+      const temp = saTemperature(k, iters);
       const cand = neighbor(cur, temp);
       const st = await evalState(cand);
       const o = obj(st);
@@ -3825,7 +3870,7 @@ async function runScenSA(scen) {
     const finPf   = bestSt ? (bestSt.pf==='∞'?10:parseFloat(bestSt.pf)) : 0;
     const improved = finPnl > basePnl && finPf >= 1.05 && (bestSt?.n||0) >= 10;
 
-    saveOptResult(scen, 'sa', improved ? bestSt : baseSt);
+    saveOptResult(scen, 'sa', improved ? bestSt : baseSt, { params: improved ? { ...PAPER_PARAMS, [PS.thr.key]: best.thr, [PS.trail.key]: best.trail } : PAPER_PARAMS, weights: improved ? best.w : liveState().w, applied: improved, note: improved ? 'best applicato al live' : 'best non applicato; snapshot baseline live' });
     const stLine = (st)=> st ? `${st.n} trade · WR ${st.wr}% · PF ${st.pf} · DD ${st.maxDD}%` : 'nessun trade';
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55">
       <div style="color:${M.color};font-weight:800;font-size:15px;margin-bottom:8px">🔥 Annealing ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato, solo parametri suoi)</div>
@@ -3862,20 +3907,60 @@ function etaClock(secRemaining) {
 }
 
 const SCEN_META = {
-  swing: { icon:'📊', label:'Swing', color:'#f0b429', mode:'1h', thrKey:'thrSwing', trailKey:'trailSwing' },
-  trend: { icon:'📈', label:'Trend', color:'#22c55e', mode:'1h', thrKey:'thrTrend', trailKey:'trailTrend' },
+  swing: { icon:'📊', label:'Swing 5M', color:'#f0b429', mode:'5m', thrKey:'thrSwing', trailKey:'trailSwing' },
+  trend: { icon:'📈', label:'Trend 1H', color:'#22c55e', mode:'1h', thrKey:'thrTrend', trailKey:'trailTrend' },
   scalp: { icon:'⚡', label:'Scalp 1M', color:'#f97316', mode:'1m', thrKey:'thrScalp', trailKey:'trailScalp' },
   bias:  { icon:'⏰', label:'Bias', color:'#a855f7', mode:'1h', thrKey:'thrBias', trailKey:'trailBias' },
 };
 
+
+function loadScenarioOptState() {
+  try { return JSON.parse(localStorage.getItem('xauapp_scenario_opt_state') || '{}'); } catch(e) { return {}; }
+}
+function saveScenarioOptState(st) {
+  try { localStorage.setItem('xauapp_scenario_opt_state', JSON.stringify(st || {})); } catch(e) {}
+}
+function isBetterScenarioRecord(a, b) {
+  if (!a) return false;
+  if (!b) return true;
+  const ap = Number(a.pnl ?? -Infinity), bp = Number(b.pnl ?? -Infinity);
+  if (ap !== bp) return ap > bp;
+  const apf = a.pf === '∞' ? 999 : parseFloat(a.pf || 0);
+  const bpf = b.pf === '∞' ? 999 : parseFloat(b.pf || 0);
+  if (apf !== bpf) return apf > bpf;
+  return Number(a.dd ?? 999) < Number(b.dd ?? 999);
+}
+
 function loadOptResults() {
   try { return JSON.parse(localStorage.getItem('xauapp_opt_results') || '{}'); } catch(e) { return {}; }
 }
-function saveOptResult(scen, source, st) {
+function clearOptResults() {
+  if (!confirm('Azzerare solo i risultati/riassunti delle ottimizzazioni? I parametri live NON verranno toccati.')) return;
+  try { localStorage.removeItem('xauapp_opt_results'); localStorage.removeItem('xauapp_scenario_opt_state'); } catch(e) {}
+  renderOptHub();
+}
+function saveOptResult(scen, source, st, snapshot=null) {
   if (!st) return;
+  const snap = snapshot || makeParamSnapshot(source, scen);
+  const rec = {
+    ts: Date.now(), source, appVersion: APP_VERSION,
+    n: st.n, wr: st.wr, pf: st.pf, dd: st.maxDD, pnl: st.pnl,
+    params: normalizeParamSnapshot(snap.params || snap.P || snap),
+    weights: clonePlain(snap.weights || (scen ? SCORE_WEIGHTS[scen] : {})),
+    applied: !!snap.applied,
+    note: snap.note || '',
+  };
   const all = loadOptResults();
-  all[scen] = { ts: Date.now(), source, n: st.n, wr: st.wr, pf: st.pf, dd: st.maxDD, pnl: st.pnl };
+  all[scen] = rec; // compatibilità: ultimo risultato
   try { localStorage.setItem('xauapp_opt_results', JSON.stringify(all)); } catch(e) {}
+
+  const state = loadScenarioOptState();
+  state[scen] = state[scen] || {};
+  state[scen].last = rec;
+  if (isBetterScenarioRecord(rec, state[scen].best)) state[scen].best = rec;
+  state[scen].lastParams = rec.params;
+  if (rec.applied) state[scen].lastAppliedParams = rec.params;
+  saveScenarioOptState(state);
   renderOptHub();
 }
 
@@ -3894,11 +3979,11 @@ async function scenQuickBacktest(scen) {
   try {
     const useScen = { swing:false, trend:false, bias:false, scalp:false }; useScen[scen] = true;
     const P = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
-    const res = await btRun(M.mode, M.mode==='1m'?60000:5000, useScen,
+    const res = await btRun(M.mode, scenarioDefaultBars(scen, M.mode==='1m'?60000:5000), useScen,
       { ...P, riskPct:P.riskPct/100, partialPct:P.partialPct/100 }, null);
     const st = btStats(res.trades, res.startCap);
     progBar.style.width='100%'; progText.textContent = `Backtest ${M.label} completato.`;
-    saveOptResult(scen, 'backtest', st);
+    saveOptResult(scen, 'backtest', st, { params: P, weights: SCORE_WEIGHTS[scen], applied:false, note:'backtest isolato live' });
     const col = (st?.pnl||0)>=0 ? '#22c55e' : '#ef4444';
     resEl.innerHTML = `<div class="card" style="border:1px solid ${M.color}55">
       <div style="color:${M.color};font-weight:800;font-size:14px;margin-bottom:6px">${M.icon} Backtest ${M.label} — scenario isolato (${M.mode.toUpperCase()})</div>
@@ -3925,38 +4010,60 @@ function sweepFor(scen) {
 function renderOptHub() {
   const host = document.getElementById('opt-hub');
   if (!host) return;
-  const results = loadOptResults();
-  const srcLabel = { backtest:'🧪 backtest', scenopt:'🎯 parametri', weights:'🧬 pesi', sa:'🔥 annealing' };
+  const legacyResults = loadOptResults();
+  const optState = loadScenarioOptState();
+  const results = Object.fromEntries(['swing','trend','scalp','bias'].map(k => [k, optState[k]?.last || legacyResults[k]]));
+  const bestResults = Object.fromEntries(['swing','trend','scalp','bias'].map(k => [k, optState[k]?.best || legacyResults[k]]));
+  const srcLabel = { backtest:'🧪 backtest', scenopt:'🎯 parametri', weights:'🧬 pesi', sa:'🔥 intra-SA', csv:'📥 CSV' };
   let html = '';
   for (const scen of ['swing','trend','scalp','bias']) {
     const M = SCEN_META[scen];
     const r = results[scen];
-    const W = (SCORE_WEIGHTS[scen]) || {};
-    const wMod = Object.entries(W).filter(([k,v])=>v!==1).map(([k,v])=>`${k}×${v}`).join(' ');
+    const best = bestResults[scen];
     const when = r ? new Date(r.ts).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})+' '+new Date(r.ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : null;
+    const rParams = r?.params || null;
+    const rThr = rParams ? rParams[M.thrKey] : null;
+    const rTrail = rParams ? rParams[M.trailKey] : null;
+    const thrDiff = rParams && String(rThr) !== String(PAPER_PARAMS[M.thrKey]);
+    const trailDiff = rParams && String(rTrail) !== String(PAPER_PARAMS[M.trailKey]);
+    const changedWeights = scen !== 'bias' && r?.weights
+      ? WEIGHT_GROUPS.filter(g => String(r.weights[g] ?? 1) !== String((SCORE_WEIGHTS[scen]?.[g]) ?? 1))
+      : [];
+    const stale = !!(thrDiff || trailDiff || changedWeights.length);
     html += `<div style="background:#141920;border:1px solid ${M.color}44;border-radius:9px;padding:10px;margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <div style="color:${M.color};font-weight:800;font-size:14px">${M.icon} ${M.label}</div>
         <div style="color:#94a3b8;font-size:10px">${M.mode.toUpperCase()} · slot indipendente · rischio ${PAPER_PARAMS.riskPct}%</div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px">
-        <div style="background:#0d1117;border-radius:6px;padding:5px 8px"><span style="color:#94a3b8;font-size:10px">Soglia score</span><br><b style="color:#f0f4fa;font-size:14px">${PAPER_PARAMS[M.thrKey]}</b></div>
-        <div style="background:#0d1117;border-radius:6px;padding:5px 8px"><span style="color:#94a3b8;font-size:10px">Trailing ×ATR</span><br><b style="color:#f0f4fa;font-size:14px">${PAPER_PARAMS[M.trailKey]}</b></div>
+        <div style="background:#0d1117;border-radius:6px;padding:5px 8px"><span style="color:#94a3b8;font-size:10px">LIVE soglia score</span><br><b style="color:#f0f4fa;font-size:14px">${PAPER_PARAMS[M.thrKey]}</b></div>
+        <div style="background:#0d1117;border-radius:6px;padding:5px 8px"><span style="color:#94a3b8;font-size:10px">LIVE trailing ×ATR</span><br><b style="color:#f0f4fa;font-size:14px">${PAPER_PARAMS[M.trailKey]}</b></div>
       </div>
       ${scen!=='bias' ? `<div style="background:#0d1117;border-radius:6px;padding:5px 8px;margin-bottom:6px">
-        <span style="color:#94a3b8;font-size:10px">Pesi interni scoring</span>
+        <span style="color:#94a3b8;font-size:10px">Pesi interni scoring LIVE</span>
         <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px">
           ${WEIGHT_GROUPS.map(g=>{const v=(SCORE_WEIGHTS[scen]?.[g])??1;return `<span style="background:${v!==1?'#e879f920':'#141920'};border:1px solid ${v!==1?'#e879f955':'#1e2535'};border-radius:4px;padding:1px 5px;font-size:10px;color:${v!==1?'#e879f9':'#94a3b8'}">${g}×${v}</span>`;}).join('')}
         </div></div>` : `<div style="color:#64748b;font-size:10px;margin-bottom:6px">Bias usa un motore di scoring dedicato (nessun peso interno).</div>`}
-      ${r ? `<div style="background:#0d1117;border-radius:7px;padding:7px;margin-bottom:7px">
-        <div style="color:#94a3b8;font-size:10px">ULTIMO RISULTATO (${srcLabel[r.source]||r.source} · ${when})</div>
+      ${r ? `<div style="background:#0d1117;border-radius:7px;padding:7px;margin-bottom:7px;border:1px solid ${stale?'#f0b42955':'#1e2535'}">
+        <div style="color:#94a3b8;font-size:10px">ULTIMO RISULTATO (${srcLabel[r.source]||r.source} · ${when} · ${r.appVersion||'pre-8.4'}) ${r.applied?'· applicato':'· non applicato'}</div>
         <div style="color:#c0cce0;font-size:12px;margin-top:2px">${r.n} trade · WR ${r.wr}% · PF ${r.pf} · DD ${r.dd}%
           <span style="color:${r.pnl>=0?'#22c55e':'#ef4444'};font-weight:800"> €${r.pnl}</span></div>
-      </div>` : `<div style="color:#64748b;font-size:11px;margin-bottom:7px">Nessun risultato registrato — lancia un backtest o l'annealing.</div>`}
-      <div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:5px">
-        <button onclick="scenQuickBacktest('${scen}')" style="background:#1a2332;color:#c0cce0;border:1px solid #2a3550;border-radius:6px;padding:8px 0;font-size:11px;font-weight:700">🧪 Backtest</button>
-        <button onclick="sweepFor('${scen}')" style="background:#1a2332;color:#f97316;border:1px solid #2a3550;border-radius:6px;padding:8px 0;font-size:11px;font-weight:700">🔁 Sweep</button>
-        <button onclick="runScenSA('${scen}')" style="background:#a855f7;color:#fff;border:none;border-radius:6px;padding:8px 0;font-size:11px;font-weight:800">🔥 Annealing</button>
+        ${rParams ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px">
+          <div style="background:#141920;border-radius:5px;padding:4px 6px"><span style="color:#64748b;font-size:9px">Snapshot soglia risultato</span><br><b style="color:${thrDiff?'#f0b429':'#c0cce0'};font-size:12px">${rThr}</b></div>
+          <div style="background:#141920;border-radius:5px;padding:4px 6px"><span style="color:#64748b;font-size:9px">Snapshot trail risultato</span><br><b style="color:${trailDiff?'#f0b429':'#c0cce0'};font-size:12px">${rTrail}</b></div>
+        </div>` : ''}
+        ${stale ? `<div style="color:#f0b429;font-size:10px;margin-top:5px">⚠️ Questo risultato è stato calcolato con parametri/pesi diversi dal live attuale. Rifai il backtest per confronti puliti.</div>` : `<div style="color:#22c55e;font-size:10px;margin-top:5px">✓ Snapshot risultato coerente col live attuale.</div>`}
+        ${r.note ? `<div style="color:#64748b;font-size:9px;margin-top:3px">${r.note}</div>` : ''}
+      </div>` : `<div style="color:#64748b;font-size:11px;margin-bottom:7px">Nessun risultato registrato — lancia un backtest o l'annealing intrascenario.</div>`}
+      ${best ? `<div style="background:#101722;border:1px solid #22c55e33;border-radius:7px;padding:7px;margin-bottom:7px">
+        <div style="color:#22c55e;font-size:10px;font-weight:800">🏆 MIGLIOR RISULTATO LOCALE</div>
+        <div style="color:#c0cce0;font-size:11px;margin-top:2px">${srcLabel[best.source]||best.source} · ${best.n} trade · WR ${best.wr}% · PF ${best.pf} · DD ${best.dd}% <span style="color:${best.pnl>=0?'#22c55e':'#ef4444'};font-weight:900">€${best.pnl}</span></div>
+      </div>` : ''}
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr;gap:5px">
+        <button onclick="scenQuickBacktest('${scen}')" style="background:#1a2332;color:#c0cce0;border:1px solid #2a3550;border-radius:6px;padding:8px 0;font-size:10px;font-weight:700">🧪 Test</button>
+        <button onclick="scenOptFor('${scen}')" style="background:#1a2332;color:#3b82f6;border:1px solid #2a3550;border-radius:6px;padding:8px 0;font-size:10px;font-weight:700">🎯 Param</button>
+        <button onclick="weightsFor('${scen}')" style="background:#1a2332;color:#e879f9;border:1px solid #2a3550;border-radius:6px;padding:8px 0;font-size:10px;font-weight:700">🧬 Pesi</button>
+        <button onclick="runScenSA('${scen}')" style="background:#a855f7;color:#fff;border:none;border-radius:6px;padding:8px 0;font-size:10px;font-weight:800">🔥 Intra-SA</button>
       </div>
     </div>`;
   }
@@ -3965,14 +4072,14 @@ function renderOptHub() {
 
 // ── OTTIMIZZAZIONE PER SCENARIO: coordinate descent, un parametro alla volta ──
 const SCEN_OPT_SPACE = {
-  swing: [ { key:'thrSwing',  label:'Soglia',      min:50,  max:75,  step:2   },
-           { key:'trailSwing',label:'Trail ×ATR',  min:0.8, max:3.0, step:0.2 } ],
-  trend: [ { key:'thrTrend',  label:'Soglia',      min:50,  max:75,  step:2   },
-           { key:'trailTrend',label:'Trail ×ATR',  min:1.0, max:3.0, step:0.2 } ],
-  bias:  [ { key:'thrBias',   label:'Soglia',      min:50,  max:80,  step:3   },
-           { key:'trailBias', label:'Trail ×ATR',  min:0.6, max:2.0, step:0.2 } ],
-  scalp: [ { key:'thrScalp',  label:'Soglia',      min:55,  max:75,  step:2   },
-           { key:'trailScalp',label:'Trail ×ATR',  min:0.4, max:1.6, step:0.1 } ],
+  swing: [ { key:'thrSwing',  label:'Soglia',      min:45,  max:85,  step:1   },
+           { key:'trailSwing',label:'Trail ×ATR',  min:0.4, max:4.0, step:0.1 } ],
+  trend: [ { key:'thrTrend',  label:'Soglia',      min:45,  max:85,  step:1   },
+           { key:'trailTrend',label:'Trail ×ATR',  min:0.6, max:4.5, step:0.1 } ],
+  bias:  [ { key:'thrBias',   label:'Soglia',      min:45,  max:85,  step:1   },
+           { key:'trailBias', label:'Trail ×ATR',  min:0.4, max:3.0, step:0.1 } ],
+  scalp: [ { key:'thrScalp',  label:'Soglia',      min:45,  max:85,  step:1   },
+           { key:'trailScalp',label:'Trail ×ATR',  min:0.3, max:2.2, step:0.1 } ],
 };
 
 async function runScenOptimization() {
@@ -3988,8 +4095,8 @@ async function runScenOptimization() {
 
   const scen = document.getElementById('scen-opt-target').value;
   const space = SCEN_OPT_SPACE[scen];
-  const maxBars = 5000;
-  const btMode = scen === 'scalp' ? '1m' : '1h';
+  const maxBars = scenarioDefaultBars(scen, document.getElementById('bt-bars')?.value || 5000);
+  const btMode = scenarioBtMode(scen);
   // Scenario ISOLATO: attribuzione pulita dei risultati al solo scenario in esame
   const useScen = { swing:false, trend:false, bias:false, scalp:false };
   useScen[scen] = true;
@@ -4079,7 +4186,7 @@ async function runScenOptimization() {
       html += `</div>`;
     });
 
-    saveOptResult(scen, 'scenopt', improved ? finalSt : baseSt);
+    saveOptResult(scen, 'scenopt', improved ? finalSt : baseSt, { params: improved ? paramsFor(current) : paramsFor({}), weights: SCORE_WEIGHTS[scen], applied: improved, note: improved ? 'parametri applicati al live' : 'risultato baseline live salvato' });
     if (improved) {
       savePaperParams(current);
       if (typeof syncParamInputs === 'function') syncParamInputs();
@@ -4139,7 +4246,7 @@ async function runSanityCheck() {
   const runAt = async (range, pOver) => {
     const P = { ...liveP(), ...(pOver||{}) };
     if (range) P._range = range;
-    const res = await btRun('1h', maxBars, useScen, P, null);
+    const res = await btRunScenarioBundle(maxBars, useScen, P, null);
     return btStats(res.trades, res.startCap);
   };
 
@@ -4297,8 +4404,8 @@ async function runWeightOptimization() {
   progCard.style.display='block'; resEl.innerHTML='';
 
   const scen = document.getElementById('wopt-target').value;
-  const maxBars = 5000;
-  const btMode = scen === 'scalp' ? '1m' : '1h';
+  const maxBars = scenarioDefaultBars(scen, document.getElementById('bt-bars')?.value || 5000);
+  const btMode = scenarioBtMode(scen);
   const useScen = { swing:false, trend:false, bias:false, scalp:false };
   useScen[scen] = true;
   const scenNames = { swing:'📊 Swing', trend:'📈 Trend', scalp:'⚡ Scalp (1M)' };
@@ -4382,7 +4489,7 @@ async function runWeightOptimization() {
       html += `</div>`;
     });
 
-    saveOptResult(scen, 'weights', improved ? finalSt : baseSt);
+    saveOptResult(scen, 'weights', improved ? finalSt : baseSt, { params: baseP(), weights: improved ? current : SCORE_WEIGHTS[scen], applied: improved, note: improved ? 'pesi applicati al live' : 'risultato baseline live salvato' });
     if (improved) {
       saveScoreWeights(scen, current);
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:10px;color:#22c55e;font-size:12px;font-weight:700">
@@ -4422,13 +4529,18 @@ async function runBtSweep() {
     progText.textContent='❌ Range non valido'; btn.disabled=false; btn.style.opacity='1'; btRunning=false; return;
   }
 
-  const mode = document.getElementById('bt-mode').value;
   const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
-  const useScen = (mode === '5m' || mode === '1m')
-    ? { scalp:true, swing:false, trend:false, bias:false }
-    : { swing: document.getElementById('bt-scen-swing').checked,
-        trend: document.getElementById('bt-scen-trend').checked,
-        bias:  document.getElementById('bt-scen-bias').checked, scalp:false };
+  const paramScenario = param.includes('Scalp') ? 'scalp'
+                      : param.includes('Swing') ? 'swing'
+                      : param.includes('Trend') ? 'trend'
+                      : param.includes('Bias') ? 'bias' : null;
+  const mode = paramScenario ? scenarioBtMode(paramScenario) : (document.getElementById('bt-mode').value === 'auto' ? '1h' : document.getElementById('bt-mode').value);
+  const useScen = paramScenario
+    ? { swing:paramScenario==='swing', trend:paramScenario==='trend', bias:paramScenario==='bias', scalp:paramScenario==='scalp' }
+    : (mode === '5m' ? { scalp:false, swing:true, trend:false, bias:false }
+      : mode === '1m' ? { scalp:true, swing:false, trend:false, bias:false }
+      : { swing:false, trend: document.getElementById('bt-scen-trend').checked,
+          bias:  document.getElementById('bt-scen-bias').checked, scalp:false });
 
   const values = [];
   for (let v = vFrom; v <= vTo + 1e-9; v += vStep) values.push(+v.toFixed(3));
@@ -4516,7 +4628,7 @@ function renderBtResults() {
   const retPct = ((endCap - startCap) / startCap * 100).toFixed(1);
 
   let html = `<div class="card" style="border:2px solid ${pnlCol}44;margin-bottom:10px">
-    <div style="color:#3b82f6;font-weight:800;font-size:15px;margin-bottom:2px">🧪 Risultato Backtest ${mode==='5m'?'· ⚡ 5M Scalp':''}</div>
+    <div style="color:#3b82f6;font-weight:800;font-size:15px;margin-bottom:2px">🧪 Risultato Backtest · ${mode || 'auto'} · verifica scenario-TF</div>
     <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">${new Date(period.from).toLocaleDateString('it-IT')} → ${new Date(period.to).toLocaleDateString('it-IT')}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:6px">
       <div style="background:#141920;border-radius:7px;padding:8px;text-align:center"><div style="color:#94a3b8;font-size:10px">P&L</div><div style="color:${pnlCol};font-size:16px;font-weight:900">${tot.pnl>=0?'+':''}€${tot.pnl}</div><div style="color:#94a3b8;font-size:9px">${retPct}%</div></div>
@@ -4531,7 +4643,7 @@ function renderBtResults() {
     const col = s.pnl >= 0 ? '#22c55e' : '#ef4444';
     html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e2535">
       <div><span style="color:#f0f4fa;font-size:13px;font-weight:700">${scenNames[id]||id}</span>
-        <span style="color:#94a3b8;font-size:11px;margin-left:6px">${s.n} trade · WR ${s.wr}% · PF ${s.pf}</span></div>
+        <span style="color:#94a3b8;font-size:11px;margin-left:6px">${scenarioExecTF(id).toUpperCase()} · ${s.n} trade · WR ${s.wr}% · PF ${s.pf}</span></div>
       <span style="color:${col};font-weight:800;font-size:13px">${s.pnl>=0?'+':''}€${s.pnl}</span>
     </div>`;
   });
@@ -4548,7 +4660,7 @@ function renderBtResults() {
     const col = t.isWin ? '#22c55e' : '#ef4444';
     html += `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1e2535;font-size:12px">
       <div><span style="color:${t.direction==='BUY'?'#22c55e':'#ef4444'};font-weight:700">${t.direction}</span>
-        <span style="color:#94a3b8;margin-left:5px">${scenNames[t.scenario]||t.scenario} · ${t.exitReason}</span>
+        <span style="color:#94a3b8;margin-left:5px">${scenNames[t.scenario]||t.scenario} ${t.execTf ? '('+t.execTf.toUpperCase()+')' : ''} · ${t.exitReason}</span>
         <span style="color:#c0cce0;margin-left:5px;font-size:10px">${new Date(t.openedAt).toLocaleDateString('it-IT')}</span></div>
       <span style="color:${col};font-weight:700">${t.pnlTotal>=0?'+':''}€${t.pnlTotal}</span>
     </div>`;
@@ -4561,16 +4673,40 @@ function renderBtResults() {
 function exportBtCsv() {
   const r = state.btResults;
   if (!r?.trades?.length) { alert('Nessun risultato da esportare.'); return; }
-  const head = ['openedAt','closedAt','scenario','bias','direction','entry','sl','tp1','tp2','lots','exitReason','exitPrice','partialPnl','pnlEur','pnlTotal','rr','confidence','capitalAfter'];
-  const rows = r.trades.map(t => head.map(k => t[k] ?? '').join(','));
-  const csv = head.join(',') + String.fromCharCode(10) + rows.join(String.fromCharCode(10));
-  const blob = new Blob([csv], { type:'text/csv' });
+  const baseHead = ['openedAt','closedAt','scenario','execTf','bias','direction','entry','sl','tp1','tp2','lots','exitReason','exitPrice','partialPnl','pnlEur','pnlTotal','rr','confidence','capitalAfter'];
+  const paramKeys = Object.keys(PAPER_PARAMS_DEFAULTS).filter(k=>k !== '_v');
+  const weightKeys = WEIGHT_GROUPS.map(g => 'weight_'+g);
+  const metaHead = ['appVersion','snapshotSource','snapshotTs','btMode','paramScenario','verifyRule'];
+  const head = [...baseHead, ...metaHead, ...paramKeys.map(k=>'param_'+k), ...weightKeys];
+  const rows = r.trades.map(t => {
+    const snap = t.paramSnapshot || makeParamSnapshot(`backtest_${r.mode||''}`, t.scenario || '', null, null);
+    const params = normalizeParamSnapshot(snap.params || snap);
+    const weights = snap.weights || (t.scenario ? SCORE_WEIGHTS[t.scenario] : {}) || {};
+    const extra = {
+      appVersion: snap.appVersion || APP_VERSION,
+      snapshotSource: snap.source || `backtest_${r.mode||''}`,
+      snapshotTs: snap.ts || '',
+      btMode: r.mode || '',
+      paramScenario: snap.scenario || t.scenario || '',
+      verifyRule: 'scalp=1m;swing=5m;trend=1h;bias=1h',
+    };
+    const vals = [
+      ...baseHead.map(k => t[k] ?? ''),
+      ...metaHead.map(k => extra[k] ?? ''),
+      ...paramKeys.map(k => params[k] ?? ''),
+      ...WEIGHT_GROUPS.map(g => weights?.[g] ?? ''),
+    ];
+    return vals.map(csvEscape).join(',');
+  });
+  const csv = head.map(csvEscape).join(',') + String.fromCharCode(10) + rows.join(String.fromCharCode(10));
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `backtest_${new Date().toISOString().slice(0,10)}.csv`;
+  a.href = url; a.download = `backtest_${new Date().toISOString().slice(0,10)}_params.csv`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
 
 // ══ STORICO PER BACKTEST — download, salvataggio locale, export ═
 const HIST_JOBS = [
@@ -4612,6 +4748,145 @@ async function histFetchSeries(symbol, interval, outputsize, endDate) {
   if (data.status === 'error') throw new Error(data.message || 'Errore API');
   if (!data.values || !data.values.length) throw new Error('Nessun dato ricevuto');
   return data;
+}
+
+
+const HIST_CORE_JOBS = [
+  { symbol:'XAU/USD', interval:'1day', key:'xauusd_1d',  inputId:'hist-sync-1day' },
+  { symbol:'XAU/USD', interval:'1h',   key:'xauusd_1h',  inputId:'hist-sync-1h' },
+  { symbol:'XAU/USD', interval:'5min', key:'xauusd_5m',  inputId:'hist-sync-5min' },
+  { symbol:'XAU/USD', interval:'1min', key:'xauusd_1m',  inputId:'hist-sync-1min' },
+];
+
+function histIntervalMs(interval) {
+  return ({ '1min':60000, '5min':300000, '1h':3600000, '4h':14400000, '1day':86400000 })[interval] || 60000;
+}
+function histDateInputDefault() {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 6);
+  return d.toISOString().slice(0,10);
+}
+function histApiDate(d) {
+  const x = d instanceof Date ? d : new Date(d);
+  return x.toISOString().slice(0,19).replace('T',' ');
+}
+function histSortDedup(candles, startDate=null) {
+  const minTs = startDate ? new Date(startDate + 'T00:00:00Z').getTime() : -Infinity;
+  const m = new Map();
+  (candles || []).forEach(cd => {
+    if (!cd || !cd.t) return;
+    const ts = new Date(cd.t.replace(' ', 'T') + (String(cd.t).includes('Z')?'':'Z')).getTime();
+    if (!Number.isFinite(ts) || ts < minTs) return;
+    m.set(cd.t, { t:cd.t, o:+cd.o, h:+cd.h, l:+cd.l, c:+cd.c, vol:cd.vol==null?null:+cd.vol });
+  });
+  return [...m.values()].sort((a,b)=>new Date(a.t.replace(' ','T')) - new Date(b.t.replace(' ','T')));
+}
+function histGapReport(candles, interval) {
+  const ms = histIntervalMs(interval);
+  let gaps = 0, maxGapMin = 0;
+  for (let i=1; i<candles.length; i++) {
+    const a = new Date(candles[i-1].t.replace(' ','T')).getTime();
+    const b = new Date(candles[i].t.replace(' ','T')).getTime();
+    const diff = b-a;
+    // Evita di contare weekend/chiusure mercato come errore dati.
+    const anomalous = interval === '1day'
+      ? diff > ms*4
+      : (diff > ms*3 && diff < 1000*60*60*12);
+    if (anomalous) { gaps++; maxGapMin = Math.max(maxGapMin, Math.round(diff/60000)); }
+  }
+  return { gaps, maxGapMin };
+}
+function histOldestMinusOneSecond(candleTime) {
+  const d = new Date(String(candleTime).replace(' ', 'T') + (String(candleTime).includes('Z')?'':'Z'));
+  d.setSeconds(d.getSeconds() - 1);
+  return histApiDate(d);
+}
+function histMergePayload(job, existing, freshCandles, startDate) {
+  const merged = histSortDedup([...(existing?.candles || []), ...(freshCandles || [])], startDate);
+  const gaps = histGapReport(merged, job.interval);
+  return {
+    symbol: job.symbol, interval: job.interval, count: merged.length,
+    firstDate: merged[0]?.t || null, lastDate: merged[merged.length-1]?.t || null,
+    requestedStartDate: startDate,
+    normalizedAt: new Date().toISOString(),
+    downloadedAt: existing?.downloadedAt || new Date().toISOString(),
+    gaps, candles: merged,
+  };
+}
+async function histFetchBackwardsToStart(job, startDate, pageSize, maxPages, delayMs) {
+  const startTs = new Date(startDate + 'T00:00:00Z').getTime();
+  let endDate = null, all = [], reachedStart = false, stoppedByLimit = false;
+  for (let p=0; p<maxPages; p++) {
+    histLog(`⏳ ${job.interval}: pagina ${p+1}/${maxPages}${endDate ? ' fino a '+endDate : ''}`, '#94a3b8');
+    let candles;
+    try {
+      const raw = await histFetchSeries(job.symbol, job.interval, pageSize, endDate);
+      candles = histNormalize(raw.values);
+    } catch(e) {
+      histLog(`⚪ ${job.interval}: stop download (${e.message})`, '#f0b429');
+      break;
+    }
+    if (!candles.length) break;
+    all = [...candles, ...all];
+    const oldest = candles[0]?.t;
+    const oldestTs = new Date(String(oldest).replace(' ', 'T') + (String(oldest).includes('Z')?'':'Z')).getTime();
+    histLog(`✅ ${job.interval}: +${candles.length} barre (${candles[0]?.t} → ${candles[candles.length-1]?.t})`, '#22c55e');
+    if (Number.isFinite(oldestTs) && oldestTs <= startTs) { reachedStart = true; break; }
+    endDate = histOldestMinusOneSecond(oldest);
+    if (p < maxPages-1) await new Promise(r => setTimeout(r, delayMs));
+    if (p === maxPages-1) stoppedByLimit = true;
+  }
+  return { candles: histSortDedup(all, startDate), reachedStart, stoppedByLimit };
+}
+
+async function startNormalizedDownload() {
+  if (histDownloading) return;
+  histDownloading = true;
+  const startInput = document.getElementById('hist-start-date');
+  const startDate = startInput?.value || histDateInputDefault();
+  if (startInput && !startInput.value) startInput.value = startDate;
+  const pageSize = Math.max(100, Math.min(5000, parseInt(document.getElementById('hist-sync-page-size')?.value, 10) || 5000));
+  const maxPages = Math.max(1, Math.min(500, parseInt(document.getElementById('hist-sync-max-pages')?.value, 10) || 120));
+  const delayMs = parseInt(document.getElementById('hist-delay')?.value, 10) || 8000;
+  const jobs = HIST_CORE_JOBS.filter(j => document.getElementById(j.inputId)?.checked);
+  const btn = document.getElementById('hist-sync-btn');
+  const progressCard = document.getElementById('hist-progress-card');
+  const progressBar = document.getElementById('hist-progress-bar');
+  const progressText = document.getElementById('hist-progress-text');
+  const logEl = document.getElementById('hist-progress-log');
+  if (!jobs.length) { alert('Seleziona almeno un timeframe da normalizzare.'); histDownloading=false; return; }
+  if (btn) { btn.disabled = true; btn.style.opacity='0.5'; btn.textContent='⏳ Normalizzazione...'; }
+  if (progressCard) progressCard.style.display='block';
+  if (logEl) logEl.innerHTML='';
+  histLog(`🚀 Normalizzazione da ${startDate}: ${jobs.map(j=>j.interval).join(' · ')}`, '#3b82f6');
+  let ok=0, warn=0, fail=0;
+  try {
+    for (let i=0; i<jobs.length; i++) {
+      const job = jobs[i];
+      if (progressBar) progressBar.style.width = Math.round(i/jobs.length*100)+'%';
+      if (progressText) progressText.textContent = `[${i+1}/${jobs.length}] ${job.symbol} ${job.interval}: scarico e integro...`;
+      const existing = await histLoad(job.key);
+      const before = existing?.candles?.length || 0;
+      try {
+        const fetched = await histFetchBackwardsToStart(job, startDate, pageSize, maxPages, delayMs);
+        const payload = histMergePayload(job, existing, fetched.candles, startDate);
+        const saved = await histSave(job.key, payload);
+        if (!saved) { fail++; continue; }
+        const added = Math.max(0, payload.count - before);
+        const gapTxt = payload.gaps?.gaps ? ` · gap interni: ${payload.gaps.gaps}` : '';
+        if (!fetched.reachedStart) { warn++; histLog(`⚠️ ${job.interval}: salvate ${payload.count} barre (+${added}), ma non ho raggiunto ${startDate}. Aumenta max pagine.${gapTxt}`, '#f0b429'); }
+        else { ok++; histLog(`✅ ${job.interval}: normalizzato ${payload.count} barre (+${added}) ${payload.firstDate} → ${payload.lastDate}${gapTxt}`, '#22c55e'); }
+      } catch(e) { fail++; histLog(`❌ ${job.interval}: ${e.message}`, '#ef4444'); }
+      if (i < jobs.length-1) await new Promise(r => setTimeout(r, delayMs));
+    }
+    if (progressBar) progressBar.style.width='100%';
+    if (progressText) progressText.textContent = `Completato: ${ok} ok · ${warn} avvisi · ${fail} errori`;
+    histLog(`🏁 Fine normalizzazione: ${ok} ok, ${warn} avvisi, ${fail} errori`, fail ? '#f0b429' : '#22c55e');
+  } finally {
+    if (btn) { btn.disabled=false; btn.style.opacity='1'; btn.textContent='🧼 Scarica e integra mancanti'; }
+    histDownloading = false;
+    renderHistSavedList();
+  }
 }
 
 // ── IndexedDB: storage grande (centinaia di MB) per le serie ──
@@ -4832,10 +5107,14 @@ async function renderHistSavedList() {
   const rows = saved.map(j => {
     const bytes = JSON.stringify(j.data).length;
     totalBytes += bytes;
+    const gapN = j.data.gaps?.gaps || 0;
+    const norm = j.data.normalizedAt ? ` · norm ${j.data.normalizedAt.slice(0,10)}` : '';
+    const start = j.data.requestedStartDate ? ` · start ${j.data.requestedStartDate}` : '';
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e2535;gap:6px">
       <div style="flex:1">
         <div style="color:#f0f4fa;font-size:12px;font-weight:700">${j.symbol} · ${j.interval}</div>
-        <div style="color:#94a3b8;font-size:10px">${j.data.count} candele · ${histFmtBytes(bytes)}</div>
+        <div style="color:#94a3b8;font-size:10px">${j.data.count} candele · ${histFmtBytes(bytes)}${start}${norm}</div>
+        ${gapN ? `<div style="color:#f0b429;font-size:9px;margin-top:2px">⚠️ ${gapN} gap interni anomali rilevati</div>` : ''}
       </div>
       <div style="color:#c0cce0;font-size:10px;text-align:right">${j.data.firstDate?.slice(0,10)||'–'}<br>→ ${j.data.lastDate?.slice(0,10)||'–'}</div>
       <button onclick="deleteHistSeries('${j.key}')" style="background:#ef444415;border:1px solid #ef444433;color:#ef4444;border-radius:6px;padding:6px 8px;font-size:12px;flex-shrink:0">🗑</button>
@@ -4900,10 +5179,15 @@ function syncParamInputs() {
   });
 }
 
+function renderDownloadScreen() {
+  const startInput = document.getElementById('hist-start-date');
+  if (startInput && !startInput.value) startInput.value = histDateInputDefault();
+  renderHistSavedList();
+}
+
 function renderHistScreen() {
   setTimeout(renderOptHub, 50);
   syncParamInputs();
-  renderHistSavedList();
 }
 
 function closeTradeById(id){
@@ -6217,9 +6501,10 @@ const PAPER_PARAMS_DEFAULTS = {
 let PAPER_PARAMS = (() => {
   try {
     const saved = JSON.parse(localStorage.getItem('xauapp_live_params') || 'null');
-    // Se il salvataggio è di una versione precedente, i nuovi default vincono
-    if (saved && saved._v === PAPER_PARAMS_DEFAULTS._v) return { ...PAPER_PARAMS_DEFAULTS, ...saved };
-    const fresh = { ...PAPER_PARAMS_DEFAULTS };
+    // Migrazione non distruttiva: preserva i valori ottimizzati dall'utente anche se cambia la versione default.
+    const fresh = saved && typeof saved === 'object'
+      ? { ...PAPER_PARAMS_DEFAULTS, ...saved, _v: PAPER_PARAMS_DEFAULTS._v }
+      : { ...PAPER_PARAMS_DEFAULTS };
     try { localStorage.setItem('xauapp_live_params', JSON.stringify(fresh)); } catch(e) {}
     return fresh;
   } catch(e) { return { ...PAPER_PARAMS_DEFAULTS }; }
@@ -6233,20 +6518,18 @@ const SCORE_WEIGHTS_DEFAULTS = {
 };
 let SCORE_WEIGHTS = (() => {
   try {
-    const saved = JSON.parse(localStorage.getItem('xauapp_score_weights') || 'null');
-    if (saved && saved._v === SCORE_WEIGHTS_DEFAULTS._v) {
-      return { ...SCORE_WEIGHTS_DEFAULTS, ...saved,
-        swing:{...SCORE_WEIGHTS_DEFAULTS.swing,...(saved.swing||{})},
-        trend:{...SCORE_WEIGHTS_DEFAULTS.trend,...(saved.trend||{})},
-        scalp:{...SCORE_WEIGHTS_DEFAULTS.scalp,...(saved.scalp||{})} };
-    }
-    return JSON.parse(JSON.stringify(SCORE_WEIGHTS_DEFAULTS));
+    const saved = JSON.parse(localStorage.getItem('xauapp_score_weights') || 'null') || {};
+    return { ...SCORE_WEIGHTS_DEFAULTS, ...saved, _v:SCORE_WEIGHTS_DEFAULTS._v,
+      swing:{...SCORE_WEIGHTS_DEFAULTS.swing,...(saved.swing||{})},
+      trend:{...SCORE_WEIGHTS_DEFAULTS.trend,...(saved.trend||{})},
+      scalp:{...SCORE_WEIGHTS_DEFAULTS.scalp,...(saved.scalp||{})} };
   } catch(e) { return JSON.parse(JSON.stringify(SCORE_WEIGHTS_DEFAULTS)); }
 })();
 function saveScoreWeights(scen, w) {
   SCORE_WEIGHTS[scen] = { ...SCORE_WEIGHTS[scen], ...w };
   SCORE_WEIGHTS._v = SCORE_WEIGHTS_DEFAULTS._v;
   try { localStorage.setItem('xauapp_score_weights', JSON.stringify(SCORE_WEIGHTS)); } catch(e) {}
+  if (typeof renderOptHub === 'function') renderOptHub();
 }
 
 function paperSlots() {
@@ -6265,6 +6548,53 @@ function syncLegacyOpen() {
 function savePaperParams(p) {
   PAPER_PARAMS = { ...PAPER_PARAMS, ...p, _v: PAPER_PARAMS_DEFAULTS._v };
   try { localStorage.setItem('xauapp_live_params', JSON.stringify(PAPER_PARAMS)); } catch(e) {}
+  if (typeof syncParamInputs === 'function') syncParamInputs();
+  if (typeof renderOptHub === 'function') renderOptHub();
+}
+
+function clonePlain(o) {
+  try { return JSON.parse(JSON.stringify(o || {})); } catch(e) { return {}; }
+}
+
+function normalizeParamSnapshot(P) {
+  const src = P || PAPER_PARAMS || {};
+  const out = {};
+  Object.keys(PAPER_PARAMS_DEFAULTS).forEach(k => {
+    if (k === '_v') return;
+    let v = src[k];
+    if (v === undefined) v = PAPER_PARAMS[k];
+    if ((k === 'riskPct' || k === 'partialPct') && typeof v === 'number' && v <= 1) v = +(v * 100).toFixed(3);
+    out[k] = v;
+  });
+  return out;
+}
+
+function makeParamSnapshot(source='live', scenario='', P=null, weights=null) {
+  const params = normalizeParamSnapshot(P || PAPER_PARAMS);
+  const w = weights || (scenario ? SCORE_WEIGHTS[scenario] : SCORE_WEIGHTS);
+  return {
+    appVersion: APP_VERSION,
+    source,
+    scenario: scenario || '',
+    ts: new Date().toISOString(),
+    params,
+    weights: clonePlain(w || {}),
+  };
+}
+
+function csvEscape(v) {
+  const s = String(v === null || v === undefined ? '' : v);
+  return /[",\n\r;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function flattenForCsv(prefix, obj, out={}) {
+  if (!obj || typeof obj !== 'object') return out;
+  Object.entries(obj).forEach(([k,v]) => {
+    const key = prefix ? `${prefix}_${k}` : k;
+    if (v && typeof v === 'object' && !Array.isArray(v)) flattenForCsv(key, v, out);
+    else out[key] = Array.isArray(v) ? v.join('|') : v;
+  });
+  return out;
 }
 
 // nowRef: in backtest restituisce l'ora storica simulata, altrimenti l'ora reale
@@ -6566,9 +6896,9 @@ function computeAllScenarios() {
       const empty = {buy:0,sell:0,buyR:[],sellR:[],bestDir:"WAIT",bestScore:0,setup:null};
       return {
         scores:[
-          {id:"swing",label:"📊 Swing",      buy:empty,sell:empty,color:"#f0b429",tf:"1H/4H",      threshold:60},
-          {id:"scalp",label:"⚡ Scalp",       buy:empty,sell:empty,color:"#f97316",tf:"1M/5M",      threshold:65},
-          {id:"trend",label:"📈 Trend",       buy:empty,sell:empty,color:"#22c55e",tf:"Daily/4H/1H",threshold:60},
+          {id:"swing",label:"📊 Swing",      buy:empty,sell:empty,color:"#f0b429",tf:"5M verifica · 1H/4H", threshold:60},
+          {id:"scalp",label:"⚡ Scalp",       buy:empty,sell:empty,color:"#f97316",tf:"1M verifica · 5M", threshold:65},
+          {id:"trend",label:"📈 Trend",       buy:empty,sell:empty,color:"#22c55e",tf:"1H verifica · D/4H", threshold:60},
         ],
         best:null,consensus:"CARICAMENTO",consensusColor:"#c0cce0",sess,regime:"RANGING",adx:{adx:0,pdi:0,mdi:0}
       };
@@ -6847,31 +7177,31 @@ function computeAllScenarios() {
     const rawScore = Math.max(0, score);
     let finalScore = Math.max(0, Math.min(100, Math.round(rawScore * cohMult)));
 
-    // Setup per quella direzione — SL strutturale, R:R minimo, anti-chase
-    const entry=last1h?.c||0;
+    // Setup operativo: entry, SL/TP, ATR e anti-chase nascono dal TF di verifica dello scenario.
+    const execTf = scenarioExecTF(scenario);
+    const execCandles = scenario === "scalp" ? (cc1m.length ? cc1m : cc5m)
+                      : scenario === "swing" ? (cc5m.length ? cc5m : cc1h)
+                      : cc1h;
+    const execLast = execCandles.length ? execCandles[execCandles.length-1] : last1h;
+    const entry = execLast?.c || 0;
+    const execAtr = execLast?.atr || (scenario === "scalp" ? (last1m?.atr || last5m?.atr || atr1h*0.25)
+                   : scenario === "swing" ? (last5m?.atr || atr1h*0.35) : atr1h);
     const atrMult = scenario==="trend"?2.0:scenario==="scalp"?1.2:1.5;
-    const tpMult1 = scenario==="trend"?3.0:scenario==="scalp"?1.5:2.0;
-    const tpMult2 = scenario==="trend"?5.0:scenario==="scalp"?2.5:3.5;
     let setup = null;
     if (entry) {
-      // SL: strutturale (swing) se ragionevole, altrimenti ATR
-      const scCandles = scenario==="scalp" ? (cc5m.length?cc5m:cc1h) : cc1h;
-      const scAtr     = scenario==="scalp" ? (last5m?.atr||atr1h*0.3) : atr1h;
-      const slStruct  = structuralSL(scCandles, dir, scAtr, scenario==="scalp"?6:8);
-      const slAtr     = isBuy ? +(entry-scAtr*atrMult).toFixed(2) : +(entry+scAtr*atrMult).toFixed(2);
-      // Usa lo strutturale se non troppo lontano (max 1.5x della distanza ATR)
+      const slStruct  = structuralSL(execCandles, dir, execAtr, scenario==="scalp"?6:scenario==="swing"?10:8);
+      const slAtr     = isBuy ? +(entry-execAtr*atrMult).toFixed(2) : +(entry+execAtr*atrMult).toFixed(2);
       let sl = slAtr;
       if (slStruct !== null) {
         const dStruct = Math.abs(entry - slStruct), dAtr = Math.abs(entry - slAtr);
         if (dStruct > dAtr*0.4 && dStruct < dAtr*1.5) sl = slStruct;
       }
       const risk = Math.abs(entry - sl);
-      const tp1  = isBuy ? +(entry+risk*1.5).toFixed(2) : +(entry-risk*1.5).toFixed(2); // R:R fisso 1.5 a TP1
-      const tp2  = isBuy ? +(entry+risk*3.0).toFixed(2) : +(entry-risk*3.0).toFixed(2); // 3R a TP2
-      setup = { direction:dir, entry, sl, tp1, tp2, risk:+risk.toFixed(2) };
-      // Anti-chase: se prezzo esteso dall'EMA20, marca il setup
-      const e20 = ema20_1h.length ? ema20_1h[ema20_1h.length-1] : null;
-      if (isChasing(entry, e20, atr1h)) { setup.chasing = true; }
+      const tp1  = isBuy ? +(entry+risk*1.5).toFixed(2) : +(entry-risk*1.5).toFixed(2);
+      const tp2  = isBuy ? +(entry+risk*3.0).toFixed(2) : +(entry-risk*3.0).toFixed(2);
+      setup = { direction:dir, entry, sl, tp1, tp2, risk:+risk.toFixed(2), execTf, execAtr:+execAtr.toFixed(4) };
+      const execEma20 = execCandles.length >= 20 ? calcEMA(execCandles.map(c=>c.c), 20).slice(-1)[0] : (ema20_1h.length ? ema20_1h[ema20_1h.length-1] : null);
+      if (isChasing(entry, execEma20, execAtr)) { setup.chasing = true; }
     }
     // Penalità score se chasing o weekend
     let finalAdj = 0;
@@ -6896,9 +7226,9 @@ function computeAllScenarios() {
   };
 
   const scores = [
-    makeScenario("swing","📊 Swing", "#f0b429","1H/4H",      THRESHOLDS.swing),
-    makeScenario("scalp","⚡ Scalp",  "#f97316","1M/5M",      THRESHOLDS.scalp),
-    makeScenario("trend","📈 Trend",  "#22c55e","Daily/4H/1H",THRESHOLDS.trend),
+    makeScenario("swing","📊 Swing", "#f0b429","5M verifica · 1H/4H contesto", THRESHOLDS.swing),
+    makeScenario("scalp","⚡ Scalp",  "#f97316","1M verifica · 5M contesto", THRESHOLDS.scalp),
+    makeScenario("trend","📈 Trend",  "#22c55e","1H verifica · Daily/4H contesto",THRESHOLDS.trend),
     computeBiasScenario(cc1h, last1h, atr1h, d1t, adx, regime),
   ];
 
@@ -7184,6 +7514,7 @@ function setMode(mode) {
     trend:  document.getElementById('trend-screen'),
     recap:  document.getElementById('recap-screen'),
     hist:   document.getElementById('hist-screen'),
+    download: document.getElementById('download-screen'),
   };
   const btns = {
     swing: document.getElementById('mode-swing'),
@@ -7191,9 +7522,10 @@ function setMode(mode) {
     trend: document.getElementById('mode-trend'),
     recap: document.getElementById('mode-recap'),
     hist:  document.getElementById('mode-hist'),
+    download: document.getElementById('mode-download'),
   };
   const colors = {
-    swing: '#f0b429', scalp: '#f97316', trend: '#22c55e', recap: '#a855f7', hist: '#3b82f6'
+    swing: '#f0b429', scalp: '#f97316', trend: '#22c55e', recap: '#a855f7', hist: '#22c55e', download: '#3b82f6'
   };
   const tfBar = document.getElementById('tf-bar');
 
@@ -7253,6 +7585,10 @@ function setMode(mode) {
     tfBar.style.display='none';
     if(screens.hist) screens.hist.style.display='block';
     renderHistScreen();
+  } else if (mode === 'download') {
+    tfBar.style.display='none';
+    if(screens.download) screens.download.style.display='block';
+    renderDownloadScreen();
   }
 }
 
@@ -7263,6 +7599,10 @@ function doRefreshCurrent() {
   else if (m === 'trend') doTrendFetch();
   else if (m === 'recap') {
     fetchTrendCandles().then(() => renderRecapScreen());
+  } else if (m === 'hist') {
+    renderHistScreen();
+  } else if (m === 'download') {
+    renderDownloadScreen();
   }
 }
 
@@ -7599,6 +7939,7 @@ async function restoreBgState() {
 
 // ══ INIT ══════════════════════════════════════════════════════
 (function init(){
+  const vb = document.getElementById('app-version-badge'); if (vb) vb.textContent = 'v' + APP_VERSION.split('-')[0];
   if ('serviceWorker' in navigator) registerSW();
   loadPaperState();
 

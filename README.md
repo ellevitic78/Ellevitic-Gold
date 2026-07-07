@@ -43,6 +43,10 @@ App standalone per Android con dati live, analisi MTF, scalping e notifiche in b
 5. Consenti le notifiche quando richiesto
 6. ✅ Riceverai alert anche con il telefono in tasca!
 
+## Versione inclusa
+
+Questa build è la **v8.5 data-normalizer**. Vedi `CHANGELOG_8.5.md` per tab Download dedicato, normalizzazione dati da data di inizio, generale solo backtest e ottimizzazioni isolate per scenario.
+
 ## Alert disponibili
 - 📍 Prezzo vicino a Pivot / R1 / S1
 - ⚠️ RSI overbought (>70) o oversold (<30)
@@ -54,3 +58,15 @@ App standalone per Android con dati live, analisi MTF, scalping e notifiche in b
 - Il monitoraggio gira ogni **5 minuti** (rispetta il rate limit Twelve Data free: 800 req/giorno)
 - Su Android Chrome le notifiche funzionano anche con lo schermo spento
 - Su iOS Safari le PWA non supportano push notification (limitazione Apple)
+
+## v8.6 — Timeframe operativo per scenario
+
+Nel backtest la verifica trade è ora strutturata per scenario:
+
+- Scalp: verifica su 1M.
+- Swing: verifica su 5M.
+- Trend: verifica su 1H.
+- Bias: verifica su 1H.
+
+Le altre candele restano disponibili come contesto di scoring, ma entry, SL/TP, trailing ed exit vengono simulati sul timeframe operativo dello scenario. Il CSV backtest include `execTf` e `verifyRule` per rendere tracciabile la regola usata.
+
