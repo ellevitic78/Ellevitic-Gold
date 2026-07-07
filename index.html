@@ -452,10 +452,20 @@ button{cursor:pointer}
   <div class="card" style="border:2px solid #3b82f644;margin-bottom:10px">
     <div style="color:#3b82f6;font-size:16px;font-weight:800;margin-bottom:4px">🧰 Ottimizzazione SOLO per scenario</div>
     <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">Ogni scenario opera su uno slot indipendente e sul proprio timeframe operativo: Scalp=1M, Swing=5M, Trend=1H. Qui fai backtest isolato, ottimizzazione parametri, ottimizzazione pesi e annealing intrascenario. Ultimi parametri e miglior risultato vengono salvati localmente.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:end;margin-bottom:8px;background:#0d1117;border:1px solid #1e2535;border-radius:8px;padding:8px">
-      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Iterazioni annealing/scenario</div><input id="scen-sa-iters" type="number" value="60" min="5" max="1000" step="5" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
-      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Barre Scalp 1M</div><input id="scen-sa-bars-1m" type="number" value="60000" min="5000" max="250000" step="5000" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:end;margin-bottom:8px;background:#0d1117;border:1px solid #1e2535;border-radius:8px;padding:8px">
+      <label style="display:flex;flex-direction:column;gap:3px">
+        <span style="color:#94a3b8;font-size:10px;margin-bottom:2px">Data inizio ottimizzazione</span>
+        <input id="opt-start-date" type="date" onchange="saveOptSettings()" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:3px">
+        <span style="color:#94a3b8;font-size:10px;margin-bottom:2px">Preparazione automatica dati</span>
+        <span style="display:flex;align-items:center;gap:7px;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:8px;color:#c0cce0;font-size:12px;font-weight:700">
+          <input id="opt-auto-sync" type="checkbox" checked onchange="saveOptSettings()" style="width:15px;height:15px;accent-color:#22c55e"/> Scarica/integra mancanti
+        </span>
+      </label>
+      <div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Iterazioni annealing/scenario</div><input id="scen-sa-iters" type="number" value="160" min="20" max="3000" step="20" style="width:100%;background:#141920;border:1px solid #2a3550;border-radius:6px;padding:7px;color:#f0f4fa;font-size:13px"/></div>
       <button onclick="clearOptResults()" style="background:#ef444420;border:1px solid #ef444444;color:#ef4444;border-radius:7px;padding:8px 10px;font-size:11px;font-weight:800">🧹 Azzera risultati</button>
+      <div style="grid-column:1/-1;color:#94a3b8;font-size:10px;line-height:1.4">Le ottimizzazioni usano <b>tutte le barre normalizzate</b> dalla data scelta in avanti. Prima del run, se attivo, l'app controlla 1D/1H/5M/1M e integra automaticamente le candele mancanti. Intra-SA usa spazio largo stabile: soglie 30–95, trailing più ampio, minConf/BE/trail trigger/parziale e pesi 0–3×.</div>
     </div>
     <div id="opt-hub"></div>
     <div id="scenario-hidden-controls" style="display:none">
@@ -600,7 +610,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-const APP_VERSION = '8.6.0-scenario-exec-tf';
+const APP_VERSION = '8.8.0-wide-annealing-space';
 // ══ STORAGE ══════════════════════════════════════════════════
 const LS = {
   get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch{return null;} },
@@ -3281,6 +3291,115 @@ function scenarioDefaultBars(scenario, requested) {
   if (scenario === 'swing') return Math.min(n, 250000);
   return n;
 }
+function optStartDateDefault() { return histDateInputDefault(); }
+function syncOptSettingsInputs() {
+  const el = document.getElementById('opt-start-date');
+  const savedDate = localStorage.getItem('xauapp_opt_start_date') || optStartDateDefault();
+  if (el && !el.value) el.value = savedDate;
+  const chk = document.getElementById('opt-auto-sync');
+  const savedAuto = localStorage.getItem('xauapp_opt_auto_sync');
+  if (chk && savedAuto !== null) chk.checked = savedAuto !== '0';
+}
+function saveOptSettings() {
+  const el = document.getElementById('opt-start-date');
+  const chk = document.getElementById('opt-auto-sync');
+  try {
+    if (el?.value) localStorage.setItem('xauapp_opt_start_date', el.value);
+    if (chk) localStorage.setItem('xauapp_opt_auto_sync', chk.checked ? '1' : '0');
+  } catch(e) {}
+}
+function optGetStartDate() {
+  syncOptSettingsInputs();
+  const el = document.getElementById('opt-start-date');
+  const d = el?.value || localStorage.getItem('xauapp_opt_start_date') || optStartDateDefault();
+  if (el && !el.value) el.value = d;
+  try { localStorage.setItem('xauapp_opt_start_date', d); } catch(e) {}
+  return d;
+}
+function optAutoSyncEnabled() {
+  syncOptSettingsInputs();
+  const chk = document.getElementById('opt-auto-sync');
+  return chk ? !!chk.checked : true;
+}
+function scenarioOptimizationBars() { return Number.MAX_SAFE_INTEGER; }
+function btTs(cd) {
+  if (!cd?.t) return NaN;
+  return new Date(String(cd.t).replace(' ', 'T') + (String(cd.t).includes('Z') ? '' : 'Z')).getTime();
+}
+function btSelectCandles(candles, maxBars, startDate=null) {
+  let arr = candles || [];
+  if (startDate) {
+    const minTs = new Date(startDate + 'T00:00:00Z').getTime();
+    arr = arr.filter(cd => btTs(cd) >= minTs);
+  } else if (Number.isFinite(maxBars) && maxBars > 0 && maxBars < arr.length) {
+    arr = arr.slice(-maxBars);
+  }
+  return arr;
+}
+function btLastCandles(candles, maxBars) {
+  if (!Array.isArray(candles)) return [];
+  if (!Number.isFinite(maxBars) || maxBars <= 0 || maxBars >= candles.length) return candles;
+  return candles.slice(-maxBars);
+}
+function optParamMeta(P={}, startDate=null) {
+  return { ...P, _startDate: startDate || optGetStartDate() };
+}
+function histCoverageStatus(data, startDate, job) {
+  if (!data?.candles?.length) return { ok:false, reason:'vuoto' };
+  const first = data.firstDate || data.candles[0]?.t;
+  const last  = data.lastDate || data.candles[data.candles.length-1]?.t;
+  const firstTs = new Date(String(first).replace(' ', 'T') + (String(first).includes('Z') ? '' : 'Z')).getTime();
+  const lastTs  = new Date(String(last).replace(' ', 'T') + (String(last).includes('Z') ? '' : 'Z')).getTime();
+  const startTs = new Date(startDate + 'T00:00:00Z').getTime();
+  if (!Number.isFinite(firstTs) || !Number.isFinite(lastTs)) return { ok:false, reason:'date non valide' };
+  if (firstTs > startTs) return { ok:false, reason:'manca inizio' };
+  const maxAge = job.interval === '1day' ? 10*86400000 : 3*86400000;
+  if (Date.now() - lastTs > maxAge) return { ok:false, reason:'manca aggiornamento recente' };
+  return { ok:true, reason:'copertura ok', first, last, count:data.candles.length };
+}
+async function ensureOptimizationData(startDate, progressText=null, progressBar=null) {
+  if (!optAutoSyncEnabled()) return { skipped:true };
+  if (histDownloading) throw new Error('Download dati già in corso: attendi la fine o disattiva auto-sync.');
+  histDownloading = true;
+  const pageSize = Math.max(100, Math.min(5000, parseInt(document.getElementById('hist-sync-page-size')?.value, 10) || 5000));
+  const maxPages = Math.max(1, Math.min(500, parseInt(document.getElementById('hist-sync-max-pages')?.value, 10) || 120));
+  const delayMs = parseInt(document.getElementById('hist-delay')?.value, 10) || 8000;
+  const jobs = HIST_CORE_JOBS;
+  let ok=0, warn=0, fail=0;
+  try {
+    for (let i=0; i<jobs.length; i++) {
+      const job = jobs[i];
+      if (progressBar) progressBar.style.width = Math.round(i/jobs.length*20) + '%';
+      if (progressText) progressText.textContent = `📥 Pre-ottimizzazione: normalizzo ${job.interval} da ${startDate}...`;
+      const existing = await histLoad(job.key);
+      const before = existing?.candles?.length || 0;
+      const coverage = histCoverageStatus(existing, startDate, job);
+      if (coverage.ok) {
+        ok++;
+        if (progressText) progressText.textContent = `✅ ${job.interval}: già normalizzato (${coverage.count} barre, ${coverage.first} → ${coverage.last})`;
+        continue;
+      }
+      try {
+        if (progressText) progressText.textContent = `📥 ${job.interval}: ${coverage.reason}, scarico mancanti...`;
+        const fetched = await histFetchBackwardsToStart(job, startDate, pageSize, maxPages, delayMs);
+        const payload = histMergePayload(job, existing, fetched.candles, startDate);
+        const saved = await histSave(job.key, payload);
+        if (!saved) { fail++; continue; }
+        const added = Math.max(0, payload.count - before);
+        if (!fetched.reachedStart) warn++; else ok++;
+        if (progressText) progressText.textContent = `📥 ${job.interval}: ${payload.count} barre normalizzate (+${added})`;
+      } catch(e) { fail++; if (progressText) progressText.textContent = `⚠️ ${job.interval}: ${e.message}`; }
+      if (i < jobs.length-1) await new Promise(r => setTimeout(r, delayMs));
+    }
+    if (progressBar) progressBar.style.width = '20%';
+    if (fail) throw new Error(`Auto-sync dati incompleto: ${fail} errori, ${warn} avvisi.`);
+    if (progressText) progressText.textContent = `✅ Dataset normalizzato da ${startDate}: ${ok} ok · ${warn} avvisi`;
+    return { ok, warn, fail };
+  } finally {
+    histDownloading = false;
+    try { renderHistSavedList(); } catch(e) {}
+  }
+}
 
 // ── Core: esegue un backtest e ritorna i risultati (no UI) ────
 async function btRun(mode, maxBars, useScen, P, onProgress) {
@@ -3291,12 +3410,14 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
   const raw = await histLoad(seriesKey);
   if (!raw?.candles?.length) throw new Error(`Serve lo storico ${is1m?'XAU 1M':is5m?'XAU 5M':'XAU 1H'} — scaricalo prima nel tab Download.`);
 
-  let src = raw.candles.slice(-maxBars);
+  const startDate = P?._startDate || null;
+  let src = btSelectCandles(raw.candles, maxBars, startDate);
   if (P._range) {
     const a = Math.floor(src.length * P._range[0]);
     const b = Math.floor(src.length * P._range[1]);
     src = src.slice(a, b);
   }
+  if (src.length < 80) throw new Error(`Storico ${is1m?'XAU 1M':is5m?'XAU 5M':'XAU 1H'} insufficiente${startDate?' da '+startDate:''}: ${src.length} barre.`);
   const fullBase = btEnrich(src); // timeframe operativo: 1M scalp, 5M swing, 1H trend/bias
 
   // Contesto multi-timeframe reale: la verifica resta sul timeframe operativo,
@@ -3331,8 +3452,8 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
   const corrKey = isIntradayFast ? 'eurusd_5m' : 'eurusd_1h';
   const tnxKey  = isIntradayFast ? 'tnx_5m'    : 'tnx_1h';
   const eurRaw = await histLoad(corrKey), tnxRaw = await histLoad(tnxKey);
-  const fullEur = eurRaw?.candles?.length ? btEnrich(eurRaw.candles.slice(-maxBars)) : [];
-  const fullTnx = tnxRaw?.candles?.length ? btEnrich(tnxRaw.candles.slice(-maxBars)) : [];
+  const fullEur = eurRaw?.candles?.length ? btEnrich(btLastCandles(eurRaw.candles, maxBars)) : [];
+  const fullTnx = tnxRaw?.candles?.length ? btEnrich(btLastCandles(tnxRaw.candles, maxBars)) : [];
 
   const backup = {
     candles: state.candles, candles4h: state.candles4h,
@@ -3492,7 +3613,7 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
   }
 
   return { trades, startCap: START_CAP, endCap: capital,
-           period: { from: fullBase[warmup]?.t, to: fullBase[fullBase.length-1]?.t }, mode };
+           period: { from: fullBase[warmup]?.t, to: fullBase[fullBase.length-1]?.t }, mode, optStartDate: startDate || null };
 }
 
 // ── Run singolo con UI ─────────────────────────────────────────
@@ -3604,19 +3725,19 @@ async function runBacktest() {
 
 // ── OTTIMIZZAZIONE Simulated Annealing sui parametri ──────────
 const SA_SPACE = {
-  // Range volutamente più ampio della vecchia 8.x: l'annealing non deve pescare in un recinto troppo stretto.
-  thrSwing:   { min:45, max:85, step:1 },
-  thrTrend:   { min:45, max:85, step:1 },
-  thrBias:    { min:45, max:85, step:1 },
-  minConf:    { min:0,  max:85, step:1 },
-  beRR:       { min:0.1, max:2.0, step:0.1 },
-  trailRR:    { min:0.1, max:2.5, step:0.1 },
-  trailSwing: { min:0.4, max:4.0, step:0.1 },
-  trailTrend: { min:0.6, max:4.5, step:0.1 },
-  trailBias:  { min:0.4, max:3.0, step:0.1 },
-  partialPct: { min:0, max:80, step:5 },
-  thrScalp:   { min:45, max:85, step:1 },
-  trailScalp: { min:0.3, max:2.2, step:0.1 },
+  // v8.8: range larghi stabili, allineati all'Intra-SA per scenario.
+  thrSwing:   { min:30, max:95, step:1 },
+  thrTrend:   { min:30, max:95, step:1 },
+  thrBias:    { min:30, max:95, step:1 },
+  minConf:    { min:25, max:90, step:1 },
+  beRR:       { min:0.0, max:2.5, step:0.1 },
+  trailRR:    { min:0.0, max:3.0, step:0.1 },
+  trailSwing: { min:0.2, max:6.0, step:0.1 },
+  trailTrend: { min:0.2, max:7.0, step:0.1 },
+  trailBias:  { min:0.2, max:5.0, step:0.1 },
+  partialPct: { min:0, max:90, step:5 },
+  thrScalp:   { min:30, max:95, step:1 },
+  trailScalp: { min:0.1, max:4.0, step:0.1 },
 };
 // riskPct escluso di proposito: col compounding ottimizzarlo significa solo alzarlo — non è un'ottimizzazione, è leva.
 
@@ -3774,11 +3895,20 @@ async function runSaOptimization() {
 
 // ── SIMULATED ANNEALING PER SCENARIO: parametri + pesi interni insieme ──
 const SCEN_SA_PARAM_SPACE = {
-  swing: { thr:{key:'thrSwing',min:45,max:85,step:1}, trail:{key:'trailSwing',min:0.4,max:4.0,step:0.1} },
-  trend: { thr:{key:'thrTrend',min:45,max:85,step:1}, trail:{key:'trailTrend',min:0.6,max:4.5,step:0.1} },
-  scalp: { thr:{key:'thrScalp',min:45,max:85,step:1}, trail:{key:'trailScalp',min:0.3,max:2.2,step:0.1} },
-  bias:  { thr:{key:'thrBias', min:45,max:85,step:1}, trail:{key:'trailBias', min:0.4,max:3.0,step:0.1} },
+  // v8.8: spazio stabile volutamente largo. L'annealing deve poter uscire dal recinto locale.
+  swing: { thr:{key:'thrSwing',min:30,max:95,step:1}, trail:{key:'trailSwing',min:0.2,max:6.0,step:0.1} },
+  trend: { thr:{key:'thrTrend',min:30,max:95,step:1}, trail:{key:'trailTrend',min:0.2,max:7.0,step:0.1} },
+  scalp: { thr:{key:'thrScalp',min:30,max:95,step:1}, trail:{key:'trailScalp',min:0.1,max:4.0,step:0.1} },
+  bias:  { thr:{key:'thrBias', min:30,max:95,step:1}, trail:{key:'trailBias', min:0.2,max:5.0,step:0.1} },
 };
+const SCEN_SA_EXEC_SPACE = {
+  minConf:    { key:'minConf',    label:'MinConf',        min:25,  max:90, step:1   },
+  beRR:       { key:'beRR',       label:'BE R',           min:0.0, max:2.5,step:0.1 },
+  trailRR:    { key:'trailRR',    label:'Trail R',        min:0.0, max:3.0,step:0.1 },
+  partialPct: { key:'partialPct', label:'Parziale %',     min:0,   max:90, step:5   },
+};
+const SCEN_SA_WEIGHT_VALUES = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
+const SCEN_SA_ACCEPT_SCALE = 5000;
 
 async function runScenSA(scen) {
   if (btRunning) return;
@@ -3792,46 +3922,64 @@ async function runScenSA(scen) {
   const M = SCEN_META[scen];
   const PS = SCEN_SA_PARAM_SPACE[scen];
   const canWeights = scen !== 'bias'; // bias non ha pesi interni
-  const iters = Math.max(5, Math.min(1000, parseInt(document.getElementById('scen-sa-iters')?.value, 10) || (scen === 'scalp' ? 40 : 60)));
-  const maxBars = M.mode === '1m'
-    ? Math.max(5000, Math.min(250000, parseInt(document.getElementById('scen-sa-bars-1m')?.value, 10) || 60000))
-    : scenarioDefaultBars(scen, document.getElementById('bt-bars')?.value || 5000);
+  const iters = Math.max(20, Math.min(3000, parseInt(document.getElementById('scen-sa-iters')?.value, 10) || (scen === 'scalp' ? 180 : 160)));
+  const optStartDate = optGetStartDate();
+  const maxBars = scenarioOptimizationBars();
   const useScen = { swing:false, trend:false, bias:false, scalp:false }; useScen[scen] = true;
   const t0 = Date.now();
 
-  // Stato = { thr, trail, w: {8 moltiplicatori} } — SOLO cose di questo scenario
+  // Stato = parametri scenario + esecuzione condivisa + pesi interni. Risk escluso: sarebbe solo leva.
   const liveState = () => ({
-    thr: PAPER_PARAMS[PS.thr.key], trail: PAPER_PARAMS[PS.trail.key],
+    thr: PAPER_PARAMS[PS.thr.key],
+    trail: PAPER_PARAMS[PS.trail.key],
+    minConf: PAPER_PARAMS.minConf,
+    beRR: PAPER_PARAMS.beRR,
+    trailRR: PAPER_PARAMS.trailRR,
+    partialPct: PAPER_PARAMS.partialPct,
     w: canWeights ? { ...SCORE_WEIGHTS[scen] } : null,
   });
   const snap = (v,s) => Math.round(v/s)*s;
-  const W_VALS = [0, 0.5, 0.75, 1, 1.25, 1.5, 2];
+  const clampSnap = (v, sp) => +Math.min(sp.max, Math.max(sp.min, snap(v, sp.step))).toFixed(3);
+  const mutateNumeric = (cur, sp, temp) => {
+    const range = sp.max - sp.min;
+    const span = temp > 0.65 ? 0.35 : temp > 0.25 ? 0.16 : 0.055;
+    const minStep = sp.step * (temp > 0.55 ? 3 : 1);
+    const delta = (Math.random()*2 - 1) * Math.max(minStep, range * span * Math.max(0.15, temp));
+    return clampSnap(cur + delta, sp);
+  };
   const neighbor = (st, temp) => {
-    const n = { thr: st.thr, trail: st.trail, w: st.w ? { ...st.w } : null };
-    const dims = ['thr','trail', ...(canWeights ? WEIGHT_GROUPS : [])];
-    const k = 1 + (Math.random() < temp ? 1 : 0);
+    const n = { ...st, w: st.w ? { ...st.w } : null };
+    const dims = ['thr','trail', ...Object.keys(SCEN_SA_EXEC_SPACE), ...(canWeights ? WEIGHT_GROUPS.map(g=>'w:'+g) : [])];
+    const k = Math.max(1, Math.min(6, 1 + Math.floor(temp*5) + (Math.random() < 0.35 ? 1 : 0)));
     for (let x=0; x<k; x++) {
       const d = dims[Math.floor(Math.random()*dims.length)];
       if (d === 'thr') {
-        const amp = Math.max(1, Math.round(3*temp)) * PS.thr.step;
-        n.thr = Math.min(PS.thr.max, Math.max(PS.thr.min, snap(n.thr + (Math.random()<0.5?-amp:amp), PS.thr.step)));
+        n.thr = mutateNumeric(n.thr, PS.thr, temp);
       } else if (d === 'trail') {
-        const amp = Math.max(1, Math.round(3*temp)) * PS.trail.step;
-        n.trail = +Math.min(PS.trail.max, Math.max(PS.trail.min, snap(n.trail + (Math.random()<0.5?-amp:amp), PS.trail.step))).toFixed(2);
-      } else if (n.w) {
-        const cur = W_VALS.indexOf(n.w[d] ?? 1);
-        const idx = Math.min(W_VALS.length-1, Math.max(0, (cur<0?3:cur) + (Math.random()<0.5?-1:1)));
-        n.w[d] = W_VALS[idx];
+        n.trail = mutateNumeric(n.trail, PS.trail, temp);
+      } else if (SCEN_SA_EXEC_SPACE[d]) {
+        const sp = SCEN_SA_EXEC_SPACE[d];
+        n[d] = mutateNumeric(n[d], sp, temp);
+      } else if (n.w && d.startsWith('w:')) {
+        const g = d.slice(2);
+        const vals = SCEN_SA_WEIGHT_VALUES;
+        const cur = vals.indexOf(n.w[g] ?? 1);
+        const baseIdx = cur < 0 ? vals.indexOf(1) : cur;
+        const jump = temp > 0.65 ? (1 + Math.floor(Math.random()*3)) : 1;
+        const idx = Math.min(vals.length-1, Math.max(0, baseIdx + (Math.random()<0.5 ? -jump : jump)));
+        n.w[g] = vals[idx];
       }
     }
     return n;
   };
   const evalState = async (st) => {
     const base = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
-    const P = { ...base, [PS.thr.key]: st.thr, [PS.trail.key]: st.trail,
-      riskPct: base.riskPct/100, partialPct: base.partialPct/100 };
+    const P = { ...base,
+      [PS.thr.key]: st.thr, [PS.trail.key]: st.trail,
+      minConf: st.minConf, beRR: st.beRR, trailRR: st.trailRR,
+      riskPct: base.riskPct/100, partialPct: st.partialPct/100 };
     if (st.w) P.weights = { [scen]: st.w };
-    const res = await btRun(M.mode, maxBars, useScen, P, null);
+    const res = await btRun(M.mode, maxBars, useScen, optParamMeta(P, optStartDate), null);
     return btStats(res.trades, res.startCap);
   };
   const obj = (st) => {
@@ -3844,7 +3992,8 @@ async function runScenSA(scen) {
   };
 
   try {
-    progText.textContent = `🔥 ${M.icon} ${M.label}: baseline...`;
+    await ensureOptimizationData(optStartDate, progText, progBar);
+    progText.textContent = `🔥 ${M.icon} ${M.label}: baseline da ${optStartDate}...`;
     await new Promise(r=>setTimeout(r,30));
     let cur = liveState();
     const baseSt = await evalState(cur);
@@ -3856,7 +4005,7 @@ async function runScenSA(scen) {
       const cand = neighbor(cur, temp);
       const st = await evalState(cand);
       const o = obj(st);
-      if (o > curObj || Math.random() < Math.exp((o-curObj)/(temp*3000+1))) { cur = cand; curObj = o; }
+      if (o > curObj || Math.random() < Math.exp((o-curObj)/(temp*SCEN_SA_ACCEPT_SCALE+1))) { cur = cand; curObj = o; }
       if (o > bestObj) { best = JSON.parse(JSON.stringify(cand)); bestSt = st; bestObj = o; }
       const el = (Date.now()-t0)/1000;
       const eta = el/(k+1)*(iters-k-1);
@@ -3870,10 +4019,13 @@ async function runScenSA(scen) {
     const finPf   = bestSt ? (bestSt.pf==='∞'?10:parseFloat(bestSt.pf)) : 0;
     const improved = finPnl > basePnl && finPf >= 1.05 && (bestSt?.n||0) >= 10;
 
-    saveOptResult(scen, 'sa', improved ? bestSt : baseSt, { params: improved ? { ...PAPER_PARAMS, [PS.thr.key]: best.thr, [PS.trail.key]: best.trail } : PAPER_PARAMS, weights: improved ? best.w : liveState().w, applied: improved, note: improved ? 'best applicato al live' : 'best non applicato; snapshot baseline live' });
+    const bestParams = { ...PAPER_PARAMS,
+      [PS.thr.key]: best.thr, [PS.trail.key]: best.trail,
+      minConf: best.minConf, beRR: best.beRR, trailRR: best.trailRR, partialPct: best.partialPct };
+    saveOptResult(scen, 'sa', improved ? bestSt : baseSt, { params: improved ? bestParams : PAPER_PARAMS, weights: improved ? best.w : liveState().w, applied: improved, optStartDate, note: (improved ? 'best applicato al live' : 'best non applicato; snapshot baseline live') + ' · da ' + optStartDate });
     const stLine = (st)=> st ? `${st.n} trade · WR ${st.wr}% · PF ${st.pf} · DD ${st.maxDD}%` : 'nessun trade';
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55">
-      <div style="color:${M.color};font-weight:800;font-size:15px;margin-bottom:8px">🔥 Annealing ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato, solo parametri suoi)</div>
+      <div style="color:${M.color};font-weight:800;font-size:15px;margin-bottom:8px">🔥 Annealing ${M.icon} ${M.label} — ${iters} iter · ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato · da ${optStartDate})</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
         <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live)</div>
           <div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(baseSt)}</div>
@@ -3882,17 +4034,18 @@ async function runScenSA(scen) {
           <div style="color:#c0cce0;font-size:12px;margin-top:3px">${stLine(bestSt)}</div>
           <div style="color:${finPnl>=0?'#22c55e':'#ef4444'};font-size:15px;font-weight:900">€${bestSt?bestSt.pnl:0}</div></div>
       </div>
-      <div style="color:#c0cce0;font-size:12px;margin-bottom:4px">Soglia: <b style="color:${best.thr!==liveState().thr?'#f0b429':'#f0f4fa'}">${best.thr}</b> · Trail: <b style="color:#f0b429">${best.trail}×</b>
+      <div style="color:#c0cce0;font-size:12px;margin-bottom:4px">Soglia: <b style="color:${best.thr!==liveState().thr?'#f0b429':'#f0f4fa'}">${best.thr}</b> · Trail: <b style="color:#f0b429">${best.trail}×</b><br>
+        Exec: minConf <b style="color:${best.minConf!==liveState().minConf?'#f0b429':'#f0f4fa'}">${best.minConf}</b> · BE <b style="color:${best.beRR!==liveState().beRR?'#f0b429':'#f0f4fa'}">${best.beRR}R</b> · TrailTrig <b style="color:${best.trailRR!==liveState().trailRR?'#f0b429':'#f0f4fa'}">${best.trailRR}R</b> · Parziale <b style="color:${best.partialPct!==liveState().partialPct?'#f0b429':'#f0f4fa'}">${best.partialPct}%</b>
         ${best.w?'<br>Pesi: '+WEIGHT_GROUPS.map(g=>`${g}×${best.w[g]??1}`).join(' · '):''}</div>`;
     if (improved) {
-      savePaperParams({ [PS.thr.key]: best.thr, [PS.trail.key]: best.trail });
+      savePaperParams({ [PS.thr.key]: best.thr, [PS.trail.key]: best.trail, minConf: best.minConf, beRR: best.beRR, trailRR: best.trailRR, partialPct: best.partialPct });
       if (best.w) saveScoreWeights(scen, best.w);
       if (typeof syncParamInputs === 'function') syncParamInputs();
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:8px;color:#22c55e;font-size:12px;font-weight:700">✅ Migliorativo (+€${(finPnl-basePnl).toFixed(0)}) — parametri e pesi live di ${M.label} AGGIORNATI.</div>`;
     } else {
       html += `<div style="background:#f0b42915;border:1px solid #f0b42933;border-radius:8px;padding:9px;margin-top:8px;color:#f0b429;font-size:12px">⚪ Nessun miglioramento affidabile (P&L > baseline, PF ≥ 1.05, ≥ 10 trade). Live invariato.</div>`;
     }
-    html += `<div style="color:#94a3b8;font-size:10px;margin-top:6px">⚠️ Ottimizzato sul passato — valida col 🛡️ sanity check.</div></div>`;
+    html += `<div style="color:#94a3b8;font-size:10px;margin-top:6px">⚠️ Spazio SA largo: utile per uscire dai massimi locali, ma aumenta il rischio overfitting — valida col 🛡️ sanity check.</div></div>`;
     resEl.innerHTML = html;
     progText.textContent = `Annealing ${M.label} completato.`;
     renderOptHub();
@@ -3947,6 +4100,7 @@ function saveOptResult(scen, source, st, snapshot=null) {
     n: st.n, wr: st.wr, pf: st.pf, dd: st.maxDD, pnl: st.pnl,
     params: normalizeParamSnapshot(snap.params || snap.P || snap),
     weights: clonePlain(snap.weights || (scen ? SCORE_WEIGHTS[scen] : {})),
+    optStartDate: snap.optStartDate || snap.params?._startDate || '',
     applied: !!snap.applied,
     note: snap.note || '',
   };
@@ -3978,12 +4132,14 @@ async function scenQuickBacktest(scen) {
   await new Promise(r=>setTimeout(r,30));
   try {
     const useScen = { swing:false, trend:false, bias:false, scalp:false }; useScen[scen] = true;
+    const optStartDate = optGetStartDate();
+    await ensureOptimizationData(optStartDate, progText, progBar);
     const P = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
-    const res = await btRun(M.mode, scenarioDefaultBars(scen, M.mode==='1m'?60000:5000), useScen,
-      { ...P, riskPct:P.riskPct/100, partialPct:P.partialPct/100 }, null);
+    const res = await btRun(M.mode, scenarioOptimizationBars(), useScen,
+      optParamMeta({ ...P, riskPct:P.riskPct/100, partialPct:P.partialPct/100 }, optStartDate), null);
     const st = btStats(res.trades, res.startCap);
     progBar.style.width='100%'; progText.textContent = `Backtest ${M.label} completato.`;
-    saveOptResult(scen, 'backtest', st, { params: P, weights: SCORE_WEIGHTS[scen], applied:false, note:'backtest isolato live' });
+    saveOptResult(scen, 'backtest', st, { params: P, weights: SCORE_WEIGHTS[scen], applied:false, optStartDate, note:'backtest isolato live da '+optStartDate });
     const col = (st?.pnl||0)>=0 ? '#22c55e' : '#ef4444';
     resEl.innerHTML = `<div class="card" style="border:1px solid ${M.color}55">
       <div style="color:${M.color};font-weight:800;font-size:14px;margin-bottom:6px">${M.icon} Backtest ${M.label} — scenario isolato (${M.mode.toUpperCase()})</div>
@@ -4008,6 +4164,7 @@ function sweepFor(scen) {
 
 // Render delle card per scenario
 function renderOptHub() {
+  syncOptSettingsInputs();
   const host = document.getElementById('opt-hub');
   if (!host) return;
   const legacyResults = loadOptResults();
@@ -4045,7 +4202,7 @@ function renderOptHub() {
           ${WEIGHT_GROUPS.map(g=>{const v=(SCORE_WEIGHTS[scen]?.[g])??1;return `<span style="background:${v!==1?'#e879f920':'#141920'};border:1px solid ${v!==1?'#e879f955':'#1e2535'};border-radius:4px;padding:1px 5px;font-size:10px;color:${v!==1?'#e879f9':'#94a3b8'}">${g}×${v}</span>`;}).join('')}
         </div></div>` : `<div style="color:#64748b;font-size:10px;margin-bottom:6px">Bias usa un motore di scoring dedicato (nessun peso interno).</div>`}
       ${r ? `<div style="background:#0d1117;border-radius:7px;padding:7px;margin-bottom:7px;border:1px solid ${stale?'#f0b42955':'#1e2535'}">
-        <div style="color:#94a3b8;font-size:10px">ULTIMO RISULTATO (${srcLabel[r.source]||r.source} · ${when} · ${r.appVersion||'pre-8.4'}) ${r.applied?'· applicato':'· non applicato'}</div>
+        <div style="color:#94a3b8;font-size:10px">ULTIMO RISULTATO (${srcLabel[r.source]||r.source} · ${when} · ${r.appVersion||'pre-8.4'}) ${r.applied?'· applicato':'· non applicato'}${r.optStartDate?' · da '+r.optStartDate:''}</div>
         <div style="color:#c0cce0;font-size:12px;margin-top:2px">${r.n} trade · WR ${r.wr}% · PF ${r.pf} · DD ${r.dd}%
           <span style="color:${r.pnl>=0?'#22c55e':'#ef4444'};font-weight:800"> €${r.pnl}</span></div>
         ${rParams ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px">
@@ -4057,7 +4214,7 @@ function renderOptHub() {
       </div>` : `<div style="color:#64748b;font-size:11px;margin-bottom:7px">Nessun risultato registrato — lancia un backtest o l'annealing intrascenario.</div>`}
       ${best ? `<div style="background:#101722;border:1px solid #22c55e33;border-radius:7px;padding:7px;margin-bottom:7px">
         <div style="color:#22c55e;font-size:10px;font-weight:800">🏆 MIGLIOR RISULTATO LOCALE</div>
-        <div style="color:#c0cce0;font-size:11px;margin-top:2px">${srcLabel[best.source]||best.source} · ${best.n} trade · WR ${best.wr}% · PF ${best.pf} · DD ${best.dd}% <span style="color:${best.pnl>=0?'#22c55e':'#ef4444'};font-weight:900">€${best.pnl}</span></div>
+        <div style="color:#c0cce0;font-size:11px;margin-top:2px">${srcLabel[best.source]||best.source}${best.optStartDate?' · da '+best.optStartDate:''} · ${best.n} trade · WR ${best.wr}% · PF ${best.pf} · DD ${best.dd}% <span style="color:${best.pnl>=0?'#22c55e':'#ef4444'};font-weight:900">€${best.pnl}</span></div>
       </div>` : ''}
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr;gap:5px">
         <button onclick="scenQuickBacktest('${scen}')" style="background:#1a2332;color:#c0cce0;border:1px solid #2a3550;border-radius:6px;padding:8px 0;font-size:10px;font-weight:700">🧪 Test</button>
@@ -4072,14 +4229,14 @@ function renderOptHub() {
 
 // ── OTTIMIZZAZIONE PER SCENARIO: coordinate descent, un parametro alla volta ──
 const SCEN_OPT_SPACE = {
-  swing: [ { key:'thrSwing',  label:'Soglia',      min:45,  max:85,  step:1   },
-           { key:'trailSwing',label:'Trail ×ATR',  min:0.4, max:4.0, step:0.1 } ],
-  trend: [ { key:'thrTrend',  label:'Soglia',      min:45,  max:85,  step:1   },
-           { key:'trailTrend',label:'Trail ×ATR',  min:0.6, max:4.5, step:0.1 } ],
-  bias:  [ { key:'thrBias',   label:'Soglia',      min:45,  max:85,  step:1   },
-           { key:'trailBias', label:'Trail ×ATR',  min:0.4, max:3.0, step:0.1 } ],
-  scalp: [ { key:'thrScalp',  label:'Soglia',      min:45,  max:85,  step:1   },
-           { key:'trailScalp',label:'Trail ×ATR',  min:0.3, max:2.2, step:0.1 } ],
+  swing: [ { key:'thrSwing',  label:'Soglia',      min:30,  max:95,  step:1   },
+           { key:'trailSwing',label:'Trail ×ATR',  min:0.2, max:6.0, step:0.1 } ],
+  trend: [ { key:'thrTrend',  label:'Soglia',      min:30,  max:95,  step:1   },
+           { key:'trailTrend',label:'Trail ×ATR',  min:0.2, max:7.0, step:0.1 } ],
+  bias:  [ { key:'thrBias',   label:'Soglia',      min:30,  max:95,  step:1   },
+           { key:'trailBias', label:'Trail ×ATR',  min:0.2, max:5.0, step:0.1 } ],
+  scalp: [ { key:'thrScalp',  label:'Soglia',      min:30,  max:95,  step:1   },
+           { key:'trailScalp',label:'Trail ×ATR',  min:0.1, max:4.0, step:0.1 } ],
 };
 
 async function runScenOptimization() {
@@ -4095,7 +4252,8 @@ async function runScenOptimization() {
 
   const scen = document.getElementById('scen-opt-target').value;
   const space = SCEN_OPT_SPACE[scen];
-  const maxBars = scenarioDefaultBars(scen, document.getElementById('bt-bars')?.value || 5000);
+  const optStartDate = optGetStartDate();
+  const maxBars = scenarioOptimizationBars();
   const btMode = scenarioBtMode(scen);
   // Scenario ISOLATO: attribuzione pulita dei risultati al solo scenario in esame
   const useScen = { swing:false, trend:false, bias:false, scalp:false };
@@ -4109,7 +4267,7 @@ async function runScenOptimization() {
   const paramsFor = (overrides) => {
     const base = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
     const merged = { ...base, ...overrides };
-    return { ...merged, riskPct: merged.riskPct/100, partialPct: merged.partialPct/100 };
+    return optParamMeta({ ...merged, riskPct: merged.riskPct/100, partialPct: merged.partialPct/100 }, optStartDate);
   };
   const tick = async (label) => {
     runCount++;
@@ -4122,6 +4280,7 @@ async function runScenOptimization() {
   };
 
   try {
+    await ensureOptimizationData(optStartDate, progText, progBar);
     // ── Baseline: parametri live, scenario isolato ─────────
     await tick('baseline');
     const baseRes = await btRun(btMode, maxBars, useScen, paramsFor({}), null);
@@ -4160,7 +4319,7 @@ async function runScenOptimization() {
 
     // ── Report ─────────────────────────────────────────────
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55;margin-bottom:10px">
-      <div style="color:#3b82f6;font-weight:800;font-size:15px;margin-bottom:8px">🎯 Ottimizzazione ${scenNames[scen]} — ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato)</div>
+      <div style="color:#3b82f6;font-weight:800;font-size:15px;margin-bottom:8px">🎯 Ottimizzazione ${scenNames[scen]} — ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato · da ${optStartDate})</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
         <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (live)</div>
           <div style="color:#c0cce0;font-size:12px;margin-top:4px">${baseSt?baseSt.n:0} trade · WR ${baseSt?baseSt.wr:'–'}%<br>PF ${baseSt?baseSt.pf:'–'} · DD ${baseSt?baseSt.maxDD:'–'}%</div>
@@ -4186,7 +4345,7 @@ async function runScenOptimization() {
       html += `</div>`;
     });
 
-    saveOptResult(scen, 'scenopt', improved ? finalSt : baseSt, { params: improved ? paramsFor(current) : paramsFor({}), weights: SCORE_WEIGHTS[scen], applied: improved, note: improved ? 'parametri applicati al live' : 'risultato baseline live salvato' });
+    saveOptResult(scen, 'scenopt', improved ? finalSt : baseSt, { params: improved ? paramsFor(current) : paramsFor({}), weights: SCORE_WEIGHTS[scen], applied: improved, optStartDate, note: (improved ? 'parametri applicati al live' : 'risultato baseline live salvato') + ' · da ' + optStartDate });
     if (improved) {
       savePaperParams(current);
       if (typeof syncParamInputs === 'function') syncParamInputs();
@@ -4221,6 +4380,7 @@ async function runSanityCheck() {
   progCard.style.display='block'; resEl.innerHTML='';
 
   const maxBars = 5000;
+  const optStartDate = optGetStartDate();
   const useScen = {
     swing: document.getElementById('bt-scen-swing').checked,
     trend: document.getElementById('bt-scen-trend').checked,
@@ -4233,7 +4393,7 @@ async function runSanityCheck() {
 
   const liveP = () => {
     const b = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
-    return { ...b, riskPct: b.riskPct/100, partialPct: b.partialPct/100 };
+    return optParamMeta({ ...b, riskPct: b.riskPct/100, partialPct: b.partialPct/100 }, optStartDate);
   };
   const tick = async (label) => {
     runCount++;
@@ -4251,6 +4411,7 @@ async function runSanityCheck() {
   };
 
   try {
+    await ensureOptimizationData(optStartDate, progText, progBar);
     // ── 0. Riferimento: tutto il periodo ─────────────────────
     await tick('riferimento (tutto il periodo)');
     const fullSt = await runAt(null);
@@ -4390,7 +4551,7 @@ async function runSanityCheck() {
 
 // ── OTTIMIZZAZIONE PESI INTERNI dello scoring, per scenario ──
 const WEIGHT_GROUPS = ['macro','mtf','adx','rsi','pivot','pullback','specific','sess'];
-const WEIGHT_VALUES = [0, 0.5, 0.75, 1, 1.25, 1.5, 2];
+const WEIGHT_VALUES = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 
 async function runWeightOptimization() {
   if (btRunning) return;
@@ -4404,7 +4565,8 @@ async function runWeightOptimization() {
   progCard.style.display='block'; resEl.innerHTML='';
 
   const scen = document.getElementById('wopt-target').value;
-  const maxBars = scenarioDefaultBars(scen, document.getElementById('bt-bars')?.value || 5000);
+  const optStartDate = optGetStartDate();
+  const maxBars = scenarioOptimizationBars();
   const btMode = scenarioBtMode(scen);
   const useScen = { swing:false, trend:false, bias:false, scalp:false };
   useScen[scen] = true;
@@ -4415,7 +4577,7 @@ async function runWeightOptimization() {
   const t0 = Date.now();
   const baseP = () => {
     const b = Object.fromEntries(Object.entries(PAPER_PARAMS).filter(([k])=>k!=='_v'));
-    return { ...b, riskPct: b.riskPct/100, partialPct: b.partialPct/100 };
+    return optParamMeta({ ...b, riskPct: b.riskPct/100, partialPct: b.partialPct/100 }, optStartDate);
   };
   const tick = async (label) => {
     runCount++;
@@ -4427,6 +4589,7 @@ async function runWeightOptimization() {
   const mkWeights = (w) => ({ [scen]: { ...SCORE_WEIGHTS[scen], ...w } });
 
   try {
+    await ensureOptimizationData(optStartDate, progText, progBar);
     // Baseline: pesi live correnti
     await tick('baseline');
     const baseRes = await btRun(btMode, maxBars, useScen, { ...baseP(), weights: mkWeights({}) }, null);
@@ -4464,7 +4627,7 @@ async function runWeightOptimization() {
     const improved = finPnl > basePnl && finPf >= 1.05 && (finalSt?.n||0) >= 10;
 
     let html = `<div class="card" style="border:2px solid ${improved?'#22c55e':'#f0b429'}55;margin-bottom:10px">
-      <div style="color:#e879f9;font-weight:800;font-size:15px;margin-bottom:8px">🧬 Pesi interni ${scenNames[scen]} — ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato)</div>
+      <div style="color:#e879f9;font-weight:800;font-size:15px;margin-bottom:8px">🧬 Pesi interni ${scenNames[scen]} — ${((Date.now()-t0)/1000).toFixed(0)}s (scenario isolato · da ${optStartDate})</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
         <div style="background:#141920;border-radius:8px;padding:9px"><div style="color:#94a3b8;font-size:10px;font-weight:700">BASELINE (pesi live)</div>
           <div style="color:#c0cce0;font-size:12px;margin-top:4px">${baseSt?baseSt.n:0} trade · WR ${baseSt?baseSt.wr:'–'}%<br>PF ${baseSt?baseSt.pf:'–'} · DD ${baseSt?baseSt.maxDD:'–'}%</div>
@@ -4489,7 +4652,7 @@ async function runWeightOptimization() {
       html += `</div>`;
     });
 
-    saveOptResult(scen, 'weights', improved ? finalSt : baseSt, { params: baseP(), weights: improved ? current : SCORE_WEIGHTS[scen], applied: improved, note: improved ? 'pesi applicati al live' : 'risultato baseline live salvato' });
+    saveOptResult(scen, 'weights', improved ? finalSt : baseSt, { params: baseP(), weights: improved ? current : SCORE_WEIGHTS[scen], applied: improved, optStartDate, note: (improved ? 'pesi applicati al live' : 'risultato baseline live salvato') + ' · da ' + optStartDate });
     if (improved) {
       saveScoreWeights(scen, current);
       html += `<div style="background:#22c55e15;border:1px solid #22c55e33;border-radius:8px;padding:9px;margin-top:10px;color:#22c55e;font-size:12px;font-weight:700">
@@ -4529,7 +4692,8 @@ async function runBtSweep() {
     progText.textContent='❌ Range non valido'; btn.disabled=false; btn.style.opacity='1'; btRunning=false; return;
   }
 
-  const maxBars = parseInt(document.getElementById('bt-bars').value, 10);
+  const optStartDate = optGetStartDate();
+  const maxBars = scenarioOptimizationBars();
   const paramScenario = param.includes('Scalp') ? 'scalp'
                       : param.includes('Swing') ? 'swing'
                       : param.includes('Trend') ? 'trend'
@@ -4548,6 +4712,7 @@ async function runBtSweep() {
   const rows = [];
   const t0 = Date.now();
   try {
+    await ensureOptimizationData(optStartDate, progText, progBar);
     for (let k = 0; k < values.length; k++) {
       const P = btGetParams();
       P[param] = (param==='riskPct'||param==='partialPct') ? values[k]/100 : values[k];
@@ -4556,7 +4721,7 @@ async function runBtSweep() {
       progText.textContent = `Sweep ${param}=${values[k]} (${k+1}/${values.length}) · fine ~${k>0?etaClock(eta):'…'}`;
       progBar.style.width = Math.round(k/values.length*100)+'%';
       await new Promise(r=>setTimeout(r,0));
-      const res = await btRun(mode, maxBars, useScen, P, null);
+      const res = await btRun(mode, maxBars, useScen, optParamMeta(P, optStartDate), null);
       const st = btStats(res.trades, res.startCap);
       rows.push({ v: values[k], st, n: res.trades.length });
     }
@@ -4867,7 +5032,14 @@ async function startNormalizedDownload() {
       if (progressText) progressText.textContent = `[${i+1}/${jobs.length}] ${job.symbol} ${job.interval}: scarico e integro...`;
       const existing = await histLoad(job.key);
       const before = existing?.candles?.length || 0;
+      const coverage = histCoverageStatus(existing, startDate, job);
+      if (coverage.ok) {
+        ok++;
+        if (progressText) progressText.textContent = `✅ ${job.interval}: già normalizzato (${coverage.count} barre, ${coverage.first} → ${coverage.last})`;
+        continue;
+      }
       try {
+        if (progressText) progressText.textContent = `📥 ${job.interval}: ${coverage.reason}, scarico mancanti...`;
         const fetched = await histFetchBackwardsToStart(job, startDate, pageSize, maxPages, delayMs);
         const payload = histMergePayload(job, existing, fetched.candles, startDate);
         const saved = await histSave(job.key, payload);

@@ -45,7 +45,7 @@ App standalone per Android con dati live, analisi MTF, scalping e notifiche in b
 
 ## Versione inclusa
 
-Questa build è la **v8.5 data-normalizer**. Vedi `CHANGELOG_8.5.md` per tab Download dedicato, normalizzazione dati da data di inizio, generale solo backtest e ottimizzazioni isolate per scenario.
+Questa build è la **v8.7 opt-start-autosync**. Vedi `CHANGELOG_8.7.md` per data inizio ottimizzazione, uso di tutte le barre normalizzate dalla data scelta e auto-sync delle candele mancanti prima dei run scenario.
 
 ## Alert disponibili
 - 📍 Prezzo vicino a Pivot / R1 / S1
@@ -70,3 +70,14 @@ Nel backtest la verifica trade è ora strutturata per scenario:
 
 Le altre candele restano disponibili come contesto di scoring, ma entry, SL/TP, trailing ed exit vengono simulati sul timeframe operativo dello scenario. Il CSV backtest include `execTf` e `verifyRule` per rendere tracciabile la regola usata.
 
+
+
+## v8.7 — Data inizio ottimizzazione e auto-sync mancanti
+
+Nel tab Backtest/Ottimizzazione è stata aggiunta una data di inizio dedicata alle ottimizzazioni. Test scenario, ottimizzazione parametri, ottimizzazione pesi, Intra-SA, Sweep e Sanity Check usano tutte le barre disponibili dalla data scelta in avanti.
+
+Se l'opzione di preparazione automatica è attiva, prima del run l'app controlla e integra le serie core XAU/USD 1D, 1H, 5M e 1M, con merge, deduplica e ordinamento cronologico. Il Backtest Generale rimane solo test e continua a non fare download automatici.
+
+## v8.8 — Wide Annealing Space
+
+L'annealing intrascenario ha ora uno spazio di ricerca stabilmente più ampio: soglie 30–95, trailing ATR più largo, pesi fino a 3× e ottimizzazione anche di minConf, BE trigger, trail trigger e parziale TP1. Il rischio percentuale resta escluso perché altererebbe il risultato principalmente tramite leva.
