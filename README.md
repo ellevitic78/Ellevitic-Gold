@@ -90,3 +90,17 @@ Il Backtest Generale ora può partire da una data dedicata e usa tutte le barre 
 Le ottimizzazioni scenario salvano checkpoint locali appena trovano un miglioramento affidabile, così un risultato utile non viene perso se il run non si completa. Dal hub scenario il miglior risultato locale può essere applicato manualmente.
 
 Per ridurre i tempi sono state aggiunte cache indicatori e ricerca binaria sui timestamp: non viene ridotto il rigore del backtest finale, ma vengono eliminati ricalcoli e scansioni inutili.
+
+## v9.0 — Nota su Backtest Generale
+
+Il Backtest Generale ora distingue chiaramente tra:
+
+- scenari indipendenti: ogni scenario viene testato con capitale proprio;
+- portfolio derivato parallelo: i trade generati vengono ordinati cronologicamente e ricapitalizzati come vista derivata;
+- portfolio derivato max 1 trade: i trade sovrapposti vengono esclusi dalla vista portfolio.
+
+Questa correzione evita l'errore della versione precedente: sommare trade generati con capitali scenario separati e presentarli come una sola equity curve compounding. Il CSV esporta sia capitale scenario sia capitale portfolio derivato, oltre a initial/final stop, rischio iniziale, parametri, pesi e metadati.
+
+Il Generale ha anche l'opzione di allineare i risultati all'intersezione comune dei periodi scenario. Serve quando, per esempio, 1H parte più tardi di 5M/1M: in quel caso i trade fuori periodo comune vengono rimossi dalla vista Generale per rendere i risultati confrontabili.
+
+Il backtest applica anche filtro mercato XAU e anti-duplicazione tra scenari. Le ottimizzazioni usano un ranking più robusto: P&L, PF, drawdown, trade minimi, stabilità mensile, equilibrio BUY/SELL e penalità overtrade.

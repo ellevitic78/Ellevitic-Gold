@@ -536,6 +536,29 @@ button{cursor:pointer}
       </select>
     </label>
 
+    <div style="display:grid;grid-template-columns:1fr;gap:6px;background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:6px">
+      <label style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span style="color:#c0cce0;font-size:13px">Contabilità risultato</span>
+        <select id="bt-portfolio-mode" onchange="saveBtGeneralSettings()" style="background:#0d1117;color:#f0f4fa;border:1px solid #2a3550;border-radius:6px;padding:5px 8px;font-size:12px;max-width:250px">
+          <option value="independent" selected>Scenari indipendenti</option>
+          <option value="parallel">Portfolio derivato parallelo</option>
+          <option value="exclusive">Portfolio derivato max 1 trade</option>
+        </select>
+      </label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <label style="display:flex;align-items:center;gap:7px;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:7px 8px;color:#c0cce0;font-size:11px;font-weight:700">
+          <input id="bt-session-filter" type="checkbox" checked onchange="saveBtGeneralSettings()" style="width:15px;height:15px;accent-color:#22c55e"/> Filtro mercato XAU
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:7px 8px;color:#c0cce0;font-size:11px;font-weight:700">
+          <input id="bt-dedup-trades" type="checkbox" checked onchange="saveBtGeneralSettings()" style="width:15px;height:15px;accent-color:#22c55e"/> Anti-duplicazione
+        </label>
+        <label style="grid-column:1/-1;display:flex;align-items:center;gap:7px;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:7px 8px;color:#c0cce0;font-size:11px;font-weight:700">
+          <input id="bt-align-common" type="checkbox" checked onchange="saveBtGeneralSettings()" style="width:15px;height:15px;accent-color:#22c55e"/> Allinea il Generale all'intersezione comune dei periodi scenario
+        </label>
+      </div>
+      <div style="color:#94a3b8;font-size:10px;line-height:1.4">Gli scenari indipendenti usano capitale separato per Trend/Swing/Scalp. Le modalità portfolio sono viste derivate dai trade generati: non falsano la size già calcolata, ma ricostruiscono capitale e sovrapposizioni in modo tracciabile.</div>
+    </div>
+
     <details style="background:#141920;border-radius:7px;padding:8px 10px;margin-bottom:8px">
       <summary style="color:#f0b429;font-size:13px;font-weight:700;cursor:pointer">⚙️ Parametri (default = valori live)</summary>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Rischio %</div><input type="number" id="btp-risk" value="5" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Min confidence</div><input type="number" id="btp-minconf" value="60" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Swing</div><input type="number" id="btp-thr-swing" value="54" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Trend</div><input type="number" id="btp-thr-trend" value="74" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Scalp</div><input type="number" id="btp-thr-scalp" value="62" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Soglia Bias</div><input type="number" id="btp-thr-bias" value="72" step="1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">BE trigger (R)</div><input type="number" id="btp-berr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail trigger (R)</div><input type="number" id="btp-trailrr" value="0.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Swing ×ATR</div><input type="number" id="btp-trail-swing" value="2.7" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Trend ×ATR</div><input type="number" id="btp-trail-trend" value="1.4" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Trail Scalp ×ATR</div><input type="number" id="btp-trail-scalp" value="0.8" step="0.1" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div><div><div style="color:#94a3b8;font-size:10px;margin-bottom:2px">Parziale TP1 %</div><input type="number" id="btp-partial" value="15" step="5" style="width:100%;background:#0d1117;border:1px solid #2a3550;border-radius:6px;padding:6px;color:#f0f4fa;font-size:13px"/></div></div>
@@ -623,7 +646,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-const APP_VERSION = '8.9.0-general-start-checkpoint-fast';
+const APP_VERSION = '9.0.0-portfolio-rigore';
 // ══ STORAGE ══════════════════════════════════════════════════
 const LS = {
   get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch{return null;} },
@@ -3371,13 +3394,34 @@ function syncBtGeneralSettingsInputs() {
   const chk = document.getElementById('bt-auto-sync');
   const savedAuto = localStorage.getItem('xauapp_bt_auto_sync');
   if (chk && savedAuto !== null) chk.checked = savedAuto !== '0';
+  const pm = document.getElementById('bt-portfolio-mode');
+  const savedPm = localStorage.getItem('xauapp_bt_portfolio_mode') || 'independent';
+  if (pm && !pm.value) pm.value = savedPm;
+  if (pm && savedPm) pm.value = savedPm;
+  const sf = document.getElementById('bt-session-filter');
+  const savedSf = localStorage.getItem('xauapp_bt_session_filter');
+  if (sf && savedSf !== null) sf.checked = savedSf !== '0';
+  const dd = document.getElementById('bt-dedup-trades');
+  const savedDd = localStorage.getItem('xauapp_bt_dedup_trades');
+  if (dd && savedDd !== null) dd.checked = savedDd !== '0';
+  const ac = document.getElementById('bt-align-common');
+  const savedAc = localStorage.getItem('xauapp_bt_align_common');
+  if (ac && savedAc !== null) ac.checked = savedAc !== '0';
 }
 function saveBtGeneralSettings() {
   const el = document.getElementById('bt-start-date');
   const chk = document.getElementById('bt-auto-sync');
+  const pm = document.getElementById('bt-portfolio-mode');
+  const sf = document.getElementById('bt-session-filter');
+  const dd = document.getElementById('bt-dedup-trades');
+  const ac = document.getElementById('bt-align-common');
   try {
     if (el) localStorage.setItem('xauapp_bt_start_date', el.value || '');
     if (chk) localStorage.setItem('xauapp_bt_auto_sync', chk.checked ? '1' : '0');
+    if (pm) localStorage.setItem('xauapp_bt_portfolio_mode', pm.value || 'independent');
+    if (sf) localStorage.setItem('xauapp_bt_session_filter', sf.checked ? '1' : '0');
+    if (dd) localStorage.setItem('xauapp_bt_dedup_trades', dd.checked ? '1' : '0');
+    if (ac) localStorage.setItem('xauapp_bt_align_common', ac.checked ? '1' : '0');
   } catch(e) {}
 }
 function btGetStartDate() {
@@ -3391,6 +3435,91 @@ function btGeneralAutoSyncEnabled() {
   syncBtGeneralSettingsInputs();
   const chk = document.getElementById('bt-auto-sync');
   return chk ? !!chk.checked : true;
+}
+
+function btPortfolioMode() {
+  syncBtGeneralSettingsInputs();
+  const el = document.getElementById('bt-portfolio-mode');
+  return el?.value || localStorage.getItem('xauapp_bt_portfolio_mode') || 'independent';
+}
+function btSessionFilterEnabled() {
+  syncBtGeneralSettingsInputs();
+  const el = document.getElementById('bt-session-filter');
+  return el ? !!el.checked : (localStorage.getItem('xauapp_bt_session_filter') !== '0');
+}
+function btDedupEnabled() {
+  syncBtGeneralSettingsInputs();
+  const el = document.getElementById('bt-dedup-trades');
+  return el ? !!el.checked : (localStorage.getItem('xauapp_bt_dedup_trades') !== '0');
+}
+function btAlignCommonEnabled() {
+  syncBtGeneralSettingsInputs();
+  const el = document.getElementById('bt-align-common');
+  return el ? !!el.checked : (localStorage.getItem('xauapp_bt_align_common') !== '0');
+}
+function isXauMarketTs(ts) {
+  if (!Number.isFinite(ts)) return false;
+  const d = new Date(ts);
+  const day = d.getUTCDay();       // 0 dom, 6 sab
+  const hour = d.getUTCHours();
+  if (day === 6) return false;     // sabato chiuso
+  if (day === 0 && hour < 22) return false;  // domenica prima riapertura Globex/spot indicativa
+  if (day === 5 && hour >= 22) return false; // venerdì dopo chiusura indicativa
+  return true;
+}
+function btTradeSignature(t) {
+  const r2 = (v) => Number.isFinite(+v) ? (+v).toFixed(2) : '';
+  const open = t.openedAt || '';
+  const close = t.closedAt || '';
+  return [open, close, t.direction || '', r2(t.entry), r2(t.exitPrice), r2(t.pnlTotal)].join('|');
+}
+function btDeduplicateTrades(trades, enabled=true) {
+  const src = Array.isArray(trades) ? [...trades] : [];
+  if (!enabled) return { trades: src, dropped: 0, droppedTrades: [] };
+  const priority = { trend:5, swing:4, scalp:3, bias:2 };
+  const bySig = new Map();
+  const droppedTrades = [];
+  for (const t of src) {
+    const sig = btTradeSignature(t);
+    const prev = bySig.get(sig);
+    if (!prev) { bySig.set(sig, { ...t, duplicateKey: sig }); continue; }
+    const keepNew = (priority[t.scenario] || 0) > (priority[prev.scenario] || 0);
+    if (keepNew) { droppedTrades.push({ ...prev, duplicateDropped:true, duplicateKey:sig }); bySig.set(sig, { ...t, duplicateKey:sig }); }
+    else droppedTrades.push({ ...t, duplicateDropped:true, duplicateKey:sig });
+  }
+  return { trades: [...bySig.values()], dropped: droppedTrades.length, droppedTrades };
+}
+function btApplyPortfolioMode(trades, mode='independent') {
+  const ordered = [...(trades || [])].sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
+  if (mode !== 'exclusive') return { trades: ordered, overlapDropped: 0, overlapTrades: [] };
+  const byOpen = [...ordered].sort((a,b)=>new Date(a.openedAt)-new Date(b.openedAt));
+  const kept = [], dropped = [];
+  let busyUntil = 0;
+  const priority = { trend:5, swing:4, scalp:3, bias:2 };
+  for (const t of byOpen) {
+    const o = new Date(t.openedAt).getTime();
+    const c = new Date(t.closedAt || t.openedAt).getTime();
+    if (!Number.isFinite(o) || o >= busyUntil) {
+      kept.push(t); busyUntil = Number.isFinite(c) ? c : o;
+    } else {
+      // Se un trade di priorità più alta nasce dentro una posizione aperta, teniamo comunque la prima: regola ex-ante semplice e non retrofittata.
+      dropped.push({ ...t, overlapDropped:true });
+    }
+  }
+  return { trades: kept.sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt)), overlapDropped: dropped.length, overlapTrades: dropped };
+}
+function btAnnotatePortfolio(trades, startCap=10000, mode='independent') {
+  let cap = startCap;
+  return (trades || []).map(t => {
+    const before = cap;
+    cap = +(cap + (+t.pnlTotal || 0)).toFixed(2);
+    return { ...t,
+      runMode: 'general', portfolioMode: mode,
+      scenarioCapitalAfter: t.scenarioCapitalAfter ?? t.capitalAfter,
+      portfolioCapitalBefore: before,
+      portfolioCapitalAfter: cap,
+    };
+  });
 }
 function btTs(cd) {
   if (!cd?.t) return NaN;
@@ -3531,6 +3660,10 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
     const b = Math.floor(src.length * P._range[1]);
     src = src.slice(a, b);
   }
+  const beforeSessionFilter = src.length;
+  const sessionFilterOn = P?._sessionFilter !== false && btSessionFilterEnabled();
+  if (sessionFilterOn) src = src.filter(cd => isXauMarketTs(btTs(cd)));
+  const sessionFiltered = Math.max(0, beforeSessionFilter - src.length);
   if (src.length < 80) throw new Error(`Storico ${is1m?'XAU 1M':is5m?'XAU 5M':'XAU 1H'} insufficiente${startDate?' da '+startDate:''}: ${src.length} barre.`);
   const fullBase = btEnrichCached(src, seriesKey + '_exec'); // timeframe operativo: 1M scalp, 5M swing, 1H trend/bias
 
@@ -3645,11 +3778,17 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
           const pnlPts = isBuy ? exitSpread - tr.entry : tr.entry - exitSpread;
           const pnlEur = +(pnlPts * tr.lots * 100).toFixed(2);
           capital = +(capital + pnlEur).toFixed(2);
+          const pnlTotal = +(pnlEur + (tr.partialPnl||0)).toFixed(2);
           trades.push({
             ...tr, exitPrice: +exitSpread.toFixed(2), exitReason, pnlEur,
-            pnlTotal: +(pnlEur + (tr.partialPnl||0)).toFixed(2),
-            isWin: (pnlEur + (tr.partialPnl||0)) > 0,
-            closedAt: cd.t, capitalAfter: capital,
+            pnlTotal,
+            isWin: pnlTotal > 0,
+            closedAt: cd.t,
+            initialSl: Number.isFinite(+(tr.initialSl ?? tr.slOrig)) ? +(tr.initialSl ?? tr.slOrig).toFixed(2) : (tr.initialSl ?? tr.slOrig),
+            finalSl: +tr.sl.toFixed(2),
+            sl: +tr.sl.toFixed(2),
+            scenarioCapitalAfter: capital,
+            capitalAfter: capital,
             rr: +(pnlPts / Math.abs(tr.entry - tr.slOrig || 1)).toFixed(2),
           });
           delete slots[scenKey]; lastClose[scenKey] = i;
@@ -3694,20 +3833,25 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
             const best = { scen:s.id, dir:bDir, score:es.score, setup:es.setup };
             {
             const setup = best.setup;
-            const riskEur = capital * P.riskPct;
+            const capitalBeforeTrade = capital;
+            const riskEur = capitalBeforeTrade * P.riskPct;
             const slDist  = Math.abs(setup.entry - setup.sl);
-            const lots = slDist ? Math.max(0.01, +Math.min(riskEur/(slDist*100), (capital*0.05)/((setup.entry/100)*100)).toFixed(2)) : 0.01;
+            const lots = slDist ? Math.max(0.01, +Math.min(riskEur/(slDist*100), (capitalBeforeTrade*0.05)/((setup.entry/100)*100)).toFixed(2)) : 0.01;
             const atrNow = getScenarioAtrFromState(best.scen) || cd.atr || 15;
             const paramSnapshot = makeParamSnapshot(`backtest_${mode}`, best.scen, P, P.weights?.[best.scen]);
             slots[best.scen] = {
               direction: best.dir,
               entry: best.dir==='BUY' ? setup.entry + SPREAD/2 : setup.entry - SPREAD/2,
-              sl: setup.sl, slOrig: setup.sl, tp1: setup.tp1, tp2: setup.tp2,
+              sl: setup.sl, slOrig: setup.sl, initialSl: setup.sl, tp1: setup.tp1, tp2: setup.tp2,
               lots, scenario: best.scen, execTf: scenarioExecTF(best.scen), confidence: best.score,
               openedAt: cd.t, atrAtEntry: atrNow, paramSnapshot,
               trailMult: trailMap[best.scen] ?? 1.5,
               timedExitUTC: setup.timedExitUTC ?? null, bias: setup.bias ?? null,
               maxFavorable: setup.entry, partialDone: false, breakEvenSet: false, partialPnl: 0,
+              capitalBeforeTrade: +capitalBeforeTrade.toFixed(2),
+              riskPct: +(P.riskPct * 100).toFixed(4),
+              initialRisk: +slDist.toFixed(4),
+              initialRiskEur: +riskEur.toFixed(2),
             };
             }
           }
@@ -3729,7 +3873,8 @@ async function btRun(mode, maxBars, useScen, P, onProgress) {
   return { trades, startCap: START_CAP, endCap: capital,
            period: { from: fullBase[warmup]?.t, to: fullBase[fullBase.length-1]?.t },
            mode, optStartDate: startDate || null,
-           barsUsed: fullBase.length, evalBars: Math.max(0, fullBase.length - warmup) };
+           barsUsed: fullBase.length, evalBars: Math.max(0, fullBase.length - warmup),
+           sessionFiltered };
 }
 
 // ── Run singolo con UI ─────────────────────────────────────────
@@ -3773,14 +3918,35 @@ async function btRunScenarioBundle(maxBars, selected, P, onProgress) {
       }
     });
     trades = [...trades, ...res.trades];
-    periods.push({ ...res.period, label: job.label, mode: job.mode, barsUsed: res.barsUsed, evalBars: res.evalBars, trades: res.trades.length });
+    periods.push({ ...res.period, label: job.label, mode: job.mode, barsUsed: res.barsUsed, evalBars: res.evalBars, trades: res.trades.length, sessionFiltered: res.sessionFiltered || 0 });
   }
-  trades.sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt));
+  const rawTradeCount = trades.length;
+  const commonFrom = periods.length ? periods.map(p=>p.from).filter(Boolean).sort().slice(-1)[0] : null;
+  const commonTo = periods.length ? periods.map(p=>p.to).filter(Boolean).sort()[0] : null;
+  let alignedDropped = 0;
+  let alignedPeriod = null;
+  if (btAlignCommonEnabled() && commonFrom && commonTo && new Date(commonFrom) < new Date(commonTo)) {
+    const a = new Date(commonFrom).getTime(), b = new Date(commonTo).getTime();
+    const before = trades.length;
+    trades = trades.filter(t => {
+      const o = new Date(t.openedAt || t.closedAt).getTime();
+      const c = new Date(t.closedAt || t.openedAt).getTime();
+      return Number.isFinite(o) && Number.isFinite(c) && o >= a && c <= b;
+    });
+    alignedDropped = Math.max(0, before - trades.length);
+    alignedPeriod = { from: commonFrom, to: commonTo };
+  }
+  const dedupRes = btDeduplicateTrades(trades, btDedupEnabled());
+  trades = dedupRes.trades;
+  const portfolioMode = btPortfolioMode();
+  const portfolioRes = btApplyPortfolioMode(trades, portfolioMode);
+  trades = btAnnotatePortfolio(portfolioRes.trades.sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt)), startCap, portfolioMode);
   const st = btStats(trades, startCap);
-  const period = periods.length
+  const period = alignedPeriod || (periods.length
     ? { from: periods.map(p=>p.from).filter(Boolean).sort()[0], to: periods.map(p=>p.to).filter(Boolean).sort().slice(-1)[0] }
-    : { from: new Date().toISOString(), to: new Date().toISOString() };
-  return { trades, startCap, endCap: startCap + (st?.pnl||0), period, mode: jobs.map(j=>j.mode).join('+'), jobs, jobPeriods: periods };
+    : { from: new Date().toISOString(), to: new Date().toISOString() });
+  return { trades, startCap, endCap: startCap + (st?.pnl||0), period, mode: jobs.map(j=>j.mode).join('+'), jobs, jobPeriods: periods,
+    portfolioMode, rawTradeCount, alignedDropped, alignedPeriod, duplicatesDropped: dedupRes.dropped || 0, overlapDropped: portfolioRes.overlapDropped || 0 };
 }
 
 // ── Run singolo con UI ─────────────────────────────────────────
@@ -3819,22 +3985,25 @@ async function runBacktest() {
         progBar.style.width = pct + '%';
         progText.textContent = `Swing 5M ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
       });
-      state.btResults = { ...res, jobs:[{mode:'5m', label:'Swing 5M'}], jobPeriods:[{...res.period, label:'Swing 5M', mode:'5m', barsUsed:res.barsUsed, evalBars:res.evalBars, trades:res.trades.length}] };
+      state.btResults = { ...res, jobs:[{mode:'5m', label:'Swing 5M'}], jobPeriods:[{...res.period, label:'Swing 5M', mode:'5m', barsUsed:res.barsUsed, evalBars:res.evalBars, trades:res.trades.length, sessionFiltered:res.sessionFiltered||0}] };
     } else if (mode === '1m') {
       const res = await btRun('1m', btStartDate ? Infinity : Math.max(5000, Math.min(maxBars, 250000)), { scalp:true, swing:false, trend:false, bias:false }, P, (pct, n, cap) => {
         progBar.style.width = pct + '%';
         progText.textContent = `Scalp 1M ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
       });
-      state.btResults = { ...res, jobs:[{mode:'1m', label:'Scalp 1M'}], jobPeriods:[{...res.period, label:'Scalp 1M', mode:'1m', barsUsed:res.barsUsed, evalBars:res.evalBars, trades:res.trades.length}] };
+      state.btResults = { ...res, jobs:[{mode:'1m', label:'Scalp 1M'}], jobPeriods:[{...res.period, label:'Scalp 1M', mode:'1m', barsUsed:res.barsUsed, evalBars:res.evalBars, trades:res.trades.length, sessionFiltered:res.sessionFiltered||0}] };
     } else {
       const res = await btRun('1h', btStartDate ? Infinity : Math.min(maxBars, 5000), { swing:false, trend:selected.trend, bias:selected.bias, scalp:false }, P, (pct, n, cap) => {
         progBar.style.width = pct + '%';
         progText.textContent = `Trend/Bias 1H ${pct}% · ${n} trade · Cap €${cap.toFixed(0)}`;
       });
-      state.btResults = { ...res, jobs:[{mode:'1h', label:'Trend/Bias 1H'}], jobPeriods:[{...res.period, label:'Trend/Bias 1H', mode:'1h', barsUsed:res.barsUsed, evalBars:res.evalBars, trades:res.trades.length}] };
+      state.btResults = { ...res, jobs:[{mode:'1h', label:'Trend/Bias 1H'}], jobPeriods:[{...res.period, label:'Trend/Bias 1H', mode:'1h', barsUsed:res.barsUsed, evalBars:res.evalBars, trades:res.trades.length, sessionFiltered:res.sessionFiltered||0}] };
     }
     state.btResults.btStartDate = btStartDate || null;
     state.btResults.verifyRule = 'scalp=1m;swing=5m;trend=1h;bias=1h';
+    state.btResults.portfolioMode = state.btResults.portfolioMode || btPortfolioMode();
+    state.btResults.rawTradeCount = state.btResults.rawTradeCount || state.btResults.trades.length;
+    state.btResults.trades = btAnnotatePortfolio(state.btResults.trades.sort((a,b)=>new Date(a.closedAt)-new Date(b.closedAt)), state.btResults.startCap, state.btResults.portfolioMode);
     progBar.style.width='100%';
     progText.textContent = `Completato: ${state.btResults.trades.length} trade${btStartDate?' · da '+btStartDate:''}`;
     renderBtResults();
@@ -3864,15 +4033,8 @@ const SA_SPACE = {
 // riskPct escluso di proposito: col compounding ottimizzarlo significa solo alzarlo — non è un'ottimizzazione, è leva.
 
 function saObjective(st) {
-  // Obiettivo robusto: P&L pesato dalla qualità. Penalizza campioni piccoli e PF<1.
-  if (!st) return -1e9;
-  const pfNum = st.pf === '∞' ? 10 : parseFloat(st.pf);
-  let obj = st.pnl;
-  if (st.n < 15)    obj -= (15 - st.n) * 800;    // pochi trade = statistica debole
-  if (pfNum < 1.05) obj -= 5000;                  // sistema in perdita/pareggio
-  obj += Math.min(pfNum, 3) * 1500;               // premia la qualità, cap a 3
-  obj -= st.maxDD * 200;                          // penalizza il drawdown
-  return obj;
+  // v9.0: obiettivo robusto comune, non solo P&L.
+  return btObjective(st);
 }
 
 function saTemperature(k, iters) {
@@ -4104,14 +4266,7 @@ async function runScenSA(scen) {
     const res = await btRun(M.mode, maxBars, useScen, optParamMeta(P, optStartDate), null);
     return btStats(res.trades, res.startCap);
   };
-  const obj = (st) => {
-    if (!st) return -1e9;
-    const pf = st.pf==='∞' ? 10 : parseFloat(st.pf);
-    let o = st.pnl + Math.min(pf,3)*1500 - st.maxDD*200;
-    if (st.n < 15) o -= 800*(15-st.n);
-    if (pf < 1.05) o -= 5000;
-    return o;
-  };
+  const obj = (st) => btObjective(st);
 
   try {
     await ensureOptimizationData(optStartDate, progText, progBar);
@@ -4251,10 +4406,10 @@ function saveOptResult(scen, source, st, snapshot=null) {
   saveScenarioOptState(state);
   renderOptHub();
 }
-function optPfNum(st) { return st ? (st.pf === '∞' ? 999 : parseFloat(st.pf || 0)) : 0; }
+function optPfNum(st) { return st ? (st.pf === '∞' ? 10 : parseFloat(st.pf || 0)) : 0; }
 function isReliableImprovement(st, baseSt, minTrades=10) {
   if (!st || !baseSt) return false;
-  return st.pnl > baseSt.pnl && optPfNum(st) >= 1.05 && (st.n || 0) >= minTrades;
+  return st.pnl >= baseSt.pnl && btObjective(st) > btObjective(baseSt) && optPfNum(st) >= 1.05 && (st.n || 0) >= minTrades;
 }
 function saveOptCheckpoint(scen, source, st, snapshot=null) {
   if (!st) return;
@@ -4449,7 +4604,7 @@ async function runScenOptimization() {
     let current = {}; // override correnti (partono dai live)
     const perParam = []; // per il report: righe di ogni line search
     for (const p of space) {
-      let bestV = PAPER_PARAMS[p.key], bestSt = null, bestPnl = -Infinity;
+      let bestV = PAPER_PARAMS[p.key], bestSt = null, bestScore = -Infinity;
       const rows = [];
       for (let v = p.min; v <= p.max + 1e-9; v += p.step) {
         const vv = +v.toFixed(3);
@@ -4457,10 +4612,10 @@ async function runScenOptimization() {
         const res = await btRun(btMode, maxBars, useScen, paramsFor({ ...current, [p.key]: vv }), null);
         const st = btStats(res.trades, res.startCap);
         rows.push({ v: vv, st });
-        const pnl = st ? st.pnl : -Infinity;
+        const score = btObjective(st);
         const pfN = st ? (st.pf==='∞'?10:parseFloat(st.pf)) : 0;
-        // vincoli minimi anche nella scelta locale
-        if (pnl > bestPnl && (st?.n||0) >= 5 && pfN >= 0.9) { bestPnl = pnl; bestV = vv; bestSt = st; }
+        // vincoli minimi anche nella scelta locale; ranking robusto, non solo P&L
+        if (score > bestScore && (st?.n||0) >= 5 && pfN >= 0.9) { bestScore = score; bestV = vv; bestSt = st; }
       }
       current[p.key] = bestV; // fissa e passa al parametro successivo
       if (isReliableImprovement(bestSt, baseSt)) {
@@ -4762,16 +4917,16 @@ async function runWeightOptimization() {
     delete current._v;
     const perGroup = [];
     for (const g of WEIGHT_GROUPS) {
-      let bestV = current[g] ?? 1, bestPnl = -Infinity, bestSt = null, rows = [];
+      let bestV = current[g] ?? 1, bestScore = -Infinity, bestSt = null, rows = [];
       for (const v of WEIGHT_VALUES) {
         await tick(`${g} = ${v}`);
         const res = await btRun(btMode, maxBars, useScen,
           { ...baseP(), weights: mkWeights({ ...current, [g]: v }) }, null);
         const st = btStats(res.trades, res.startCap);
         rows.push({ v, st });
-        const pnl = st ? st.pnl : -Infinity;
+        const score = btObjective(st);
         const pfN = st ? (st.pf==='∞'?10:parseFloat(st.pf)) : 0;
-        if (pnl > bestPnl && (st?.n||0) >= 5 && pfN >= 0.9) { bestPnl = pnl; bestV = v; bestSt = st; }
+        if (score > bestScore && (st?.n||0) >= 5 && pfN >= 0.9) { bestScore = score; bestV = v; bestSt = st; }
       }
       current[g] = bestV;
       if (isReliableImprovement(bestSt, baseSt)) {
@@ -4894,8 +5049,8 @@ async function runBtSweep() {
     progText.textContent = `Sweep completato: ${values.length} configurazioni in ${((Date.now()-t0)/1000).toFixed(0)}s`;
 
     const paramNames = { minConf:'Min confidence', thrSwing:'Soglia Swing', thrTrend:'Soglia Trend', thrScalp:'Soglia Scalp', thrBias:'Soglia Bias', riskPct:'Rischio %', beRR:'BE trigger (R)', trailRR:'Trail trigger (R)', trailTrend:'Trail Trend ×ATR', trailSwing:'Trail Swing ×ATR', trailScalp:'Trail Scalp ×ATR', partialPct:'Parziale TP1 %' };
-    let bestIdx = -1, bestPnl = -Infinity;
-    rows.forEach((r,idx) => { const p = r.st ? r.st.pnl : -Infinity; if (p > bestPnl) { bestPnl = p; bestIdx = idx; } });
+    let bestIdx = -1, bestScore = -Infinity;
+    rows.forEach((r,idx) => { const sc = btObjective(r.st); if (sc > bestScore) { bestScore = sc; bestIdx = idx; } });
     let html = `<div class="card"><div style="color:#a855f7;font-weight:800;font-size:14px;margin-bottom:8px">🔁 Sweep: ${paramNames[param]||param}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:2px;font-size:11px;font-weight:700;color:#94a3b8;padding:4px 0;border-bottom:1px solid #2a3550">
         <div>Valore</div><div>Trade</div><div>WR</div><div>PF</div><div>P&L</div></div>`;
@@ -4921,29 +5076,82 @@ async function runBtSweep() {
 function btStats(trades, startCap) {
   if (!trades.length) return null;
   const wins   = trades.filter(t => t.isWin);
-  const grossW = wins.reduce((s,t) => s + t.pnlTotal, 0);
-  const grossL = Math.abs(trades.filter(t => !t.isWin).reduce((s,t) => s + t.pnlTotal, 0));
+  const grossW = wins.reduce((sum,t) => sum + Math.max(0, +t.pnlTotal || 0), 0);
+  const grossL = Math.abs(trades.filter(t => !t.isWin).reduce((sum,t) => sum + Math.min(0, +t.pnlTotal || 0), 0));
   const pf     = grossL > 0 ? grossW / grossL : (grossW > 0 ? Infinity : 0);
   let peak = startCap, maxDD = 0, cap = startCap;
   trades.forEach(t => {
-    cap += t.pnlTotal;
+    cap += (+t.pnlTotal || 0);
     peak = Math.max(peak, cap);
-    maxDD = Math.max(maxDD, (peak - cap) / peak * 100);
+    maxDD = Math.max(maxDD, peak > 0 ? (peak - cap) / peak * 100 : 0);
   });
-  return {
+  const pnl = +trades.reduce((sum,t) => sum + (+t.pnlTotal || 0), 0).toFixed(2);
+  const byMonth = {};
+  const byDir = { BUY:{n:0,pnl:0}, SELL:{n:0,pnl:0} };
+  const firstTs = Math.min(...trades.map(t => new Date(t.openedAt || t.closedAt).getTime()).filter(Number.isFinite));
+  const lastTs  = Math.max(...trades.map(t => new Date(t.closedAt || t.openedAt).getTime()).filter(Number.isFinite));
+  trades.forEach(t => {
+    const d = new Date(t.closedAt || t.openedAt || Date.now());
+    const m = d.toISOString().slice(0,7);
+    byMonth[m] = (byMonth[m] || 0) + (+t.pnlTotal || 0);
+    if (byDir[t.direction]) { byDir[t.direction].n++; byDir[t.direction].pnl += (+t.pnlTotal || 0); }
+  });
+  const months = Object.values(byMonth);
+  const posMonths = months.filter(v => v > 0).length;
+  const negMonths = months.filter(v => v < 0).length;
+  const monthlyPosPct = months.length ? +(posMonths / months.length * 100).toFixed(1) : 0;
+  const days = (Number.isFinite(firstTs) && Number.isFinite(lastTs) && lastTs > firstTs) ? Math.max(1, (lastTs-firstTs)/86400000) : 1;
+  const overtradePerDay = +(trades.length / days).toFixed(2);
+  const buyPnl = +byDir.BUY.pnl.toFixed(2), sellPnl = +byDir.SELL.pnl.toFixed(2);
+  const grossDirA = Math.abs(buyPnl), grossDirB = Math.abs(sellPnl);
+  const dirRobust = (grossDirA || grossDirB) ? +(Math.min(grossDirA, grossDirB) / Math.max(grossDirA, grossDirB) * 100).toFixed(1) : 0;
+  const out = {
     n: trades.length,
     wr: Math.round(wins.length / trades.length * 100),
-    pnl: +trades.reduce((s,t) => s + t.pnlTotal, 0).toFixed(2),
+    pnl,
     pf: pf === Infinity ? '∞' : pf.toFixed(2),
-    avgR: +(trades.reduce((s,t) => s + (t.rr||0), 0) / trades.length).toFixed(2),
+    avgR: +(trades.reduce((sum,t) => sum + (+t.rr||0), 0) / trades.length).toFixed(2),
     maxDD: +maxDD.toFixed(1),
+    months: months.length,
+    posMonths,
+    negMonths,
+    monthlyPosPct,
+    overtradePerDay,
+    buyN: byDir.BUY.n,
+    sellN: byDir.SELL.n,
+    buyPnl,
+    sellPnl,
+    dirRobust,
   };
+  out.robustScore = +btObjective(out).toFixed(2);
+  return out;
+}
+
+function optPfNum(st) {
+  if (!st) return 0;
+  return st.pf === '∞' ? 10 : (parseFloat(st.pf) || 0);
+}
+function btObjective(st) {
+  // Ranking robusto: P&L resta importante, ma non basta.
+  // Penalizza PF debole, drawdown, pochi trade, mesi negativi, dipendenza solo BUY/SELL e overtrade estremo.
+  if (!st) return -1e9;
+  const pf = optPfNum(st);
+  let score = +st.pnl || 0;
+  score += Math.min(pf, 3) * 1800;
+  score -= (+st.maxDD || 0) * 260;
+  if ((st.n || 0) < 20) score -= (20 - (st.n || 0)) * 900;
+  if (pf < 1.05) score -= 7000;
+  if ((st.months || 0) >= 3) score += ((st.monthlyPosPct || 0) - 50) * 60;
+  if ((st.buyN || 0) > 5 && (st.sellN || 0) > 5) score += Math.min(st.dirRobust || 0, 65) * 35;
+  else score -= 1200; // direzione unica = robustezza più bassa
+  if ((st.overtradePerDay || 0) > 80) score -= ((st.overtradePerDay || 0) - 80) * 80;
+  return score;
 }
 
 function renderBtResults() {
   const el = document.getElementById('bt-results');
   if (!el || !state.btResults) return;
-  const { trades, startCap, endCap, period, mode, jobPeriods, btStartDate } = state.btResults;
+  const { trades, startCap, endCap, period, mode, jobPeriods, btStartDate, portfolioMode, rawTradeCount, duplicatesDropped, overlapDropped, alignedDropped } = state.btResults;
 
   if (!trades.length) {
     el.innerHTML = '<div class="card" style="color:#f0b429;font-size:13px;text-align:center;padding:16px">Nessun trade generato — soglie mai superate nel periodo. Prova ad abbassare le soglie nei Parametri o allargare il periodo.</div>';
@@ -4956,14 +5164,20 @@ function renderBtResults() {
   const scenNames = { swing:'📊 Swing', trend:'📈 Trend', bias:'⏰ Bias', scalp:'⚡ Scalp' };
   const pnlCol = tot.pnl >= 0 ? '#22c55e' : '#ef4444';
   const retPct = ((endCap - startCap) / startCap * 100).toFixed(1);
+  const portfolioLabel = ({ independent:'scenari indipendenti', parallel:'portfolio derivato parallelo', exclusive:'portfolio derivato max 1 trade' })[portfolioMode || 'independent'] || (portfolioMode || 'scenari indipendenti');
 
   let html = `<div class="card" style="border:2px solid ${pnlCol}44;margin-bottom:10px">
-    <div style="color:#3b82f6;font-weight:800;font-size:15px;margin-bottom:2px">🧪 Risultato Backtest · ${mode || 'auto'} · verifica scenario-TF</div>
+    <div style="color:#3b82f6;font-weight:800;font-size:15px;margin-bottom:2px">🧪 Risultato Backtest · ${mode || 'auto'} · ${portfolioLabel}</div>
     <div style="color:#94a3b8;font-size:11px;margin-bottom:10px">${btStartDate?'Da '+btStartDate+' · ':''}${new Date(period.from).toLocaleDateString('it-IT')} → ${new Date(period.to).toLocaleDateString('it-IT')}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:6px">
       <div style="background:#141920;border-radius:7px;padding:8px;text-align:center"><div style="color:#94a3b8;font-size:10px">P&L</div><div style="color:${pnlCol};font-size:16px;font-weight:900">${tot.pnl>=0?'+':''}€${tot.pnl}</div><div style="color:#94a3b8;font-size:9px">${retPct}%</div></div>
       <div style="background:#141920;border-radius:7px;padding:8px;text-align:center"><div style="color:#94a3b8;font-size:10px">Win Rate</div><div style="color:${tot.wr>=50?'#22c55e':'#f0b429'};font-size:16px;font-weight:900">${tot.wr}%</div><div style="color:#94a3b8;font-size:9px">${tot.n} trade</div></div>
       <div style="background:#141920;border-radius:7px;padding:8px;text-align:center"><div style="color:#94a3b8;font-size:10px">Profit Factor</div><div style="color:${parseFloat(tot.pf)>=1.5?'#22c55e':parseFloat(tot.pf)>=1?'#f0b429':'#ef4444'};font-size:16px;font-weight:900">${tot.pf}</div><div style="color:#94a3b8;font-size:9px">DD max ${tot.maxDD}%</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:6px">
+      <div style="background:#0d1117;border-radius:7px;padding:7px;text-align:center"><div style="color:#94a3b8;font-size:9px">Mesi positivi</div><div style="color:${tot.monthlyPosPct>=60?'#22c55e':'#f0b429'};font-size:13px;font-weight:800">${tot.posMonths}/${tot.months}</div></div>
+      <div style="background:#0d1117;border-radius:7px;padding:7px;text-align:center"><div style="color:#94a3b8;font-size:9px">Trade/giorno</div><div style="color:${tot.overtradePerDay>80?'#f0b429':'#c0cce0'};font-size:13px;font-weight:800">${tot.overtradePerDay}</div></div>
+      <div style="background:#0d1117;border-radius:7px;padding:7px;text-align:center"><div style="color:#94a3b8;font-size:9px">Robust score</div><div style="color:#c0cce0;font-size:13px;font-weight:800">${tot.robustScore}</div></div>
     </div>
   </div>`;
 
@@ -4974,9 +5188,21 @@ function renderBtResults() {
       const to   = j.to ? new Date(j.to).toLocaleDateString('it-IT') : '–';
       html += `<div style="display:grid;grid-template-columns:1.1fr 1fr .8fr .8fr;gap:4px;padding:5px 0;border-bottom:1px solid #1e2535;font-size:11px">
         <div style="color:#c0cce0;font-weight:700">${j.label}</div><div style="color:#94a3b8">${from} → ${to}</div>
-        <div style="color:#94a3b8;text-align:right">${j.evalBars||j.barsUsed||0} barre</div><div style="color:#94a3b8;text-align:right">${j.trades||0} trade</div></div>`;
+        <div style="color:#94a3b8;text-align:right">${j.evalBars||j.barsUsed||0} barre${j.sessionFiltered?` <span style='color:#f0b429'>-${j.sessionFiltered}</span>`:''}</div><div style="color:#94a3b8;text-align:right">${j.trades||0} trade</div></div>`;
     });
     html += `<div style="color:#64748b;font-size:10px;margin-top:6px">Verifica: scalp=1M · swing=5M · trend/bias=1H. Il periodo globale sopra è l'unione dei periodi scenario.</div></div>`;
+  }
+
+  const sessFilteredTot = (jobPeriods || []).reduce((sum,j)=>sum+(j.sessionFiltered||0),0);
+  if ((duplicatesDropped||0) || (overlapDropped||0) || (alignedDropped||0) || sessFilteredTot || (portfolioMode||'independent') !== 'independent') {
+    html += `<div class="card" style="margin-bottom:10px;border:1px solid #f0b42944">
+      <div style="color:#f0b429;font-weight:800;font-size:13px;margin-bottom:6px">🔎 Diagnostica rigore</div>
+      <div style="color:#c0cce0;font-size:11px;line-height:1.55">
+        Modalità: <b>${portfolioLabel}</b> · trade grezzi: <b>${rawTradeCount || trades.length}</b> · trade conteggiati: <b>${trades.length}</b><br>
+        Fuori intersezione comune rimossi: <b>${alignedDropped || 0}</b> · duplicati rimossi: <b>${duplicatesDropped || 0}</b> · overlap rimossi: <b>${overlapDropped || 0}</b> · barre fuori mercato filtrate: <b>${sessFilteredTot}</b><br>
+        Nota: in modalità indipendente il P&L è la somma dei risultati scenario, non una singola equity curve compounding. Nel CSV trovi sia capitale scenario sia capitale portfolio derivato.
+      </div>
+    </div>`;
   }
 
   html += '<div class="card" style="margin-bottom:10px"><div style="color:#f0f4fa;font-weight:700;font-size:13px;margin-bottom:8px">Per scenario</div>';
@@ -5015,10 +5241,10 @@ function renderBtResults() {
 function exportBtCsv() {
   const r = state.btResults;
   if (!r?.trades?.length) { alert('Nessun risultato da esportare.'); return; }
-  const baseHead = ['openedAt','closedAt','scenario','execTf','bias','direction','entry','sl','tp1','tp2','lots','exitReason','exitPrice','partialPnl','pnlEur','pnlTotal','rr','confidence','capitalAfter'];
+  const baseHead = ['openedAt','closedAt','scenario','execTf','bias','direction','entry','initialSl','finalSl','sl','tp1','tp2','lots','exitReason','exitPrice','partialPnl','pnlEur','pnlTotal','rr','confidence','capitalBeforeTrade','capitalAfter','scenarioCapitalAfter','portfolioCapitalBefore','portfolioCapitalAfter','initialRisk','initialRiskEur','riskPct','runMode','portfolioMode','duplicateKey'];
   const paramKeys = Object.keys(PAPER_PARAMS_DEFAULTS).filter(k=>k !== '_v');
   const weightKeys = WEIGHT_GROUPS.map(g => 'weight_'+g);
-  const metaHead = ['appVersion','snapshotSource','snapshotTs','btMode','btStartDate','paramScenario','verifyRule'];
+  const metaHead = ['appVersion','snapshotSource','snapshotTs','btMode','btStartDate','paramScenario','verifyRule','portfolioMode','rawTradeCount','duplicatesDropped','overlapDropped','alignedDropped'];
   const head = [...baseHead, ...metaHead, ...paramKeys.map(k=>'param_'+k), ...weightKeys];
   const rows = r.trades.map(t => {
     const snap = t.paramSnapshot || makeParamSnapshot(`backtest_${r.mode||''}`, t.scenario || '', null, null);
@@ -5032,6 +5258,11 @@ function exportBtCsv() {
       btStartDate: r.btStartDate || r.optStartDate || '',
       paramScenario: snap.scenario || t.scenario || '',
       verifyRule: 'scalp=1m;swing=5m;trend=1h;bias=1h',
+      portfolioMode: r.portfolioMode || t.portfolioMode || '',
+      rawTradeCount: r.rawTradeCount || '',
+      duplicatesDropped: r.duplicatesDropped || 0,
+      overlapDropped: r.overlapDropped || 0,
+      alignedDropped: r.alignedDropped || 0,
     };
     const vals = [
       ...baseHead.map(k => t[k] ?? ''),
